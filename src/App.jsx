@@ -930,7 +930,7 @@ function RankingModal({ score, nickname, quizMode, maxNum, subLevel="junior", on
     });
     const entry = (quizMode==="ion"||quizMode==="formula")
       ? { name:nickname, score, quizMode, subLevel, difficulty, date:Date.now() }
-      : { name:nickname, score, maxNum, quizMode:"element", directionMode, difficulty, date:Date.now() };
+      : { name:nickname, score, maxNum, quizMode:"element", difficulty, date:Date.now() };
     filtered.push(entry);
     filtered.sort((a,b)=>b.score-a.score);
     await sSet(key, JSON.stringify(filtered.slice(0,50)), true);
