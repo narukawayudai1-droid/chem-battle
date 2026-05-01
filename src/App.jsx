@@ -1702,13 +1702,12 @@ export default function App() {
   const [bgmOn,setBgmOn]=useState(true);
 
   useEffect(()=>{
-    (async()=>{const res=await sGet("nickname");if(res)setNickname(res.value);})();
     const start=()=>{bgm.start("home");document.removeEventListener("click",start);};
     document.addEventListener("click",start);
     return()=>document.removeEventListener("click",start);
   },[]);
 
-  const saveNickname=async(nick)=>{setNickname(nick);await sSet("nickname",nick);};
+  const saveNickname=async(nick)=>{setNickname(nick);};
 
   const handleSoloFinish=(result)=>{
     bgm.stop();
