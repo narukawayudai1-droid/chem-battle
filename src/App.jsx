@@ -912,7 +912,7 @@ function Countdown({ onDone }) {
 }
 
 // ── ランキング登録モーダル ─────────────────────────────────────
-function RankingModal({ score, nickname, quizMode, maxNum, subLevel="junior", onDone }) {
+function RankingModal({ score, nickname, quizMode, maxNum, subLevel="junior", difficulty="normal", onDone }) {
   const [saving, setSaving] = useState(false);
 
   const doSave = async () => {
@@ -1303,7 +1303,7 @@ function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", o
     <div>
       {/* ランキング登録モーダル（対戦モード以外） */}
       {showRankModal && !battleResult && (
-        <RankingModal score={result.score} nickname={nickname} quizMode={quizMode} maxNum={maxNum} subLevel={result.subLevel||"junior"}
+        <RankingModal score={result.score} nickname={nickname} quizMode={quizMode} maxNum={maxNum} subLevel={result.subLevel||"junior"} difficulty={result.difficulty||"normal"}
           onDone={(saved)=>{setRankSaved(saved);setShowRankModal(false);}}/>
       )}
 
