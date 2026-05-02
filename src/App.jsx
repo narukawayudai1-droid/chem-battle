@@ -108,6 +108,21 @@ const ALL_ELEMENTS = [
   { number:101,symbol:"Md", name:"メンデレビウム" },
   { number:102,symbol:"No", name:"ノーベリウム" },
   { number:103,symbol:"Lr", name:"ローレンシウム" },
+  { number:104,symbol:"Rf", name:"ラザホージウム" },
+  { number:105,symbol:"Db", name:"ドブニウム" },
+  { number:106,symbol:"Sg", name:"シーボーギウム" },
+  { number:107,symbol:"Bh", name:"ボーリウム" },
+  { number:108,symbol:"Hs", name:"ハッシウム" },
+  { number:109,symbol:"Mt", name:"マイトネリウム" },
+  { number:110,symbol:"Ds", name:"ダームスタチウム" },
+  { number:111,symbol:"Rg", name:"レントゲニウム" },
+  { number:112,symbol:"Cn", name:"コペルニシウム" },
+  { number:113,symbol:"Nh", name:"ニホニウム" },
+  { number:114,symbol:"Fl", name:"フレロビウム" },
+  { number:115,symbol:"Mc", name:"モスコビウム" },
+  { number:116,symbol:"Lv", name:"リバモリウム" },
+  { number:117,symbol:"Ts", name:"テネシン" },
+  { number:118,symbol:"Og", name:"オガネソン" },
 ];
 
 // イオンデータ: question=イオン式, answer=名前 の両方向出題
@@ -1144,7 +1159,7 @@ const RANGE_PRESETS = [
   { label:"1〜20", min:1,  max:20  },
   { label:"1〜50", min:1,  max:50  },
   { label:"51〜103",min:51, max:103 },
-  { label:"全範囲", min:1,  max:103 },
+  { label:"全範囲", min:1,  max:118 },
 ];
 
 function RangeSelector({ minNum=1, maxNum=20, onChangeMin, onChangeMax, onChange }) {
@@ -1171,23 +1186,23 @@ function RangeSelector({ minNum=1, maxNum=20, onChangeMin, onChangeMax, onChange
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
           <div style={{display:"flex",alignItems:"center",gap:8,fontSize:".8rem"}}>
             <span style={{width:28,textAlign:"right",color:"var(--muted)"}}>下限</span>
-            <input type="range" min={1} max={103} value={mn}
+            <input type="range" min={1} max={118} value={mn}
               onChange={e=>{const v=Number(e.target.value);if(v<=mx-3)onChangeMin(v);}}
               style={{flex:1}}/>
             <span style={{width:32,fontWeight:700,color:"var(--primary)"}}>{mn}番</span>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8,fontSize:".8rem"}}>
             <span style={{width:28,textAlign:"right",color:"var(--muted)"}}>上限</span>
-            <input type="range" min={1} max={103} value={mx}
+            <input type="range" min={1} max={118} value={mx}
               onChange={e=>{const v=Number(e.target.value);if(v>=mn+3)onChangeMax(v);}}
               style={{flex:1}}/>
             <span style={{width:32,fontWeight:700,color:"var(--primary)"}}>{mx}番</span>
           </div>
         </div>
       ) : (
-        <input type="range" min={4} max={103} value={mx} onChange={e=>onChange(Number(e.target.value))}/>
+        <input type="range" min={4} max={118} value={mx} onChange={e=>onChange(Number(e.target.value))}/>
       )}
-      <div className="rlbls" style={{marginTop:4}}><span>1</span><span>20</span><span>50</span><span>82</span><span>103</span></div>
+      <div className="rlbls" style={{marginTop:4}}><span>1</span><span>20</span><span>50</span><span>82</span><span>103</span><span>118</span></div>
       <div className="pbtns">
         {RANGE_PRESETS.map(p=>(
           <button key={p.label}
@@ -1272,7 +1287,7 @@ function HowToModal({ onClose }) {
 }
 
 // ── HomeScreen ─────────────────────────────────────────────────
-function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm }) {
+function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm, todayCount=0 }) {
   const [edit,setEdit]=useState(false);
   const [ni,setNi]=useState(nickname||"");
   const [showHowTo,setShowHowTo]=useState(false);
@@ -1286,6 +1301,12 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
         <img src="/hero.png" alt="CHEM BATTLE" style={{width:"100%",display:"block",objectFit:"cover"}}/>
       </div>
 
+      {/* ── 今日のプレイヤー数 ── */}
+      {todayCount>0&&(
+        <div style={{textAlign:"center",marginBottom:8,fontSize:".78rem",color:"var(--muted)"}}>
+          🎮 今日 <b style={{color:"var(--primary)",fontSize:"1rem"}}>{todayCount}</b> 人目のプレイヤー！
+        </div>
+      )}
       {/* ── ニックネーム入力 ── */}
       <div style={{marginBottom:12,background:"linear-gradient(135deg,#0f0c29,#1a1040)",borderRadius:12,padding:"14px 16px"}}>
         {!nickname||edit?(
@@ -1748,7 +1769,7 @@ function RankingScreen({ onBack, myNickname }) {
     if(r.quizMode==="ion") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--ion-l)", color:"var(--ion)"};
     if(r.quizMode==="formula") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--form-l)", color:"var(--form)"};
     if(r.quizMode==="mol") return {text:({intro:"入門",basic:"基礎",adv:"応用",random:"乱"})[r.subLevel]||r.subLevel, bg:"#ede9fe", color:"#6366f1"};
-    if(r.maxNum) return {text:`〜${r.maxNum}`, bg:"var(--pl)", color:"var(--primary)"};
+    if(r.maxNum && r.maxNum!==20) return {text:`〜${r.maxNum}`, bg:"var(--pl)", color:"var(--primary)"};
     return null;
   };
 
@@ -1789,7 +1810,6 @@ function RankingScreen({ onBack, myNickname }) {
                     cursor:"pointer",fontFamily:"inherit",transition:"all .12s"
                   }}>
                   {d.l}
-                  {d.v!=="all"&&<span style={{marginLeft:3,fontSize:".68rem",opacity:.8}}>({allRanks.filter(r=>(r.subLevel||"random")===d.v).length})</span>}
                 </button>
               );
             })}
@@ -1815,11 +1835,6 @@ function RankingScreen({ onBack, myNickname }) {
                     fontFamily:"inherit",transition:"all .12s"
                   }}>
                   {d.l}
-                  {d.v!=="all"&&(
-                    <span style={{marginLeft:4,fontSize:".68rem",opacity:.8}}>
-                      ({allRanks.filter(r=>(r.difficulty||"normal")===d.v).length})
-                    </span>
-                  )}
                 </button>
               );
             })}
@@ -2020,42 +2035,63 @@ function getMolFormula(q) {
   const gv = q.given;
   const nm = q.numer;
   const r = (v) => Math.round(v*10000)/10000;
+  // ÷ を × 1/分母 の分数表記に変換するヘルパー
+  // 例: ÷ 36.5g/mol → × (1mol/36.5g)
+  const frac = (num, unit) => `× (${num}/${unit})`;
 
   if (t==="g_to_mol")
-    return `${gv}g ÷ ${mm}g/mol = ${q.ans}mol`;
+    return `${gv}g ${frac("1mol",mm+"g")} = ${q.ans}mol`;
   if (t==="mol_to_g")
-    return `${gv}mol × ${mm}g/mol = ${q.ans}g`;
+    return `${gv}mol × (${mm}g/1mol) = ${q.ans}g`;
   if (t==="mol_to_L")
-    return `${gv}mol × 22.4L/mol = ${q.ans}L`;
+    return `${gv}mol × (22.4L/1mol) = ${q.ans}L`;
   if (t==="L_to_mol")
-    return `${gv}L ÷ 22.4L/mol = ${q.ans}mol`;
+    return `${gv}L ${frac("1mol","22.4L")} = ${q.ans}mol`;
   if (t==="mol_to_N")
-    return `${gv}mol × 6.0×10²³個/mol = ${q.ans}個`;
+    return `${gv}mol × (6.0×10²³個/1mol) = ${q.ans}個`;
   if (t==="N_to_mol")
-    return `${nm}×10²³個 ÷ 6.0×10²³個/mol = ${q.ans}mol`;
+    return `${nm}×10²³個 ${frac("1mol","6.0×10²³個")} = ${q.ans}mol`;
   if (t==="g_to_L") {
     const mol = r(gv/mm);
-    return `① ${gv}g ÷ ${mm}g/mol = ${mol}mol\n② ${mol}mol × 22.4L/mol = ${q.ans}L\n\n式全体：${gv}g ÷ ${mm}g/mol × 22.4L/mol = ${q.ans}L`;
+    return `① ${gv}g ${frac("1mol",mm+"g")} = ${mol}mol
+② ${mol}mol × (22.4L/1mol) = ${q.ans}L
+
+式全体：${gv}g ${frac("1mol",mm+"g")} × (22.4L/1mol) = ${q.ans}L`;
   }
   if (t==="L_to_g") {
     const mol = r(gv/22.4);
-    return `① ${gv}L ÷ 22.4L/mol = ${mol}mol\n② ${mol}mol × ${mm}g/mol = ${q.ans}g\n\n式全体：${gv}L ÷ 22.4L/mol × ${mm}g/mol = ${q.ans}g`;
+    return `① ${gv}L ${frac("1mol","22.4L")} = ${mol}mol
+② ${mol}mol × (${mm}g/1mol) = ${q.ans}g
+
+式全体：${gv}L ${frac("1mol","22.4L")} × (${mm}g/1mol) = ${q.ans}g`;
   }
   if (t==="g_to_N") {
     const mol = r(gv/mm);
-    return `① ${gv}g ÷ ${mm}g/mol = ${mol}mol\n② ${mol}mol × 6.0×10²³個/mol = ${q.ans}個\n\n式全体：${gv}g ÷ ${mm}g/mol × 6.0×10²³個/mol = ${q.ans}個`;
+    return `① ${gv}g ${frac("1mol",mm+"g")} = ${mol}mol
+② ${mol}mol × (6.0×10²³個/1mol) = ${q.ans}個
+
+式全体：${gv}g ${frac("1mol",mm+"g")} × (6.0×10²³個/1mol) = ${q.ans}個`;
   }
   if (t==="N_to_g") {
     const mol = r(nm/6);
-    return `① ${nm}×10²³個 ÷ 6.0×10²³個/mol = ${mol}mol\n② ${mol}mol × ${mm}g/mol = ${q.ans}g\n\n式全体：${nm}×10²³個 ÷ 6.0×10²³個/mol × ${mm}g/mol = ${q.ans}g`;
+    return `① ${nm}×10²³個 ${frac("1mol","6.0×10²³個")} = ${mol}mol
+② ${mol}mol × (${mm}g/1mol) = ${q.ans}g
+
+式全体：${nm}×10²³個 ${frac("1mol","6.0×10²³個")} × (${mm}g/1mol) = ${q.ans}g`;
   }
   if (t==="L_to_N") {
     const mol = r(gv/22.4);
-    return `① ${gv}L ÷ 22.4L/mol = ${mol}mol\n② ${mol}mol × 6.0×10²³個/mol = ${q.ans}個\n\n式全体：${gv}L ÷ 22.4L/mol × 6.0×10²³個/mol = ${q.ans}個`;
+    return `① ${gv}L ${frac("1mol","22.4L")} = ${mol}mol
+② ${mol}mol × (6.0×10²³個/1mol) = ${q.ans}個
+
+式全体：${gv}L ${frac("1mol","22.4L")} × (6.0×10²³個/1mol) = ${q.ans}個`;
   }
   if (t==="N_to_L") {
     const mol = r(nm/6);
-    return `① ${nm}×10²³個 ÷ 6.0×10²³個/mol = ${mol}mol\n② ${mol}mol × 22.4L/mol = ${q.ans}L\n\n式全体：${nm}×10²³個 ÷ 6.0×10²³個/mol × 22.4L/mol = ${q.ans}L`;
+    return `① ${nm}×10²³個 ${frac("1mol","6.0×10²³個")} = ${mol}mol
+② ${mol}mol × (22.4L/1mol) = ${q.ans}L
+
+式全体：${nm}×10²³個 ${frac("1mol","6.0×10²³個")} × (22.4L/1mol) = ${q.ans}L`;
   }
   return "";
 }
@@ -3130,7 +3166,32 @@ export default function App() {
     return()=>document.removeEventListener("click",start);
   },[]);
 
-  const saveNickname=async(nick)=>{setNickname(nick);};
+  const [todayCount,setTodayCount]=useState(0);
+
+  const saveNickname=async(nick)=>{
+    setNickname(nick);
+    // 今日のプレイヤー数をカウント
+    try {
+      const today = new Date().toISOString().slice(0,10).replace(/-/g,"");
+      const key = `players_${today}`;
+      const res = await sGet(key, true);
+      let count = 1;
+      if(res) { try { count = parseInt(res.value)||0; count+=1; } catch{} }
+      await sSet(key, String(count), true);
+      setTodayCount(count);
+    } catch{}
+  };
+
+  useEffect(()=>{
+    // 起動時に今日のカウントを取得
+    (async()=>{
+      try {
+        const today = new Date().toISOString().slice(0,10).replace(/-/g,"");
+        const res = await sGet(`players_${today}`, true);
+        if(res) setTodayCount(parseInt(res.value)||0);
+      } catch{}
+    })();
+  },[]);
 
   const handleSoloFinish=(result)=>{
     bgm.stop();
@@ -3172,7 +3233,7 @@ export default function App() {
               onRanking={()=>setScreen("ranking")}
               onMemo={()=>setScreen("memo")}
               onMol={(t)=>{bgm.stop();if(t==="battle")setScreen("mol_battle");else setScreen("mol_setup");}}
-              bgmOn={bgmOn} onToggleBgm={toggleBgm}/>
+              bgmOn={bgmOn} onToggleBgm={toggleBgm} todayCount={todayCount}/>
           )}
           {screen==="setup"&&(
             <SetupScreen title={isIon?"イオンクイズ設定":"出題範囲を選択"} quizMode={quizMode} onBack={goHome}
