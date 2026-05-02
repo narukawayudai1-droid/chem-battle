@@ -1281,34 +1281,30 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
     <div>
       {showHowTo&&<HowToModal onClose={()=>setShowHowTo(false)}/>}
       {/* ── Hero ── */}
-      <div className="hero">
-        <div className="hero-glow1"/><div className="hero-glow2"/><div className="hero-glow3"/>
-        <div className="hero-ring"/><div className="hero-ring2"/>
-        <div className="hero-dots"/>
-        <div className="hero-icons-deco"><span>⚛️</span><span>🔬</span><span>⚡</span></div>
-        <div className="hero-icons-deco2"><span>🧪</span><span>🧬</span><span>💡</span></div>
-        <div className="hero-content">
-          <div className="hero-badge">SCIENCE QUIZ</div>
-          <span className="hero-main-icon">⚗️</span>
-          <div className="hero-app-title">CHEM BATTLE</div>
-          <div className="hero-sub-title">化学を、バトルにしよう</div>
-          {!nickname||edit?(
-            <div className="hero-input-wrap">
-              <input className="hero-input" value={ni} onChange={e=>setNi(e.target.value)}
-                placeholder="ニックネームを入力してね" maxLength={12}
+      {/* ── Hero Banner ── */}
+      <div style={{borderRadius:"14px",overflow:"hidden",marginBottom:12,boxShadow:"0 4px 20px rgba(0,0,0,.25)"}}>
+        <img src="/hero.png" alt="CHEM BATTLE" style={{width:"100%",display:"block",objectFit:"cover"}}/>
+      </div>
+
+      {/* ── ニックネーム入力 ── */}
+      <div style={{marginBottom:12,background:"linear-gradient(135deg,#0f0c29,#1a1040)",borderRadius:12,padding:"14px 16px"}}>
+        {!nickname||edit?(
+          <div>
+            <div style={{color:"rgba(255,255,255,.7)",fontSize:".8rem",marginBottom:8,textAlign:"center"}}>ニックネームを登録してスタート！</div>
+            <div style={{display:"flex",gap:8}}>
+              <input className="hero-input" style={{flex:1}} value={ni} onChange={e=>setNi(e.target.value)}
+                placeholder="ニックネームを入力" maxLength={12}
                 onKeyDown={e=>e.key==="Enter"&&save()} autoFocus={edit}/>
-              <div style={{display:"flex",gap:8,marginTop:10}}>
-                <button className="hero-save-btn" style={{flex:1}} onClick={save}>✓ 保存してスタート</button>
-                {edit&&<button className="hero-save-btn" style={{flex:"0 0 auto",background:"rgba(255,255,255,.12)",color:"rgba(255,255,255,.7)"}} onClick={()=>setEdit(false)}>✕</button>}
-              </div>
+              <button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 14px"}} onClick={save}>✓ 保存</button>
+              {edit&&<button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 10px",background:"rgba(255,255,255,.12)",color:"rgba(255,255,255,.7)"}} onClick={()=>setEdit(false)}>✕</button>}
             </div>
-          ):(
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-              <div className="hero-nick">👤 {nickname}</div>
-              <button className="hero-nick-btn" onClick={()=>setEdit(true)}>変更</button>
-            </div>
-          )}
-        </div>
+          </div>
+        ):(
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+            <div className="hero-nick">👤 {nickname}</div>
+            <button className="hero-nick-btn" onClick={()=>setEdit(true)}>変更</button>
+          </div>
+        )}
       </div>
 
       <div style={{marginBottom:10}}>
