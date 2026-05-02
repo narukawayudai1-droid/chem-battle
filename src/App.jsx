@@ -2445,29 +2445,43 @@ function MolQuizScreen({ mode, onFinish }) {
 
   // 選択肢生成
   const [choices] = useState(()=>{
+    // 正解の有効数字桁数を調べて、ダミーも同じ桁数にフォーマットする
+    const fmtNum = (val, ansStr) => {
+      const s = String(ansStr);
+      // 小数点以下の桁数を正解から取得
+      const dotIdx = s.indexOf(".");
+      const decimals = dotIdx >= 0 ? s.length - dotIdx - 1 : 0;
+      const rounded = Math.round(val * Math.pow(10, decimals)) / Math.pow(10, decimals);
+      return decimals > 0 ? rounded.toFixed(decimals) : String(rounded);
+    };
+
     return questions.map(qq=>{
       const isExp = typeof qq.ans === "string"; // 指数表記の答え
       if (isExp) {
-        // numer（×10²³の係数）を使ってダミーを生成
-        // 典型ミス：係数の2倍・半分・3倍など、指数も変わるものを混ぜる
         const numer = qq.numer || 6.0;
         const candidates = [];
-        // 係数違い（×10²³）
         const c23 = [numer*2, numer/2, numer*3, numer*0.5].filter(x=>x>0&&x!==numer);
         c23.forEach(n=>{
           if(n>=10) candidates.push(`${(n/10).toFixed(1).replace(/\.0$/,"")}×10²⁴`);
           else candidates.push(`${n.toFixed(1).replace(/\.0$/,"")}×10²³`);
         });
-        // 指数違い（同じ係数で×10²²や×10²⁵）
         candidates.push(`${numer.toFixed(1).replace(/\.0$/,"")}×10²²`);
         candidates.push(`${numer.toFixed(1).replace(/\.0$/,"")}×10²⁵`);
-        // 正解と重複しないものを3個選ぶ
         const dummies = shuffle(candidates.filter(x=>x!==qq.ans)).slice(0,3);
         return shuffle([qq.ans, ...dummies]);
       } else {
-        // 数値の答え
+        // 数値：正解と同じ有効数字でダミーをフォーマット
         const dummies = genMolDummies(qq.ans, qq.qtype);
-        return shuffle([qq.ans, ...dummies.slice(0,3).map(d=>String(Math.round(d*1000)/1000))]);
+        const formatted = dummies.slice(0,3)
+          .map(d => fmtNum(d, qq.ans))
+          .filter(d => d !== String(qq.ans)); // 正解と偶然一致したものを除外
+        // 足りない場合は別のダミーで補完
+        while(formatted.length < 3) {
+          const extra = fmtNum(qq.ans * (formatted.length + 2), qq.ans);
+          if(!formatted.includes(extra) && extra !== String(qq.ans)) formatted.push(extra);
+          else break;
+        }
+        return shuffle([String(qq.ans), ...formatted.slice(0,3)]);
       }
     });
   });
