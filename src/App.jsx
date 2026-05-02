@@ -1447,7 +1447,8 @@ function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", o
 // ── RankingScreen ──────────────────────────────────────────────
 function RankingScreen({ onBack, myNickname }) {
   const [tab,setTab]=useState("element_all");
-  const [ranks,setRanks]=useState([]);
+  const [diffFilter,setDiffFilter]=useState("all"); // "all"|"easy"|"normal"|"hard"
+  const [allRanks,setAllRanks]=useState([]);
   const [loading,setLoading]=useState(true);
 
   useEffect(()=>{load();},[tab]);
@@ -1463,15 +1464,25 @@ function RankingScreen({ onBack, myNickname }) {
     const res=await sGet(key,true);
     let all=[];
     try{if(res)all=JSON.parse(res.value);}catch{}
-    if(["element_all","ion","formula","mol","timeattack"].includes(tab)) setRanks(all);
-    else setRanks(all.filter(r=>r.maxNum===Number(tab)));
+    if(!["element_all","ion","formula","mol","timeattack"].includes(tab))
+      all=all.filter(r=>r.maxNum===Number(tab));
+    setAllRanks(all);
+    setDiffFilter("all");
     setLoading(false);
   };
+
+  // 難易度フィルター適用後に順位を再計算
+  const ranks = diffFilter==="all"
+    ? allRanks
+    : allRanks.filter(r=>(r.difficulty||"normal")===diffFilter);
 
   const tabs=[
     ["element_all","⚛️元素"],["ion","⚡イオン"],["formula","🧬化学式"],
     ["mol","🧮mol"],["timeattack","⏱TA"],
   ];
+
+  // 難易度フィルターボタン（元素・イオン・化学式のみ表示）
+  const showDiffFilter = ["element_all","ion","formula"].includes(tab);
 
   const modeLabel = (r) => {
     if(r.quizMode==="ion") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--ion-l)", color:"var(--ion)"};
@@ -1491,11 +1502,42 @@ function RankingScreen({ onBack, myNickname }) {
           <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
           <span style={{fontWeight:700}}>🏆 ランキング</span><span/>
         </div>
-        <div className="tabs">
+        {/* クイズ種別タブ */}
+        <div className="tabs" style={{marginBottom:showDiffFilter?8:13}}>
           {tabs.map(([v,l])=>(
             <button key={v} className={`tab ${tab===v?"on":""}`} onClick={()=>setTab(v)}>{l}</button>
           ))}
         </div>
+        {/* 難易度フィルター */}
+        {showDiffFilter&&(
+          <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:13}}>
+            {[
+              {v:"all",  l:"全て",   bg:"var(--bg)", color:"var(--muted)",  activeBg:"var(--border)", activeColor:"var(--text)"},
+              {v:"easy",  l:"😊 易",  bg:"#dcfce7",   color:"#166534"},
+              {v:"normal",l:"😐 普通", bg:"#fef3c7",   color:"#92400e"},
+              {v:"hard",  l:"😈 難",  bg:"#fee2e2",   color:"#991b1b"},
+            ].map(d=>{
+              const active = diffFilter===d.v;
+              return (
+                <button key={d.v} onClick={()=>setDiffFilter(d.v)}
+                  style={{
+                    padding:"4px 12px",borderRadius:20,border:`2px solid ${active?(d.color||"var(--text)"):"var(--border)"}`,
+                    background:active?(d.bg||"var(--bg)"):"#fff",
+                    color:active?(d.color||"var(--text)"):"var(--muted)",
+                    fontWeight:active?700:400,fontSize:".78rem",cursor:"pointer",
+                    fontFamily:"inherit",transition:"all .12s"
+                  }}>
+                  {d.l}
+                  {d.v!=="all"&&(
+                    <span style={{marginLeft:4,fontSize:".68rem",opacity:.8}}>
+                      ({allRanks.filter(r=>(r.difficulty||"normal")===d.v).length})
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
       {loading?<p className="tc muted" style={{padding:16}}>読み込み中...</p>
         :ranks.length===0?<p className="tc muted" style={{padding:16}}>まだ記録がありません</p>
@@ -1503,7 +1545,7 @@ function RankingScreen({ onBack, myNickname }) {
           <div>
             {ranks.map((r,i)=>{
               const ml = modeLabel(r);
-              const diff = DIFFICULTY_OPTIONS.find(o=>o.value===r.difficulty);
+              const diff = DIFFICULTY_OPTIONS.find(o=>o.value===(r.difficulty||"normal"));
               const isMe = r.name===myNickname;
               return (
                 <div key={i} className={`rcard ${isMe?"me":""}`}>
@@ -1514,7 +1556,7 @@ function RankingScreen({ onBack, myNickname }) {
                       {isMe&&<span className="bdg by" style={{marginLeft:5}}>あなた</span>}
                     </span>
                     {ml&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:ml.bg,color:ml.color,fontWeight:700}}>{ml.text}</span>}
-                    {diff&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:diff.light,color:diff.color,fontWeight:700}}>{diff.label.split(" ")[0]}</span>}
+                    {diff&&diffFilter==="all"&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:diff.light,color:diff.color,fontWeight:700}}>{diff.label.split(" ")[0]}</span>}
                     <span className="rcard-score">{r.score}点</span>
                   </div>
                   <div className="rcard-meta">
