@@ -1065,26 +1065,31 @@ function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLe
 
   const doSave = async () => {
     setSaving(true);
-    const key = quizMode==="ion" ? "ranking:ion"
-      : quizMode==="formula" ? "ranking:formula"
-      : quizMode==="mol" ? "ranking:mol"
-      : "ranking:v2";
-    const res = await sGet(key, true);
-    let all = [];
-    try { if(res) all=JSON.parse(res.value); } catch{}
-    // 同じニックネーム＋条件の古い記録を削除
-    const filtered = all.filter(r => {
-      if(r.name!==nickname) return true;
-      if(quizMode==="ion"||quizMode==="formula") return r.subLevel!==subLevel;
-      if(quizMode==="mol") return r.molMode!==subLevel;
-      return r.maxNum!==maxNum;
-    });
-    const entry = { name:nickname, score, correct, total, acc, quizMode, subLevel, maxNum, difficulty, date:Date.now() };
-    filtered.push(entry);
-    filtered.sort((a,b)=>b.score-a.score);
-    await sSet(key, JSON.stringify(filtered.slice(0,100)), true);
-    setSaving(false);
-    onDone(true);
+    try {
+      const key = quizMode==="ion" ? "ranking:ion"
+        : quizMode==="formula" ? "ranking:formula"
+        : quizMode==="mol" ? "ranking:mol"
+        : "ranking:v2";
+      const res = await sGet(key, true);
+      let all = [];
+      try { if(res) all=JSON.parse(res.value); } catch{}
+      const filtered = all.filter(r => {
+        if(r.name!==nickname) return true;
+        if(quizMode==="ion"||quizMode==="formula") return r.subLevel!==subLevel;
+        if(quizMode==="mol") return r.molMode!==subLevel;
+        return r.maxNum!==maxNum;
+      });
+      const entry = { name:nickname, score, correct, total, acc, quizMode, subLevel, maxNum, difficulty, date:Date.now() };
+      filtered.push(entry);
+      filtered.sort((a,b)=>b.score-a.score);
+      await sSet(key, JSON.stringify(filtered.slice(0,100)), true);
+      setSaving(false);
+      onDone(true);
+    } catch(e) {
+      console.error("doSave error:", e);
+      setSaving(false);
+      onDone(false);
+    }
   };
 
   return (
@@ -2636,6 +2641,7 @@ function MolBattleLobby({ nickname, onBack }) {
       </div>
       <button className="btn btn-blk" style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",color:"#fff",fontWeight:700}}
         onClick={joinRoom} disabled={joinCode.length<4}>参加する</button>
+      <AppFooter/>
     </div>
   );
 
@@ -2657,6 +2663,7 @@ function MolBattleLobby({ nickname, onBack }) {
           </div>
         </div>
       </div>
+      <AppFooter/>
     </div>
   );
 }
@@ -3086,6 +3093,7 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
           style={{fontFamily:"Space Mono",fontSize:"1.4rem",letterSpacing:6,textAlign:"center"}}/>
       </div>
       <button className={`btn ${isIon?"btn-ion":"btn-p"} btn-blk`} onClick={joinRoom} disabled={joinCode.length<4}>参加する</button>
+      <AppFooter/>
     </div>
   );
   return (
@@ -3101,6 +3109,7 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
           <div className={`sc ${isIon?"ion-sc":isFormula?"form-sc":""}`} onClick={()=>setPhase("join")}><div className="ic">🚪</div><div className="nm">ルームに入る</div></div>
         </div>
       </div>
+      <AppFooter/>
     </div>
   );
 }
