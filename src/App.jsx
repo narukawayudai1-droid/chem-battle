@@ -930,6 +930,7 @@ input[type=range]{width:100%;accent-color:var(--primary);}
 .howto-body{padding:16px;}
 .howto-section{margin-bottom:16px;}
 .howto-section h3{font-size:.88rem;font-weight:800;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--border);}
+.howto-section p{font-size:.83rem;color:var(--text);line-height:1.6;margin-bottom:3px;}
 .howto-row{display:flex;gap:10px;margin-bottom:6px;align-items:flex-start;font-size:.83rem;}
 .howto-icon{font-size:1.1rem;flex-shrink:0;width:22px;}
 .howto-text{flex:1;color:var(--text);line-height:1.5;}
@@ -1050,53 +1051,59 @@ function HowToModal({ onClose }) {
         </div>
         <div className="howto-body">
 
-          {/* 共通ルール */}
+          {/* 共通 */}
           <div className="howto-section">
-            <h3 style={{color:"var(--primary)"}}>⚙️ 共通ルール</h3>
-            <div className="howto-row"><span className="howto-icon">👤</span><div className="howto-text">ニックネームを登録してからプレイ。ランキングに名前が載ります。</div></div>
-            <div className="howto-row"><span className="howto-icon">🎯</span><div className="howto-text">4択から正しい答えを選べ。タップで即判定！</div></div>
-            <div className="howto-row"><span className="howto-icon">😊😐😈</span><div className="howto-text"><b>難易度</b>で選択肢の紛らわしさが変わる。易→明らかに違う選択肢 / 難→非常に似たダミーのみ。</div></div>
+            <h3>共通ルール</h3>
+            <p>・ニックネームを登録してプレイ。スコアはランキングに登録できる。</p>
+            <p>・4択から正しい答えをタップで選ぶ。</p>
+            <p>・難易度：易（明らかに違う選択肢）→ 普通 → 難（非常に似たダミー）</p>
           </div>
 
-          {/* 元素・イオン・化学式クイズ */}
+          {/* 暗記クイズ */}
           <div className="howto-section">
             <h3 style={{color:"var(--primary)"}}>⚛️⚡🧬 暗記クイズ（60秒）</h3>
-            <div className="howto-row"><span className="howto-icon">📋</span><div className="howto-text"><b>60秒間、ひたすら問題が出続ける。</b>何問正解できるか挑戦！</div></div>
-            <div className="howto-row"><span className="howto-icon">💯</span><div className="howto-text"><b>点数 = 正解時の残り秒数 + 正答率²×200点ボーナス</b><br/>速く答えるほど高得点。正答率が高いほどボーナスが爆発的に増える。</div></div>
-            <div className="howto-row"><span className="howto-icon">⚔️</span><div className="howto-text">対戦モードはルームコードを共有して同時スタート。同じ問題を解いてスコアを比較。</div></div>
-            <div className="howto-row"><span className="howto-icon">🔣</span><div className="howto-text">出題方向を選べる。「記号→名前」「名前→記号」「ランダム」から選択。</div></div>
+            <p>・60秒間ひたすら出題。何問正解できるか挑戦！</p>
+            <p>・出題方向を選べる：記号→名前 / 名前→記号 / ランダム</p>
+            <p>・対戦：ルームコードを共有して同時スタート、スコアを比較</p>
+            <p style={{marginTop:6,padding:"8px 10px",background:"var(--bg)",borderRadius:7,fontSize:".78rem"}}>
+              <b>スコア</b> ＝ 正解時の残り秒数の合計 ＋ 正答率²×200点
+            </p>
           </div>
 
           {/* タイムアタック */}
           <div className="howto-section">
             <h3 style={{color:"#f59e0b"}}>⏱ タイムアタック</h3>
-            <div className="howto-row"><span className="howto-icon">🏁</span><div className="howto-text"><b>10問正解するまでタイムを計測。</b>間違えても何度でも挑戦できる。</div></div>
-            <div className="howto-row"><span className="howto-icon">💯</span><div className="howto-text"><b>点数 = 正解数×100 + 正答率²×100 + (600-タイム)点ボーナス</b><br/>速くクリアするほど高得点。</div></div>
-            <div className="howto-row"><span className="howto-icon">⚠️</span><div className="howto-text">不正解でもスキップ不可。必ず正解しないと次へ進めない。</div></div>
+            <p>・10問正解するまでタイムを計測。間違えても何度でも答えられる。</p>
+            <p>・スキップ不可。必ず正解しないと次へ進めない。</p>
+            <p style={{marginTop:6,padding:"8px 10px",background:"var(--bg)",borderRadius:7,fontSize:".78rem"}}>
+              <b>スコア</b> ＝ 正解数×100 ＋ 正答率²×100 ＋ (600-タイム)
+            </p>
           </div>
 
           {/* mol計算 */}
           <div className="howto-section">
             <h3 style={{color:"#6366f1"}}>🧮 mol計算ドリル（5分）</h3>
-            <div className="howto-row"><span className="howto-icon">🔢</span><div className="howto-text"><b>自分で計算して4択から選べ。</b>10問・5分制限。時間切れで終了。</div></div>
-            <div className="howto-row"><span className="howto-icon">💯</span><div className="howto-text"><b>点数 = 正解数×100 + 正答率²×100 + 残り時間×0.5点ボーナス</b></div></div>
-            <div className="howto-row"><span className="howto-icon">💡</span><div className="howto-text"><b>ヒントボタン</b>で最大3段階のヒントを表示（①変換の方向 ②使う値 ③計算手順）。答えは表示しない。</div></div>
-            <div className="howto-row"><span className="howto-icon">⏭</span><div className="howto-text"><b>スキップ</b>すると+5秒ペナルティ。ミスとしてカウント。</div></div>
-            <div className="howto-row"><span className="howto-icon">📊</span><div className="howto-text">モード：入門（g↔mol）/ 基礎（L↔mol・個数）/ 応用（2段変換）/ ランダム</div></div>
-            <div className="howto-row"><span className="howto-icon">⚔️</span><div className="howto-text">対戦モードあり。同じ問題を解いて正解数を比較。</div></div>
+            <p>・自分で計算して4択から選ぶ。10問・5分制限。</p>
+            <p>・ヒント：最大3段階（①変換の方向 ②使う値 ③計算手順）。答えは表示しない。</p>
+            <p>・スキップ：+5秒ペナルティ、ミスとしてカウント。</p>
+            <p>・モード：入門（g↔mol）/ 基礎（L↔mol・個数）/ 応用（2段変換）</p>
+            <p>・対戦モードあり。同じ問題を解いて正解数を比較。</p>
+            <p style={{marginTop:6,padding:"8px 10px",background:"var(--bg)",borderRadius:7,fontSize:".78rem"}}>
+              <b>スコア</b> ＝ 正解数×100 ＋ 正答率²×100 ＋ 残り時間×0.5
+            </p>
           </div>
 
           {/* 原子量 */}
           <div className="howto-section">
-            <h3 style={{color:"#475569"}}>⚛️ 原子量（mol計算用）</h3>
-            <div style={{background:"#1e293b",color:"#94a3b8",borderRadius:8,padding:"10px 12px",fontFamily:"monospace",fontSize:".75rem",lineHeight:1.8}}>
+            <h3>原子量（mol計算用）</h3>
+            <div style={{background:"#1e293b",color:"#94a3b8",borderRadius:7,padding:"9px 12px",fontFamily:"monospace",fontSize:".75rem",lineHeight:1.9}}>
               H=1.0　C=12　O=16　N=14<br/>
               Na=23　Cl=35.5　Cu=64　S=32<br/>
               アボガドロ数: 6.0×10²³ /mol
             </div>
           </div>
 
-          <button className="btn btn-p btn-blk" onClick={onClose} style={{marginTop:4}}>✓ 閉じる</button>
+          <button className="btn btn-p btn-blk" onClick={onClose} style={{marginTop:4}}>閉じる</button>
         </div>
       </div>
     </div>
@@ -1144,46 +1151,43 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
       </div>
 
       <div style={{marginBottom:10}}>
-        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--primary)",marginBottom:5,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>⚛️ 元素クイズ</div>
-        <p style={{fontSize:".75rem",color:"var(--muted)",marginBottom:7,paddingLeft:4}}>元素記号と元素名を一致させよ。60秒間ひたすら挑戦！</p>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--primary)",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>⚛️ 元素クイズ</div>
         <div className="g2">
           <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onSolo("element")}>
             <div className="ic">🎮</div><div className="nm">ひとりで挑戦</div>
-            <span className="rule-tag">記号⇔名前を60秒で何問解けるか</span>
+            <span className="rule-tag">60秒でたくさん解け！</span>
           </div>
           <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onBattle("element")}>
             <div className="ic">⚔️</div><div className="nm">対戦する</div>
-            <span className="rule-tag">同じ問題を同時に解いてスコア比較</span>
+            <span className="rule-tag">同時に解いてスコア比較</span>
           </div>
         </div>
       </div>
 
       <div style={{marginBottom:10}}>
-        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--ion)",marginBottom:5,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>⚡ イオンクイズ</div>
-        <p style={{fontSize:".75rem",color:"var(--muted)",marginBottom:7,paddingLeft:4}}>イオン式とイオン名を一致させよ。中学・高校レベルを選べる！</p>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--ion)",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>⚡ イオンクイズ</div>
         <div className="g2">
           <div className="sc ion-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onSolo("ion")}>
             <div className="ic">🎮</div><div className="nm">ひとりで挑戦</div>
-            <span className="rule-tag">式⇔名前を60秒で何問解けるか</span>
+            <span className="rule-tag">60秒でたくさん解け！</span>
           </div>
           <div className="sc ion-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onBattle("ion")}>
             <div className="ic">⚔️</div><div className="nm">対戦する</div>
-            <span className="rule-tag">同じ問題を同時に解いてスコア比較</span>
+            <span className="rule-tag">同時に解いてスコア比較</span>
           </div>
         </div>
       </div>
 
       <div style={{marginBottom:10}}>
-        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--form)",marginBottom:5,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧬 化学式クイズ</div>
-        <p style={{fontSize:".75rem",color:"var(--muted)",marginBottom:7,paddingLeft:4}}>化学式と物質名を一致させよ。中学・高校レベルを選べる！</p>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--form)",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧬 化学式クイズ</div>
         <div className="g2">
           <div className="sc form-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onSolo("formula")}>
             <div className="ic">🎮</div><div className="nm">ひとりで挑戦</div>
-            <span className="rule-tag">化学式⇔名前を60秒で何問解けるか</span>
+            <span className="rule-tag">60秒でたくさん解け！</span>
           </div>
           <div className="sc form-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onBattle("formula")}>
             <div className="ic">⚔️</div><div className="nm">対戦する</div>
-            <span className="rule-tag">同じ問題を同時に解いてスコア比較</span>
+            <span className="rule-tag">同時に解いてスコア比較</span>
           </div>
         </div>
       </div>
@@ -1196,13 +1200,12 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
       {nickname&&(
         <div style={{marginBottom:10}}>
           <div style={{fontWeight:800,fontSize:".78rem",color:"#f59e0b",marginBottom:5,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>⏱ タイムアタック</div>
-          <p style={{fontSize:".75rem",color:"var(--muted)",marginBottom:7,paddingLeft:4}}>10問正解するまでタイムを計測せよ。間違えても何度でも挑戦できる！</p>
-          <div className="sc" style={{borderColor:"#f59e0b"}} onClick={()=>onTimeAttack()}>
+            <div className="sc" style={{borderColor:"#f59e0b"}} onClick={()=>onTimeAttack()}>
             <div style={{display:"flex",alignItems:"center",gap:10,padding:"2px 0"}}>
               <span style={{fontSize:"1.6rem"}}>⏱</span>
               <div style={{flex:1}}>
                 <div style={{fontWeight:700,fontSize:".95rem"}}>タイムアタック</div>
-                <span className="rule-tag" style={{display:"inline-block"}}>10問全問正解→クリア。速さを競え！</span>
+                <span className="rule-tag" style={{display:"inline-block"}}>10問正解するまでのタイムを競え！</span>
               </div>
               <span className="ta-badge">NEW</span>
             </div>
@@ -1212,12 +1215,11 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
 
       <div style={{marginBottom:10}}>
         <div style={{fontWeight:800,fontSize:".78rem",color:"#6366f1",marginBottom:5,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧮 mol計算ドリル</div>
-        <p style={{fontSize:".75rem",color:"var(--muted)",marginBottom:7,paddingLeft:4}}>自分で計算して正しい答えを選べ。10問・5分制限。ヒントも使える！</p>
         <div className="g2" style={{gridTemplateColumns:"1fr"}}>
           <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol()}>
             <div className="ic">🧮</div>
             <div className="nm">mol計算ドリル</div>
-            <span className="rule-tag">g・mol・L・個数を変換せよ。5分で10問！</span>
+            <span className="rule-tag">計算して正しい答えを選べ！5分で10問</span>
           </div>
         </div>
       </div>
@@ -1821,6 +1823,26 @@ function genMolDummies(correct, qtype) {
 }
 
 // ヒント生成
+
+// mol問題の計算式を生成（間違い一覧用）
+function getMolFormula(q) {
+  if (!q) return "";
+  const t = q.qtype;
+  if (t==="g_to_mol")  return `mol = ${q.given}g ÷ ${q.molarMass}g/mol = ${q.ans}mol`;
+  if (t==="mol_to_g")  return `g = ${q.given}mol × ${q.molarMass}g/mol = ${q.ans}g`;
+  if (t==="mol_to_L")  return `L = ${q.given}mol × 22.4L/mol = ${q.ans}L`;
+  if (t==="L_to_mol")  return `mol = ${q.given}L ÷ 22.4L/mol = ${q.ans}mol`;
+  if (t==="mol_to_N")  return `個 = ${q.given}mol × 6.0×10²³ = ${q.ans}`;
+  if (t==="N_to_mol")  return `mol = ${q.numer}×10²³ ÷ 6.0×10²³ = ${q.ans}mol`;
+  if (t==="g_to_L")    return `mol = ${q.given}÷${q.molarMass} = ${q.given/q.molarMass}mol → L = ×22.4 = ${q.ans}L`;
+  if (t==="L_to_g")    return `mol = ${q.given}÷22.4 = ${Math.round(q.given/22.4*1000)/1000}mol → g = ×${q.molarMass} = ${q.ans}g`;
+  if (t==="g_to_N")    return `mol = ${q.given}÷${q.molarMass} = ${Math.round(q.given/q.molarMass*1000)/1000}mol → 個 = ×6.0×10²³ = ${q.ans}`;
+  if (t==="N_to_g")    return `mol = ${q.numer}×10²³÷6.0×10²³ = ${q.numer/6}mol → g = ×${q.molarMass} = ${q.ans}g`;
+  if (t==="L_to_N")    return `mol = ${q.given}÷22.4 = ${Math.round(q.given/22.4*1000)/1000}mol → 個 = ×6.0×10²³ = ${q.ans}`;
+  if (t==="N_to_L")    return `mol = ${q.numer}×10²³÷6.0×10²³ = ${q.numer/6}mol → L = ×22.4 = ${q.ans}L`;
+  return "";
+}
+
 function getMolHints(q) {
   const hints = [];
   if (q.qtype==="g_to_mol")  { hints.push("g → mol の変換：mol = g ÷ モル質量"); hints.push(`${q.substance}のモル質量 = ${q.molarMass} g/mol`); hints.push(`mol = ${q.given} ÷ ${q.molarMass}`); }
@@ -2645,13 +2667,21 @@ function MolResultScreen({ result, nickname="", onHome, onRetry }) {
             <span style={{fontWeight:700}}>❌ 間違えた問題 ({result.mistakes.length}問)</span>
             <button className="btn btn-s btn-sm" onClick={()=>setShowMiss(v=>!v)}>{showMiss?"閉じる":"見る"}</button>
           </div>
-          {showMiss&&result.mistakes.map((m,i)=>(
-            <div key={i} style={{padding:"8px 0",borderBottom:"1px solid var(--border)",fontSize:".83rem"}}>
-              <div style={{fontWeight:700,marginBottom:3}}>{m.q.q}</div>
-              <div style={{color:"var(--success)"}}>✓ 正解: {m.q.ans}</div>
-              <div style={{color:"var(--danger)"}}>✗ あなた: {m.yours}</div>
-            </div>
-          ))}
+          {showMiss&&result.mistakes.map((m,i)=>{
+            const formula = getMolFormula(m.q);
+            return (
+              <div key={i} style={{padding:"9px 0",borderBottom:"1px solid var(--border)",fontSize:".83rem"}}>
+                <div style={{fontWeight:700,marginBottom:4}}>{m.q.q}</div>
+                <div style={{color:"var(--success)"}}>✓ 正解: {m.q.ans}</div>
+                <div style={{color:"var(--danger)"}}>✗ あなた: {m.yours==="スキップ"?"スキップ":m.yours}</div>
+                {formula&&(
+                  <div style={{marginTop:5,background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:6,padding:"5px 8px",fontFamily:"monospace",fontSize:".75rem",color:"#166534",lineHeight:1.7}}>
+                    📐 {formula}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
