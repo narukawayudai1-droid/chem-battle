@@ -284,6 +284,37 @@ function calcMolScore(correct, total, timeLeft) {
   return base + accBonus + timeBonus;
 }
 
+// ── mol計算：科学的記数法フォーマット ──────────────────────
+// 数値を「有効数字×10ⁿ」形式に変換
+// 例: 0.625 → "6.25×10⁻¹", 2 → "2×10⁰", 22.4 → "2.24×10¹"
+const SUP_MAP = {"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹","-":"⁻"};
+function toSup(n) { return String(n).split("").map(c=>SUP_MAP[c]||c).join(""); }
+
+function toSciNotation(val, sigFigs = 3) {
+  if (val === 0) return "0";
+  const sign = val < 0 ? "-" : "";
+  const abs = Math.abs(val);
+  const exp = Math.floor(Math.log10(abs));
+  const coef = abs / Math.pow(10, exp);
+  // 有効数字に丸める
+  const factor = Math.pow(10, sigFigs - 1);
+  const rounded = Math.round(coef * factor) / factor;
+  // 整数か小数かで表示を切り替え
+  const coefStr = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(sigFigs - 1).replace(/\.?0+$/, "");
+  if (exp === 0) return `${sign}${coefStr}×10⁰`;
+  return `${sign}${coefStr}×10${toSup(exp)}`;
+}
+
+// MOL_QUESTIONS_RAW の答えと問題の数値を科学的記数法に変換
+// 選択肢生成・表示で使う
+function fmtMolVal(val) {
+  if (typeof val === "string") return val; // すでに指数表記
+  if (val === 0) return "0";
+  // 1桁の整数（1〜9）はそのまま
+  if (Number.isInteger(val) && val >= 1 && val <= 9) return String(val);
+  return toSciNotation(val, 3);
+}
+
 // タイムアタック：正解数×100 + タイムボーナス（早いほど高得点）
 function calcTimeAttackScore(correct, total, elapsedSec) {
   if (total === 0) return 0;
@@ -2495,21 +2526,16 @@ function MolQuizScreen({ mode, onFinish }) {
   const q = questions[qIdx];
   const hints = getMolHints(q);
 
-  // 選択肢生成
-  const [choices] = useState(()=>{
-    // 正解の有効数字桁数を調べて、ダミーも同じ桁数にフォーマットする
-    const fmtNum = (val, ansStr) => {
-      const s = String(ansStr);
-      // 小数点以下の桁数を正解から取得
-      const dotIdx = s.indexOf(".");
-      const decimals = dotIdx >= 0 ? s.length - dotIdx - 1 : 0;
-      const rounded = Math.round(val * Math.pow(10, decimals)) / Math.pow(10, decimals);
-      return decimals > 0 ? rounded.toFixed(decimals) : String(rounded);
-    };
+  // 選択肢生成（科学的記数法で統一）
+  const ansDisplay = (qq) => fmtMolVal(qq.ans); // 選択肢・正解判定用
 
+  const [choices] = useState(()=>{
     return questions.map(qq=>{
-      const isExp = typeof qq.ans === "string"; // 指数表記の答え
+      const isExp = typeof qq.ans === "string"; // すでに指数表記（個数系）
+      const ansStr = fmtMolVal(qq.ans);
+
       if (isExp) {
+        // 個数系：既存の指数表記ダミー生成
         const numer = qq.numer || 6.0;
         const candidates = [];
         const c23 = [numer*2, numer/2, numer*3, numer*0.5].filter(x=>x>0&&x!==numer);
@@ -2522,23 +2548,22 @@ function MolQuizScreen({ mode, onFinish }) {
         const dummies = shuffle(candidates.filter(x=>x!==qq.ans)).slice(0,3);
         return shuffle([qq.ans, ...dummies]);
       } else {
-        // 数値：正解と同じ有効数字でダミーをフォーマット
+        // 数値系：科学的記数法でフォーマット
         const dummies = genMolDummies(qq.ans, qq.qtype);
         const formatted = dummies
-          .map(d => fmtNum(d, qq.ans))
-          .filter(d => d !== String(qq.ans));
-        // 重複除去
+          .map(d => fmtMolVal(d))
+          .filter(d => d !== ansStr);
         const unique = [...new Set(formatted)];
-        // 3個に足りない場合は倍数・分数で補完
+        // 3個に足りない場合は倍数で補完
         const multipliers = [2, 3, 4, 5, 0.25, 6, 0.1, 10];
         for (const m of multipliers) {
           if (unique.length >= 3) break;
-          const extra = fmtNum(qq.ans * m, qq.ans);
-          if (!unique.includes(extra) && extra !== String(qq.ans) && extra !== "0") {
+          const extra = fmtMolVal(qq.ans * m);
+          if (!unique.includes(extra) && extra !== ansStr && extra !== "0") {
             unique.push(extra);
           }
         }
-        return shuffle([String(qq.ans), ...unique.slice(0,3)]);
+        return shuffle([ansStr, ...unique.slice(0,3)]);
       }
     });
   });
@@ -2566,8 +2591,7 @@ function MolQuizScreen({ mode, onFinish }) {
 
   const handleChoice = (choice)=>{
     if(selected!==null) return;
-    const isOk = String(choice) === String(q.ans);
-    setSelected(choice); setFeedback(isOk?"ok":"ng");
+        const isOk = String(choice) === fmtMolVal(q.ans); setSelected(choice); setFeedback(isOk?"ok":"ng");
     if(!isOk){ missRef.current+=1; setMissCount(missRef.current); mistakesRef.current=[...mistakesRef.current,{q,yours:choice}]; setMistakes(mistakesRef.current); bgm.se("wrong"); }
     else bgm.se("correct");
     setTimeout(()=>{
@@ -2710,7 +2734,7 @@ function MolResultScreen({ result, nickname="", onHome, onRetry }) {
             return (
               <div key={i} style={{padding:"9px 0",borderBottom:"1px solid var(--border)",fontSize:".83rem"}}>
                 <div style={{fontWeight:700,marginBottom:4}}>{m.q.q}</div>
-                <div style={{color:"var(--success)"}}>✓ 正解: {m.q.ans}</div>
+                <div style={{color:"var(--success)"}}>✓ 正解: {fmtMolVal(m.q.ans)}</div>
                 <div style={{color:"var(--danger)"}}>✗ あなた: {m.yours==="スキップ"?"スキップ":m.yours}</div>
                 {formula&&(
                   <div style={{marginTop:5,background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:6,padding:"7px 10px",fontFamily:"monospace",fontSize:".78rem",color:"#166534",lineHeight:2}}>
