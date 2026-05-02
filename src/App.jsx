@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+×import { useState, useEffect, useRef } from "react";
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
@@ -117,7 +117,7 @@ const PRESETS = [
   { label:"1〜20番", max:20 },
   { label:"1〜36番", max:36 },
   { label:"1〜56番", max:56 },
-  { label:"全範囲(〜82)", max:82 },
+  { label:"全範囲(〜103番)", max:103 },
 ];
 
 function getElements(maxNum) { return ALL_ELEMENTS.filter(e => e.number <= maxNum); }
@@ -1056,8 +1056,8 @@ function RangeSelector({ maxNum, onChange }) {
         <span style={{fontWeight:700,fontSize:".88rem"}}>出題範囲: 1〜{maxNum}番</span>
         <span className="muted">{getElements(maxNum).length}元素</span>
       </div>
-      <input type="range" min={4} max={82} value={maxNum} onChange={e=>onChange(Number(e.target.value))} max={103}/>
-      <div className="rlbls"><span>4</span><span>20</span><span>36</span><span>56</span><span>82</span></div>
+      <input type="range" min={4} max={103} value={maxNum} onChange={e=>onChange(Number(e.target.value))}/>
+      <div className="rlbls"><span>4</span><span>20</span><span>36</span><span>56</span><span>82</span><span>103</span></div>
       <div className="pbtns">
         {PRESETS.map(p=>(
           <button key={p.max} className={`pbtn ${maxNum===p.max?"on":""}`} onClick={()=>onChange(p.max)}>{p.label}</button>
@@ -1326,7 +1326,7 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
       {/* element: 範囲スライダー */}
       {isElement&&(
         <div style={{marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>出題範囲（元素番号）</div>
+          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>出題範囲（原子番号）</div>
           <RangeSelector maxNum={maxNum} onChange={setMaxNum}/>
         </div>
       )}
@@ -1648,7 +1648,7 @@ function RankingScreen({ onBack, myNickname }) {
         :ranks.length===0?<p className="tc muted" style={{padding:16}}>まだ記録がありません</p>
         :(
           <div>
-            {ranks.map((r,i)=>{
+            {ranks.slice(0,5).map((r,i)=>{
               const ml = modeLabel(r);
               const diff = DIFFICULTY_OPTIONS.find(o=>o.value===(r.difficulty||"normal"));
               const isMe = r.name===myNickname;
@@ -1720,7 +1720,7 @@ function MemoScreen({ onBack }) {
           <>
             <div style={{marginBottom:10}}>
               <div style={{fontWeight:700,fontSize:".82rem",marginBottom:6}}>出題範囲: 1〜{elMax}番（{elItems.length}元素）</div>
-              <input type="range" min={4} max={82} value={elMax} onChange={e=>setElMax(Number(e.target.value))}/>
+              <input type="range" min={4} max={103} value={elMax} onChange={e=>setElMax(Number(e.target.value))}/>
               <div className="pbtns">
                 {PRESETS.map(p=>(
                   <button key={p.max} className={`pbtn ${elMax===p.max?"on":""}`} onClick={()=>setElMax(p.max)}>{p.label}</button>
@@ -1834,18 +1834,47 @@ function genMolDummies(correct, qtype) {
 function getMolFormula(q) {
   if (!q) return "";
   const t = q.qtype;
-  if (t==="g_to_mol")  return `mol = ${q.given}g ÷ ${q.molarMass}g/mol = ${q.ans}mol`;
-  if (t==="mol_to_g")  return `g = ${q.given}mol × ${q.molarMass}g/mol = ${q.ans}g`;
-  if (t==="mol_to_L")  return `L = ${q.given}mol × 22.4L/mol = ${q.ans}L`;
-  if (t==="L_to_mol")  return `mol = ${q.given}L ÷ 22.4L/mol = ${q.ans}mol`;
-  if (t==="mol_to_N")  return `個 = ${q.given}mol × 6.0×10²³ = ${q.ans}`;
-  if (t==="N_to_mol")  return `mol = ${q.numer}×10²³ ÷ 6.0×10²³ = ${q.ans}mol`;
-  if (t==="g_to_L")    return `mol = ${q.given}÷${q.molarMass} = ${q.given/q.molarMass}mol → L = ×22.4 = ${q.ans}L`;
-  if (t==="L_to_g")    return `mol = ${q.given}÷22.4 = ${Math.round(q.given/22.4*1000)/1000}mol → g = ×${q.molarMass} = ${q.ans}g`;
-  if (t==="g_to_N")    return `mol = ${q.given}÷${q.molarMass} = ${Math.round(q.given/q.molarMass*1000)/1000}mol → 個 = ×6.0×10²³ = ${q.ans}`;
-  if (t==="N_to_g")    return `mol = ${q.numer}×10²³÷6.0×10²³ = ${q.numer/6}mol → g = ×${q.molarMass} = ${q.ans}g`;
-  if (t==="L_to_N")    return `mol = ${q.given}÷22.4 = ${Math.round(q.given/22.4*1000)/1000}mol → 個 = ×6.0×10²³ = ${q.ans}`;
-  if (t==="N_to_L")    return `mol = ${q.numer}×10²³÷6.0×10²³ = ${q.numer/6}mol → L = ×22.4 = ${q.ans}L`;
+  const mm = q.molarMass;
+  const gv = q.given;
+  const nm = q.numer;
+  const r = (v) => Math.round(v*10000)/10000;
+
+  if (t==="g_to_mol")
+    return `${gv}g ÷ ${mm}g/mol = ${q.ans}mol`;
+  if (t==="mol_to_g")
+    return `${gv}mol × ${mm}g/mol = ${q.ans}g`;
+  if (t==="mol_to_L")
+    return `${gv}mol × 22.4L/mol = ${q.ans}L`;
+  if (t==="L_to_mol")
+    return `${gv}L ÷ 22.4L/mol = ${q.ans}mol`;
+  if (t==="mol_to_N")
+    return `${gv}mol × 6.0×10²³個/mol = ${q.ans}個`;
+  if (t==="N_to_mol")
+    return `${nm}×10²³個 ÷ 6.0×10²³個/mol = ${q.ans}mol`;
+  if (t==="g_to_L") {
+    const mol = r(gv/mm);
+    return `① ${gv}g ÷ ${mm}g/mol = ${mol}mol\n② ${mol}mol × 22.4L/mol = ${q.ans}L\n\n式全体：${gv}g ÷ ${mm}g/mol × 22.4L/mol = ${q.ans}L`;
+  }
+  if (t==="L_to_g") {
+    const mol = r(gv/22.4);
+    return `① ${gv}L ÷ 22.4L/mol = ${mol}mol\n② ${mol}mol × ${mm}g/mol = ${q.ans}g\n\n式全体：${gv}L ÷ 22.4L/mol × ${mm}g/mol = ${q.ans}g`;
+  }
+  if (t==="g_to_N") {
+    const mol = r(gv/mm);
+    return `① ${gv}g ÷ ${mm}g/mol = ${mol}mol\n② ${mol}mol × 6.0×10²³個/mol = ${q.ans}個\n\n式全体：${gv}g ÷ ${mm}g/mol × 6.0×10²³個/mol = ${q.ans}個`;
+  }
+  if (t==="N_to_g") {
+    const mol = r(nm/6);
+    return `① ${nm}×10²³個 ÷ 6.0×10²³個/mol = ${mol}mol\n② ${mol}mol × ${mm}g/mol = ${q.ans}g\n\n式全体：${nm}×10²³個 ÷ 6.0×10²³個/mol × ${mm}g/mol = ${q.ans}g`;
+  }
+  if (t==="L_to_N") {
+    const mol = r(gv/22.4);
+    return `① ${gv}L ÷ 22.4L/mol = ${mol}mol\n② ${mol}mol × 6.0×10²³個/mol = ${q.ans}個\n\n式全体：${gv}L ÷ 22.4L/mol × 6.0×10²³個/mol = ${q.ans}個`;
+  }
+  if (t==="N_to_L") {
+    const mol = r(nm/6);
+    return `① ${nm}×10²³個 ÷ 6.0×10²³個/mol = ${mol}mol\n② ${mol}mol × 22.4L/mol = ${q.ans}L\n\n式全体：${nm}×10²³個 ÷ 6.0×10²³個/mol × 22.4L/mol = ${q.ans}L`;
+  }
   return "";
 }
 
@@ -2683,8 +2712,10 @@ function MolResultScreen({ result, nickname="", onHome, onRetry }) {
                 <div style={{color:"var(--success)"}}>✓ 正解: {m.q.ans}</div>
                 <div style={{color:"var(--danger)"}}>✗ あなた: {m.yours==="スキップ"?"スキップ":m.yours}</div>
                 {formula&&(
-                  <div style={{marginTop:5,background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:6,padding:"5px 8px",fontFamily:"monospace",fontSize:".75rem",color:"#166534",lineHeight:1.7}}>
-                    📐 {formula}
+                  <div style={{marginTop:5,background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:6,padding:"7px 10px",fontFamily:"monospace",fontSize:".78rem",color:"#166534",lineHeight:2}}>
+                    {formula.split("\n").map((line,i)=>(
+                      <div key={i}>{i===0?"📐 ":""}{line}</div>
+                    ))}
                   </div>
                 )}
               </div>
