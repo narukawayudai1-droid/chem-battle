@@ -1084,17 +1084,6 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
       </div>
 
       <div style={{marginBottom:10}}>
-        <div style={{fontWeight:800,fontSize:".78rem",color:"#6366f1",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧮 mol計算ドリル</div>
-        <div className="g2" style={{gridTemplateColumns:"1fr"}}>
-          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol()}>
-            <div className="ic">🧮</div>
-            <div className="nm">mol計算ドリル</div>
-            <div className="ds">10問・5分・高校化学基礎</div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{marginBottom:10}}>
         <div style={{fontWeight:800,fontSize:".78rem",color:"var(--form)",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧬 化学式クイズ</div>
         <div className="g2">
           <div className="sc form-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onSolo("formula")}>
@@ -1102,6 +1091,17 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
           </div>
           <div className="sc form-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onBattle("formula")}>
             <div className="ic">⚔️</div><div className="nm">対戦する</div><div className="ds">化学式・物質名</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{marginBottom:10}}>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"#6366f1",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧮 mol計算ドリル</div>
+        <div className="g2" style={{gridTemplateColumns:"1fr"}}>
+          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol()}>
+            <div className="ic">🧮</div>
+            <div className="nm">mol計算ドリル</div>
+            <div className="ds">10問・5分・高校化学基礎</div>
           </div>
         </div>
       </div>
@@ -1843,6 +1843,19 @@ function getMolQuestions(mode) {
   return shuffle(pool).slice(0,10);
 }
 
+
+// 指数表記を見やすく表示するコンポーネント
+function MolChoice({ val }) {
+  if (typeof val !== "string" || !val.includes("×10")) return <span>{val}</span>;
+  // "1.8×10²⁴" → "1.8×10" + sup("24")
+  const match = val.match(/^(.+)×10(.+)$/);
+  if (!match) return <span>{val}</span>;
+  const [, coef, exp] = match;
+  // ²³→23, ²⁴→24 などに変換
+  const expNum = exp.replace(/²/g,"2").replace(/³/g,"3").replace(/⁴/g,"4").replace(/⁵/g,"5");
+  return <span>{coef}×10<sup style={{fontSize:".7em"}}>{expNum}</sup></span>;
+}
+
 // ── MolSetupScreen ─────────────────────────────────────────
 function MolSetupScreen({ onStart, onBack }) {
   const [mode, setMode] = useState("intro");
@@ -2294,16 +2307,29 @@ function MolQuizScreen({ mode, onFinish }) {
   // 選択肢生成
   const [choices] = useState(()=>{
     return questions.map(qq=>{
-      const dummies = genMolDummies(typeof qq.ans==="string"?parseFloat(qq.ans.replace(/×10[²³⁴]*/,"e").replace("²³","23").replace("²⁴","24")):qq.ans, qq.qtype);
-      return shuffle([qq.ans, ...dummies.slice(0,3).map(d=>{
-        if(typeof qq.ans==="string") {
-          // 指数表記
-          const base = d / 1e23;
-          if(base >= 10) return `${(d/1e24).toFixed(1).replace(/\.0$/,"")}×10²⁴`;
-          return `${base.toFixed(1).replace(/\.0$/,"")}×10²³`;
-        }
-        return String(Math.round(d*1000)/1000);
-      })]);
+      const isExp = typeof qq.ans === "string"; // 指数表記の答え
+      if (isExp) {
+        // numer（×10²³の係数）を使ってダミーを生成
+        // 典型ミス：係数の2倍・半分・3倍など、指数も変わるものを混ぜる
+        const numer = qq.numer || 6.0;
+        const candidates = [];
+        // 係数違い（×10²³）
+        const c23 = [numer*2, numer/2, numer*3, numer*0.5].filter(x=>x>0&&x!==numer);
+        c23.forEach(n=>{
+          if(n>=10) candidates.push(`${(n/10).toFixed(1).replace(/\.0$/,"")}×10²⁴`);
+          else candidates.push(`${n.toFixed(1).replace(/\.0$/,"")}×10²³`);
+        });
+        // 指数違い（同じ係数で×10²²や×10²⁵）
+        candidates.push(`${numer.toFixed(1).replace(/\.0$/,"")}×10²²`);
+        candidates.push(`${numer.toFixed(1).replace(/\.0$/,"")}×10²⁵`);
+        // 正解と重複しないものを3個選ぶ
+        const dummies = shuffle(candidates.filter(x=>x!==qq.ans)).slice(0,3);
+        return shuffle([qq.ans, ...dummies]);
+      } else {
+        // 数値の答え
+        const dummies = genMolDummies(qq.ans, qq.qtype);
+        return shuffle([qq.ans, ...dummies.slice(0,3).map(d=>String(Math.round(d*1000)/1000))]);
+      }
     });
   });
 
@@ -2402,8 +2428,10 @@ function MolQuizScreen({ mode, onFinish }) {
           {(choices[qIdx]||[]).map((c,i)=>(
             <button key={i}
               className={`ch ${selected!==null?"dis":""} ${selected!==null&&String(c)===String(q.ans)?"ok":""} ${selected===c&&String(c)!==String(q.ans)?"ng":""}`}
-              style={{fontFamily:"Space Mono,monospace",fontSize:".95rem"}}
-              onClick={()=>handleChoice(c)}>{c}</button>
+              style={{fontFamily:"Space Mono,monospace",fontSize:"1rem"}}
+              onClick={()=>handleChoice(c)}>
+              <MolChoice val={c}/>
+            </button>
           ))}
         </div>
 
@@ -2717,11 +2745,13 @@ export default function App() {
           )}
           {screen==="ranking"&&<RankingScreen myNickname={nickname} onBack={()=>setScreen("home")}/>}
           {screen==="memo"&&<MemoScreen onBack={()=>setScreen("home")}/>}
-          {screen==="mol_setup"&&<MolSetupScreen onBack={()=>setScreen("home")} onStart={(m,t)=>{setMolMode(m);bgm.stop();if(t==="battle")setScreen("mol_battle");else setScreen("mol_quiz");}}/>}
+          {screen==="mol_setup"&&<MolSetupScreen onBack={()=>setScreen("home")} onStart={(m,t)=>{setMolMode(m);bgm.stop();if(t==="battle")setScreen("mol_battle");else setScreen("mol_countdown");}}/>}
           {screen==="mol_battle"&&<MolBattleLobby nickname={nickname} onBack={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
+          {screen==="mol_countdown"&&<Countdown onDone={()=>setScreen("mol_quiz")}/>}
           {screen==="mol_quiz"&&<MolQuizScreen mode={molMode} onFinish={r=>{bgm.stop();bgm.se("finish");setQuizResult({...r,_mol:true,molMode});setScreen("mol_result");}}/>}
           {screen==="mol_result"&&quizResult?._mol&&<MolResultScreen result={quizResult} nickname={nickname} onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}} onRetry={()=>{bgm.stop();setScreen("mol_quiz");}}/>}
-          {screen==="ta_setup"&&<TimeAttackSetupScreen onBack={()=>setScreen("home")} onStart={s=>{setTaSettings(s);bgm.stop();setScreen("ta_quiz");}}/>}
+          {screen==="ta_setup"&&<TimeAttackSetupScreen onBack={()=>setScreen("home")} onStart={s=>{setTaSettings(s);bgm.stop();setScreen("ta_countdown");}}/>}
+          {screen==="ta_countdown"&&<Countdown onDone={()=>setScreen("ta_quiz")}/>}
           {screen==="ta_quiz"&&taSettings&&<TimeAttackQuizScreen settings={taSettings} onFinish={r=>{bgm.stop();setQuizResult({...r,_ta:true});setScreen("ta_result");}}/>}
           {screen==="ta_result"&&quizResult?._ta&&<TimeAttackResultScreen result={quizResult} nickname={nickname} settings={taSettings} onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}} onRetry={()=>{bgm.stop();setScreen("ta_quiz");}}/>}
           {screen==="battle"&&<BattleLobby nickname={nickname} quizMode={quizMode} directionMode={directionMode} subLevel={subLevel} difficulty={difficulty} onBack={goHome}/>}
