@@ -399,45 +399,46 @@ const ION_SIMILAR = {
 // ── イオン用ダミー ──────────────────────────────────────────
 // 各イオンに「似ているイオン」を事前定義
 const FORMULA_SIMILAR = {
-  "H₂O":    { normal:["CO₂","H₂","HCl"],           hard:["H₂O₂","HO","H₃O"] },
-  "CO₂":    { normal:["CO","SO₂","H₂O"],            hard:["CO","CO₃","C₂O₄"] },
-  "CO":     { normal:["CO₂","NO","SO₂"],            hard:["CO₂","C₂O","CO₃"] },
-  "HCl":    { normal:["NaCl","H₂","Cl₂"],           hard:["HCl₂","H₂Cl","HClO"] },
-  "NaCl":   { normal:["KCl","MgCl₂","NaOH"],        hard:["NaCl₂","Na₂Cl","NaCl₃"] },
-  "NaOH":   { normal:["KOH","NaCl","Na₂O"],         hard:["Na₂OH","NaO","NaOH₂"] },
-  "H₂SO₄":  { normal:["H₂SO₃","HNO₃","H₃PO₄"],     hard:["H₂SO₃","HSO₄","H₃SO₄"] },
-  "HNO₃":   { normal:["HNO₂","H₂SO₄","HCl"],        hard:["HNO₂","H₂NO₃","HN₂O₃"] },
-  "NH₃":    { normal:["N₂","H₂","N₂H₄"],            hard:["NH₂","NH₄","N₂H₃"] },
-  "H₂O₂":   { normal:["H₂O","HO","H₂"],             hard:["HO₂","H₂O","HO₂⁻"] },
-  "CaCO₃":  { normal:["Na₂CO₃","CaO","Ca(OH)₂"],    hard:["CaCO","Ca₂CO₃","CaCO₄"] },
-  "Ca(OH)₂":{ normal:["CaCO₃","CaO","Mg(OH)₂"],     hard:["Ca(OH)","CaOH","Ca₂(OH)₂"] },
-  "CuO":    { normal:["Cu₂O","FeO","ZnO"],           hard:["Cu₂O","CuO₂","Cu₃O"] },
-  "Fe₂O₃":  { normal:["FeO","Fe₃O₄","Al₂O₃"],       hard:["FeO","Fe₃O₄","Fe₂O₄"] },
-  "MgO":    { normal:["CaO","ZnO","Al₂O₃"],         hard:["Mg₂O","MgO₂","Mg₃O"] },
-  "Al₂O₃":  { normal:["Fe₂O₃","SiO₂","MgO"],        hard:["AlO","Al₃O₄","Al₂O"] },
-  "Na₂O":   { normal:["K₂O","NaOH","Na₂CO₃"],       hard:["Na₂O₂","NaO","Na₃O"] },
-  "H₂":     { normal:["O₂","N₂","Cl₂"],             hard:["H","H₃","H₂⁺"] },
-  "O₂":     { normal:["O₃","N₂","H₂"],              hard:["O₃","O","O₂⁻"] },
-  "N₂":     { normal:["O₂","NO","NH₃"],             hard:["NO","N","N₃"] },
-  "Cl₂":    { normal:["HCl","Br₂","F₂"],            hard:["Cl","Cl₃","ClO"] },
-  "CH₄":    { normal:["C₂H₆","C₂H₄","NH₃"],        hard:["CH₃","C₂H₄","CH₄O"] },
-  "C₂H₅OH": { normal:["CH₃OH","C₂H₄","CH₄"],       hard:["C₂H₄OH","C₂H₆O","C₂H₅O"] },
-  "SO₂":    { normal:["SO₃","NO₂","CO₂"],           hard:["SO₃","S₂O","SO"] },
-  "SO₃":    { normal:["SO₂","NO₂","CO₂"],           hard:["SO₂","S₂O₃","SO₄"] },
-  "NO":     { normal:["NO₂","N₂O","CO"],            hard:["NO₂","N₂O","NO₃"] },
-  "NO₂":    { normal:["NO","N₂O₄","SO₂"],           hard:["NO","N₂O₄","NO₃"] },
-  "KOH":    { normal:["NaOH","K₂O","KCl"],          hard:["K₂OH","KOH₂","KOOH"] },
-  "Ba(OH)₂":{ normal:["Ca(OH)₂","BaO","BaCl₂"],     hard:["Ba(OH)","BaO+H₂O","Ba₂(OH)₂"] },
-  "NH₄Cl":  { normal:["NaCl","NH₃","HCl"],          hard:["NH₄Cl₂","(NH₄)₂Cl","NH₃Cl"] },
-  "CuSO₄":  { normal:["ZnSO₄","CuCl₂","CaCO₃"],    hard:["Cu₂SO₄","CuSO₃","Cu(SO₄)₂"] },
-  "FeCl₂":  { normal:["FeCl₃","NaCl","MgCl₂"],      hard:["FeCl₃","Fe₂Cl","FeCl"] },
-  "FeCl₃":  { normal:["FeCl₂","AlCl₃","NaCl"],      hard:["FeCl₂","FeCl₄","Fe₂Cl₃"] },
-  "NaHCO₃": { normal:["Na₂CO₃","NaOH","CaCO₃"],     hard:["Na₂CO₃","NaCO₃","NaHCO₂"] },
-  "Na₂CO₃": { normal:["NaHCO₃","Na₂O","NaOH"],      hard:["NaHCO₃","Na₃CO₃","Na₂CO₂"] },
-  "SiO₂":   { normal:["CO₂","SO₂","Al₂O₃"],         hard:["SiO","Si₂O₃","SiO₃"] },
-  "O₃":     { normal:["O₂","SO₃","NO₃"],            hard:["O₂","O₄","O₂⁻"] },
-  "H₂S":    { normal:["HCl","SO₂","H₂O"],           hard:["HS","H₂S₂","H₃S"] },
-  "H₃PO₄":  { normal:["H₂SO₄","HNO₃","H₂PO₄"],     hard:["H₂PO₄⁻","H₃PO₃","HPO₄²⁻"] },
+  // 式→名前 の難易度別ダミー名前リスト（名前のみ）
+  "H₂O":    { normal:["二酸化炭素","塩化水素（塩酸）","アンモニア"],        hard:["過酸化水素","水酸化物","三酸化水素"] },
+  "CO₂":    { normal:["一酸化炭素","二酸化硫黄","水"],                     hard:["一酸化炭素","炭酸","三酸化炭素"] },
+  "CO":     { normal:["二酸化炭素","一酸化窒素","二酸化硫黄"],              hard:["二酸化炭素","炭素","炭酸"] },
+  "HCl":    { normal:["塩化ナトリウム（食塩）","水素","塩素"],              hard:["塩素","塩化カリウム","塩化マグネシウム"] },
+  "NaCl":   { normal:["水酸化ナトリウム","塩化カリウム","塩化マグネシウム"], hard:["塩化カリウム","塩化ナトリウム(別)","塩化マグネシウム"] },
+  "NaOH":   { normal:["水酸化カリウム","塩化ナトリウム（食塩）","炭酸ナトリウム"], hard:["水酸化カリウム","酸化ナトリウム","炭酸ナトリウム"] },
+  "H₂SO₄":  { normal:["亜硫酸","硝酸","リン酸"],                          hard:["亜硫酸","硫酸水素","リン酸"] },
+  "HNO₃":   { normal:["亜硝酸","硫酸","塩化水素（塩酸）"],                  hard:["亜硝酸","硫酸","塩化水素（塩酸）"] },
+  "NH₃":    { normal:["窒素","水素","ヒドラジン"],                          hard:["アンモニウム塩","ヒドラジン","窒化水素"] },
+  "H₂O₂":   { normal:["水","酸素","塩化水素（塩酸）"],                      hard:["水","酸素","過水素"] },
+  "CaCO₃":  { normal:["炭酸ナトリウム","酸化カルシウム","水酸化カルシウム"], hard:["炭酸マグネシウム","炭酸バリウム","炭酸ナトリウム"] },
+  "Ca(OH)₂":{ normal:["炭酸カルシウム","酸化カルシウム","水酸化マグネシウム"], hard:["水酸化マグネシウム","水酸化バリウム","酸化カルシウム"] },
+  "CuO":    { normal:["酸化銅(I)","酸化鉄(II)","酸化亜鉛"],                hard:["酸化銅(I)","酸化亜鉛","酸化鉄(II)"] },
+  "Fe₂O₃":  { normal:["酸化鉄(II)","四酸化三鉄","酸化アルミニウム"],        hard:["酸化鉄(II)","四酸化三鉄","酸化鉄(IV)"] },
+  "MgO":    { normal:["酸化カルシウム","酸化亜鉛","酸化アルミニウム"],       hard:["酸化カルシウム","酸化亜鉛","酸化バリウム"] },
+  "Al₂O₃":  { normal:["酸化鉄(III)","二酸化ケイ素","酸化マグネシウム"],     hard:["酸化鉄(III)","二酸化ケイ素","酸化クロム(III)"] },
+  "Na₂O":   { normal:["水酸化ナトリウム","炭酸ナトリウム","酸化カリウム"],   hard:["過酸化ナトリウム","酸化カリウム","炭酸ナトリウム"] },
+  "H₂":     { normal:["酸素","窒素","塩素"],                               hard:["酸素","ヘリウム","窒素"] },
+  "O₂":     { normal:["窒素","水素","塩素"],                               hard:["オゾン","窒素","塩素"] },
+  "N₂":     { normal:["酸素","水素","一酸化窒素"],                          hard:["一酸化窒素","二酸化窒素","アンモニア"] },
+  "Cl₂":    { normal:["塩化水素（塩酸）","臭素","フッ素"],                   hard:["塩化水素（塩酸）","臭素","フッ素"] },
+  "CH₄":    { normal:["エタン","エチレン","アンモニア"],                     hard:["エタン","プロパン","エチレン"] },
+  "C₂H₅OH": { normal:["メタノール","エタン","酢酸"],                        hard:["メタノール","プロパノール","酢酸"] },
+  "SO₂":    { normal:["三酸化硫黄","二酸化炭素","二酸化窒素"],               hard:["三酸化硫黄","亜硫酸","硫酸"] },
+  "SO₃":    { normal:["二酸化硫黄","二酸化炭素","硫酸"],                    hard:["二酸化硫黄","亜硫酸","硫酸"] },
+  "NO":     { normal:["二酸化窒素","一酸化炭素","亜酸化窒素"],               hard:["二酸化窒素","亜酸化窒素","四酸化二窒素"] },
+  "NO₂":    { normal:["一酸化窒素","亜硝酸","四酸化二窒素"],                 hard:["一酸化窒素","四酸化二窒素","亜硝酸"] },
+  "KOH":    { normal:["水酸化ナトリウム","塩化カリウム","酸化カリウム"],      hard:["水酸化ナトリウム","水酸化バリウム","水酸化カルシウム"] },
+  "Ba(OH)₂":{ normal:["水酸化カルシウム","酸化バリウム","水酸化マグネシウム"], hard:["水酸化カルシウム","水酸化マグネシウム","水酸化ストロンチウム"] },
+  "NH₄Cl":  { normal:["塩化ナトリウム（食塩）","アンモニア","塩化水素（塩酸）"], hard:["塩化ナトリウム（食塩）","塩化カリウム","塩化カルシウム"] },
+  "CuSO₄":  { normal:["硫酸亜鉛","塩化銅(II)","炭酸カルシウム"],            hard:["硫酸亜鉛","硫酸鉄(II)","硫酸ニッケル"] },
+  "FeCl₂":  { normal:["塩化鉄(III)","塩化ナトリウム（食塩）","塩化マグネシウム"], hard:["塩化鉄(III)","塩化コバルト(II)","塩化ニッケル"] },
+  "FeCl₃":  { normal:["塩化鉄(II)","塩化アルミニウム","塩化ナトリウム（食塩）"], hard:["塩化鉄(II)","塩化クロム(III)","塩化アルミニウム"] },
+  "NaHCO₃": { normal:["炭酸ナトリウム","水酸化ナトリウム","炭酸カルシウム"],  hard:["炭酸ナトリウム","炭酸水素カリウム","炭酸水素カルシウム"] },
+  "Na₂CO₃": { normal:["炭酸水素ナトリウム","酸化ナトリウム","水酸化ナトリウム"], hard:["炭酸水素ナトリウム","炭酸カリウム","炭酸カルシウム"] },
+  "SiO₂":   { normal:["二酸化炭素","二酸化硫黄","酸化アルミニウム"],         hard:["一酸化ケイ素","二酸化炭素","酸化アルミニウム"] },
+  "O₃":     { normal:["酸素","二酸化硫黄","三酸化硫黄"],                    hard:["酸素","四酸素","二酸素"] },
+  "H₂S":    { normal:["塩化水素（塩酸）","二酸化硫黄","水"],                 hard:["塩化水素（塩酸）","二酸化硫黄","二硫化炭素"] },
+  "H₃PO₄":  { normal:["硫酸","硝酸","亜リン酸"],                           hard:["亜リン酸","次亜リン酸","ピロリン酸"] },
 };
 
 // 難易度に応じたダミー選択肢を生成
@@ -1104,6 +1105,38 @@ function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLe
           <button className="btn btn-s btn-blk" onClick={()=>onDone(false)}>登録しない</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── 元素難易度自動判定バッジ ─────────────────────────────────
+// A案：固定レンジ / B案：中央値ベース
+// 両方表示して参考にできるようにする
+function ElementDifficultyBadge({ minNum=1, maxNum=20 }) {
+  // A案：固定レンジ判定（上限値で判定）
+  const getDiffA = (max) => {
+    if (max <= 20) return { label:"😊 易", color:"#22c55e", bg:"#dcfce7", desc:"原子番号1〜20" };
+    if (max <= 50) return { label:"😐 普通", color:"#f59e0b", bg:"#fef3c7", desc:"原子番号21〜50" };
+    return { label:"😈 難", color:"#ef4444", bg:"#fee2e2", desc:"原子番号51以上" };
+  };
+  // B案：中央値ベース判定
+  const getDiffB = (min, max) => {
+    const mid = (min + max) / 2;
+    if (mid <= 20) return { label:"😊 易", color:"#22c55e", bg:"#dcfce7", desc:`中央値 ${Math.round(mid)}番` };
+    if (mid <= 50) return { label:"😐 普通", color:"#f59e0b", bg:"#fef3c7", desc:`中央値 ${Math.round(mid)}番` };
+    return { label:"😈 難", color:"#ef4444", bg:"#fee2e2", desc:`中央値 ${Math.round(mid)}番` };
+  };
+  const dA = getDiffA(maxNum);
+  const dB = getDiffB(minNum, maxNum);
+  return (
+    <div style={{marginTop:8,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+      <span style={{fontSize:".75rem",color:"var(--muted)"}}>難易度目安：</span>
+      <span style={{background:dA.bg,color:dA.color,padding:"2px 10px",borderRadius:12,fontSize:".78rem",fontWeight:700}}>
+        A案：{dA.label} <span style={{fontWeight:400,opacity:.8}}>({dA.desc})</span>
+      </span>
+      <span style={{background:dB.bg,color:dB.color,padding:"2px 10px",borderRadius:12,fontSize:".78rem",fontWeight:700}}>
+        B案：{dB.label} <span style={{fontWeight:400,opacity:.8}}>({dB.desc})</span>
+      </span>
     </div>
   );
 }
@@ -1830,6 +1863,7 @@ function RankingScreen({ onBack, myNickname }) {
 // ── MemoScreen（暗記一覧画面）──────────────────────────────────
 function MemoScreen({ onBack }) {
   const [tab, setTab] = useState("element");
+  const [elMin, setElMin] = useState(1);
   const [elMax, setElMax] = useState(20);
   const [ionLv, setIonLv] = useState("junior");
   const [frmLv, setFrmLv] = useState("junior");
@@ -1840,7 +1874,7 @@ function MemoScreen({ onBack }) {
     { id:"formula", label:"🧬 化学式", cls:"form-t" },
   ];
 
-  const elItems = getElements(elMax);
+  const elItems = ALL_ELEMENTS.filter(e=>e.number>=elMin&&e.number<=elMax);
   const ionItems = getIons(ionLv);
   const frmItems = getFormulas(frmLv);
 
@@ -1862,13 +1896,11 @@ function MemoScreen({ onBack }) {
         {tab==="element"&&(
           <>
             <div style={{marginBottom:10}}>
-              <div style={{fontWeight:700,fontSize:".82rem",marginBottom:6}}>出題範囲: 1〜{elMax}番（{elItems.length}元素）</div>
-              <input type="range" min={4} max={103} value={elMax} onChange={e=>setElMax(Number(e.target.value))}/>
-              <div className="pbtns">
-                {PRESETS.map(p=>(
-                  <button key={p.max} className={`pbtn ${elMax===p.max?"on":""}`} onClick={()=>setElMax(p.max)}>{p.label}</button>
-                ))}
-              </div>
+              <RangeSelector minNum={elMin} maxNum={elMax} onChangeMin={setElMin} onChangeMax={setElMax}/>
+              <ElementDifficultyBadge minNum={elMin} maxNum={elMax}/>
+            </div>
+            <div style={{fontSize:".78rem",color:"var(--muted)",marginBottom:8,textAlign:"center"}}>
+              {elMin}〜{elMax}番の元素 <b style={{color:"var(--primary)"}}>{elItems.length}</b> 種
             </div>
             <div className="memo-grid">
               {elItems.map(el=>(
