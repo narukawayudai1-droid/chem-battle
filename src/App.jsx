@@ -1197,21 +1197,19 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
           <span className="hero-nologin">✋ ニックネームを登録してスタート！</span>
         </div>
       )}
-      {nickname&&(
-        <div style={{marginBottom:10}}>
-          <div style={{fontWeight:800,fontSize:".78rem",color:"#f59e0b",marginBottom:5,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>⏱ タイムアタック</div>
-            <div className="sc" style={{borderColor:"#f59e0b"}} onClick={()=>onTimeAttack()}>
-            <div style={{display:"flex",alignItems:"center",gap:10,padding:"2px 0"}}>
-              <span style={{fontSize:"1.6rem"}}>⏱</span>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:700,fontSize:".95rem"}}>タイムアタック</div>
-                <span className="rule-tag" style={{display:"inline-block"}}>10問正解するまでのタイムを競え！</span>
-              </div>
-              <span className="ta-badge">NEW</span>
+      <div style={{marginBottom:10}}>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"#f59e0b",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>⏱ タイムアタック</div>
+        <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#f59e0b"}:{borderColor:"#f59e0b"}} onClick={()=>nickname&&onTimeAttack()}>
+          <div style={{display:"flex",alignItems:"center",gap:10,padding:"2px 0"}}>
+            <span style={{fontSize:"1.6rem"}}>⏱</span>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:700,fontSize:".95rem"}}>タイムアタック</div>
+              <span className="rule-tag" style={{display:"inline-block"}}>10問正解するまでのタイムを競え！</span>
             </div>
+            <span className="ta-badge">NEW</span>
           </div>
         </div>
-      )}
+      </div>
 
       <div style={{marginBottom:10}}>
         <div style={{fontWeight:800,fontSize:".78rem",color:"#6366f1",marginBottom:5,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧮 mol計算ドリル</div>
@@ -1224,6 +1222,12 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
         </div>
       </div>
 
+      {!nickname&&(
+        <div className="tc" style={{marginBottom:10}}>
+          <span className="hero-nologin">✋ ニックネームを登録してスタート！</span>
+        </div>
+      )}
+
       <div style={{display:"flex",gap:8,marginBottom:8}}>
         <button className="btn btn-s" style={{flex:1}} onClick={()=>setShowHowTo(true)}>📋 遊び方</button>
         <button className="btn btn-s" style={{flex:1}} onClick={onMemo}>📖 暗記リスト</button>
@@ -1231,7 +1235,7 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
         <button className="btn btn-s" style={{flex:"0 0 auto",padding:"10px 12px"}} onClick={onToggleBgm}>{bgmOn?"🔊":"🔇"}</button>
       </div>
       <div className="footer-copy">
-        © 2026 Narukawa<br/>
+        © 2026 Narukawa All Rights Reserved.<br/>
         本アプリの無断転載・再配布を禁止します。
       </div>
     </div>
@@ -2494,16 +2498,21 @@ function MolQuizScreen({ mode, onFinish }) {
       } else {
         // 数値：正解と同じ有効数字でダミーをフォーマット
         const dummies = genMolDummies(qq.ans, qq.qtype);
-        const formatted = dummies.slice(0,3)
+        const formatted = dummies
           .map(d => fmtNum(d, qq.ans))
-          .filter(d => d !== String(qq.ans)); // 正解と偶然一致したものを除外
-        // 足りない場合は別のダミーで補完
-        while(formatted.length < 3) {
-          const extra = fmtNum(qq.ans * (formatted.length + 2), qq.ans);
-          if(!formatted.includes(extra) && extra !== String(qq.ans)) formatted.push(extra);
-          else break;
+          .filter(d => d !== String(qq.ans));
+        // 重複除去
+        const unique = [...new Set(formatted)];
+        // 3個に足りない場合は倍数・分数で補完
+        const multipliers = [2, 3, 4, 5, 0.25, 6, 0.1, 10];
+        for (const m of multipliers) {
+          if (unique.length >= 3) break;
+          const extra = fmtNum(qq.ans * m, qq.ans);
+          if (!unique.includes(extra) && extra !== String(qq.ans) && extra !== "0") {
+            unique.push(extra);
+          }
         }
-        return shuffle([String(qq.ans), ...formatted.slice(0,3)]);
+        return shuffle([String(qq.ans), ...unique.slice(0,3)]);
       }
     });
   });
@@ -2521,7 +2530,9 @@ function MolQuizScreen({ mode, onFinish }) {
 
   const finishGame = ()=>{
     clearInterval(timerRef.current);
-    onFinish({timeLeft:tlRef.current, miss:missRef.current, hints:hintRef.current, skips:skipRef.current, total:questions.length, mistakes:mistakesRef.current, questions});
+    const correct = questions.length - missRef.current;
+    const molScore = calcMolScore(correct, questions.length, tlRef.current);
+    onFinish({score:molScore, timeLeft:tlRef.current, miss:missRef.current, hints:hintRef.current, skips:skipRef.current, total:questions.length, correct, mistakes:mistakesRef.current, questions});
   };
 
   const handleChoice = (choice)=>{
