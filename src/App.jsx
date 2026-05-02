@@ -290,18 +290,26 @@ function calcMolScore(correct, total, timeLeft) {
 const SUP_MAP = {"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹","-":"⁻"};
 function toSup(n) { return String(n).split("").map(c=>SUP_MAP[c]||c).join(""); }
 
-function toSciNotation(val, sigFigs = 3) {
+function toSciNotation(val, sigFigs = 2) {
   if (val === 0) return "0";
   const sign = val < 0 ? "-" : "";
   const abs = Math.abs(val);
   const exp = Math.floor(Math.log10(abs));
   const coef = abs / Math.pow(10, exp);
-  // 有効数字に丸める
   const factor = Math.pow(10, sigFigs - 1);
   const rounded = Math.round(coef * factor) / factor;
-  // 整数か小数かで表示を切り替え
-  const coefStr = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(sigFigs - 1).replace(/\.?0+$/, "");
-  if (exp === 0) return `${sign}${coefStr}×10⁰`;
+  // 有効数字2桁で表示
+  const coefStr = rounded.toFixed(sigFigs - 1);
+  // 10^0 や 10^1 の場合は通常表記に戻す
+  if (exp === 0) {
+    // 例: 1.0, 2.0 など
+    return `${sign}${coefStr}`;
+  }
+  if (exp === 1) {
+    // 例: 12, 22, 44 など
+    const plain = Math.round(abs * Math.pow(10, sigFigs-1-exp)) / Math.pow(10, sigFigs-1-exp);
+    return `${sign}${plain}`;
+  }
   return `${sign}${coefStr}×10${toSup(exp)}`;
 }
 
@@ -312,7 +320,7 @@ function fmtMolVal(val) {
   if (val === 0) return "0";
   // 1桁の整数（1〜9）はそのまま
   if (Number.isInteger(val) && val >= 1 && val <= 9) return String(val);
-  return toSciNotation(val, 3);
+  return toSciNotation(val, 2);
 }
 
 // タイムアタック：正解数×100 + タイムボーナス（早いほど高得点）
@@ -1079,25 +1087,76 @@ function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLe
   );
 }
 
-// ── RangeSelector ──────────────────────────────────────────────
-function RangeSelector({ maxNum, onChange }) {
+// ── RangeSelector（ダブルスライダー）──────────────────────────
+const RANGE_PRESETS = [
+  { label:"1〜20", min:1,  max:20  },
+  { label:"1〜50", min:1,  max:50  },
+  { label:"51〜103",min:51, max:103 },
+  { label:"全範囲", min:1,  max:103 },
+];
+
+function RangeSelector({ minNum=1, maxNum=20, onChangeMin, onChangeMax, onChange }) {
+  // onChangeがある場合はシングルスライダー互換（maxのみ）
+  const isDouble = !!onChangeMin;
+  const mn = isDouble ? minNum : 1;
+  const mx = maxNum;
+  const count = ALL_ELEMENTS.filter(e=>e.number>=mn&&e.number<=mx).length;
+
+  const handlePreset = (p) => {
+    if(isDouble){ onChangeMin(p.min); onChangeMax(p.max); }
+    else onChange(p.max);
+  };
+
   return (
     <div className="rwrap">
       <div className="fb2 mb8">
-        <span style={{fontWeight:700,fontSize:".88rem"}}>出題範囲: 1〜{maxNum}番</span>
-        <span className="muted">{getElements(maxNum).length}元素</span>
+        <span style={{fontWeight:700,fontSize:".88rem"}}>
+          出題範囲: {mn}〜{mx}番
+        </span>
+        <span className="muted">{count}元素</span>
       </div>
-      <input type="range" min={4} max={103} value={maxNum} onChange={e=>onChange(Number(e.target.value))}/>
-      <div className="rlbls"><span>4</span><span>20</span><span>36</span><span>56</span><span>82</span><span>103</span></div>
+      {isDouble ? (
+        <div style={{display:"flex",flexDirection:"column",gap:6}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,fontSize:".8rem"}}>
+            <span style={{width:28,textAlign:"right",color:"var(--muted)"}}>下限</span>
+            <input type="range" min={1} max={103} value={mn}
+              onChange={e=>{const v=Number(e.target.value);if(v<=mx-3)onChangeMin(v);}}
+              style={{flex:1}}/>
+            <span style={{width:32,fontWeight:700,color:"var(--primary)"}}>{mn}番</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:8,fontSize:".8rem"}}>
+            <span style={{width:28,textAlign:"right",color:"var(--muted)"}}>上限</span>
+            <input type="range" min={1} max={103} value={mx}
+              onChange={e=>{const v=Number(e.target.value);if(v>=mn+3)onChangeMax(v);}}
+              style={{flex:1}}/>
+            <span style={{width:32,fontWeight:700,color:"var(--primary)"}}>{mx}番</span>
+          </div>
+        </div>
+      ) : (
+        <input type="range" min={4} max={103} value={mx} onChange={e=>onChange(Number(e.target.value))}/>
+      )}
+      <div className="rlbls" style={{marginTop:4}}><span>1</span><span>20</span><span>50</span><span>82</span><span>103</span></div>
       <div className="pbtns">
-        {PRESETS.map(p=>(
-          <button key={p.max} className={`pbtn ${maxNum===p.max?"on":""}`} onClick={()=>onChange(p.max)}>{p.label}</button>
+        {RANGE_PRESETS.map(p=>(
+          <button key={p.label}
+            className={`pbtn ${mn===p.min&&mx===p.max?"on":""}`}
+            onClick={()=>handlePreset(p)}>{p.label}</button>
         ))}
       </div>
     </div>
   );
 }
 
+
+// ── 共通フッター ────────────────────────────────────────────
+function AppFooter() {
+  return (
+    <div style={{textAlign:"center",padding:"14px 10px 8px",color:"var(--muted)",fontSize:".72rem",lineHeight:1.7,borderTop:"1px solid var(--border)",marginTop:8}}>
+      © 2026 Narukawa All Rights Reserved.<br/>
+      本アプリの無断転載・再配布を禁止します。
+    </div>
+  );
+}
 
 // ── 遊び方モーダル ──────────────────────────────────────────
 function HowToModal({ onClose }) {
@@ -1248,7 +1307,7 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
           <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#6366f1"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol("solo")}>
             <div className="ic">🎮</div>
             <div className="nm">ひとりで挑戦</div>
-            <span className="rule-tag">計算して正しい答えを選べ！</span>
+            <span className="rule-tag">5分以内に10問解け！</span>
           </div>
           <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#6366f1"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol("battle")}>
             <div className="ic">⚔️</div>
@@ -1270,10 +1329,7 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
         <button className="btn btn-s" style={{flex:1}} onClick={onRanking}>🏆 ランキング</button>
         <button className="btn btn-s" style={{flex:"0 0 auto",padding:"10px 12px"}} onClick={onToggleBgm}>{bgmOn?"🔊":"🔇"}</button>
       </div>
-      <div className="footer-copy">
-        © 2026 Narukawa All Rights Reserved.<br/>
-        本アプリの無断転載・再配布を禁止します。
-      </div>
+      <AppFooter/>
     </div>
   );
 }
@@ -1310,6 +1366,7 @@ const DIFFICULTY_OPTIONS = [
 
 function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
   const [maxNum,setMaxNum]=useState(20);
+  const [minNum,setMinNum]=useState(1);
   const [directionMode,setDirectionMode]=useState(quizMode==="ion"||quizMode==="formula"?"n2f":"s2n");
   const [subLevel,setSubLevel]=useState("junior");
   const [difficulty,setDifficulty]=useState("normal");
@@ -1358,7 +1415,7 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
       {isElement&&(
         <div style={{marginBottom:14}}>
           <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>出題範囲（原子番号）</div>
-          <RangeSelector maxNum={maxNum} onChange={setMaxNum}/>
+          <RangeSelector minNum={minNum} maxNum={maxNum} onChangeMin={setMinNum} onChangeMax={setMaxNum}/>
         </div>
       )}
 
@@ -1412,8 +1469,8 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
 
       <button
         className={`btn ${btnClass} btn-blk`}
-        onClick={()=>onStart(isElement?maxNum:null, directionMode, subLevel, difficulty)}
-        disabled={isElement&&getElements(maxNum).length<4}>
+        onClick={()=>onStart(isElement?{min:minNum,max:maxNum}:null, directionMode, subLevel, difficulty)}
+        disabled={isElement&&ALL_ELEMENTS.filter(e=>e.number>=minNum&&e.number<=maxNum).length<4}>
         {isBattle?"🚀 この設定でルーム作成":"🚀 スタート！"}
       </button>
     </div>
@@ -1421,10 +1478,10 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
 }
 
 // ── QuizScreen ─────────────────────────────────────────────────
-function QuizScreen({ maxNum, quizMode, directionMode="random", subLevel="junior", difficulty="normal", onFinish, seed=null }) {
+function QuizScreen({ maxNum, minNum=1, quizMode, directionMode="random", subLevel="junior", difficulty="normal", onFinish, seed=null }) {
   const isIon = quizMode==="ion";
   const isFormula = quizMode==="formula";
-  const elements = isFormula ? getFormulas(subLevel) : isIon ? getIons(subLevel) : getElements(maxNum);
+  const elements = isFormula ? getFormulas(subLevel) : isIon ? getIons(subLevel) : ALL_ELEMENTS.filter(e=>e.number>=(minNum||1)&&e.number<=(maxNum||20));
   const genQ = isFormula ? generateFormulaQ : isIon ? generateIonQ : generateElementQ;
   const rngRef = useRef(seed!==null?seededRng(seed):null);
   const [q,setQ]=useState(()=>genQ(elements,rngRef.current,directionMode,difficulty));
@@ -1585,7 +1642,8 @@ function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", o
 // ── RankingScreen ──────────────────────────────────────────────
 function RankingScreen({ onBack, myNickname }) {
   const [tab,setTab]=useState("element_all");
-  const [diffFilter,setDiffFilter]=useState("all"); // "all"|"easy"|"normal"|"hard"
+  const [diffFilter,setDiffFilter]=useState("all");
+  const [molFilter,setMolFilter]=useState("all"); // mol専用モードフィルター
   const [allRanks,setAllRanks]=useState([]);
   const [loading,setLoading]=useState(true);
 
@@ -1605,21 +1663,25 @@ function RankingScreen({ onBack, myNickname }) {
       all=all.filter(r=>r.maxNum===Number(tab));
     setAllRanks(all);
     setDiffFilter("all");
+    setMolFilter("all");
     setLoading(false);
   };
 
-  // 難易度フィルター適用後に順位を再計算
-  const ranks = diffFilter==="all"
-    ? allRanks
-    : allRanks.filter(r=>(r.difficulty||"normal")===diffFilter);
+  // フィルター適用
+  let ranks = allRanks;
+  if(tab==="mol") {
+    ranks = molFilter==="all" ? allRanks : allRanks.filter(r=>(r.subLevel||"random")===molFilter);
+  } else {
+    ranks = diffFilter==="all" ? allRanks : allRanks.filter(r=>(r.difficulty||"normal")===diffFilter);
+  }
 
   const tabs=[
     ["element_all","⚛️元素"],["ion","⚡イオン"],["formula","🧬化学式"],
     ["mol","🧮mol"],
   ];
 
-  // 難易度フィルターボタン（元素・イオン・化学式のみ表示）
   const showDiffFilter = ["element_all","ion","formula"].includes(tab);
+  const showMolFilter = tab==="mol";
 
   const modeLabel = (r) => {
     if(r.quizMode==="ion") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--ion-l)", color:"var(--ion)"};
@@ -1644,6 +1706,34 @@ function RankingScreen({ onBack, myNickname }) {
             <button key={v} className={`tab ${tab===v?"on":""}`} onClick={()=>setTab(v)}>{l}</button>
           ))}
         </div>
+        {/* molモードフィルター */}
+        {showMolFilter&&(
+          <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:13}}>
+            {[
+              {v:"all",    l:"すべて"},
+              {v:"intro",  l:"入門"},
+              {v:"basic",  l:"基礎"},
+              {v:"adv",    l:"応用"},
+              {v:"random", l:"ランダム"},
+            ].map(d=>{
+              const active = molFilter===d.v;
+              return (
+                <button key={d.v} onClick={()=>setMolFilter(d.v)}
+                  style={{
+                    padding:"4px 12px",borderRadius:20,
+                    border:`2px solid ${active?"#6366f1":"var(--border)"}`,
+                    background:active?"#ede9fe":"#fff",
+                    color:active?"#6366f1":"var(--muted)",
+                    fontWeight:active?700:400,fontSize:".78rem",
+                    cursor:"pointer",fontFamily:"inherit",transition:"all .12s"
+                  }}>
+                  {d.l}
+                  {d.v!=="all"&&<span style={{marginLeft:3,fontSize:".68rem",opacity:.8}}>({allRanks.filter(r=>(r.subLevel||"random")===d.v).length})</span>}
+                </button>
+              );
+            })}
+          </div>
+        )}
         {/* 難易度フィルター */}
         {showDiffFilter&&(
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:13}}>
@@ -1707,7 +1797,8 @@ function RankingScreen({ onBack, myNickname }) {
                 </div>
               );
             })}
-            <p className="muted tc" style={{marginTop:7,fontSize:".71rem",paddingBottom:8}}>※ランキングは全ユーザーに公開されます</p>
+            <p className="muted tc" style={{marginTop:7,fontSize:".71rem",paddingBottom:4}}>※ランキングは全ユーザーに公開されます</p>
+            <AppFooter/>
           </div>
         )
       }
@@ -2168,7 +2259,7 @@ function TimeAttackSetupScreen({ onStart, onBack }) {
       {quizMode==="element"&&(
         <div style={{marginBottom:14}}>
           <div style={{fontWeight:700,fontSize:".86rem",marginBottom:6}}>出題範囲</div>
-          <RangeSelector maxNum={maxNum} onChange={setMaxNum}/>
+          <RangeSelector minNum={minNum} maxNum={maxNum} onChangeMin={setMinNum} onChangeMax={setMaxNum}/>
         </div>
       )}
       {(quizMode==="ion"||quizMode==="formula")&&(
@@ -2196,7 +2287,7 @@ function TimeAttackQuizScreen({ settings, onFinish }) {
   const { quizMode, maxNum, subLevel } = settings;
   const isIon = quizMode==="ion";
   const isFormula = quizMode==="formula";
-  const elements = isFormula ? getFormulas(subLevel) : isIon ? getIons(subLevel) : getElements(maxNum);
+  const elements = isFormula ? getFormulas(subLevel) : isIon ? getIons(subLevel) : ALL_ELEMENTS.filter(e=>e.number>=(minNum||1)&&e.number<=(maxNum||20));
   const genQ = isFormula ? generateFormulaQ : isIon ? generateIonQ : generateElementQ;
   const [q, setQ] = useState(()=>genQ(elements, null, "random", "normal"));
   const [elapsed, setElapsed] = useState(0);
@@ -2776,6 +2867,7 @@ function MolResultScreen({ result, nickname="", onHome, onRetry }) {
         <button className="btn btn-p" style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}} onClick={onRetry}>🔁 もう一度</button>
         <button className="btn btn-s" style={{flex:1}} onClick={onHome}>🏠 ホーム</button>
       </div>
+      <AppFooter/>
     </div>
   );
 }
@@ -2867,7 +2959,7 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
   useEffect(()=>()=>clearInterval(pollRef.current),[]);
 
   if(phase==="countdown") return <Countdown onDone={()=>setPhase("quiz")}/>;
-  if(phase==="quiz") return <QuizScreen maxNum={maxNum} quizMode={quizMode} directionMode={roomData?.directionMode||directionMode} subLevel={roomData?.subLevel||subLevel} difficulty={roomData?.difficulty||difficulty} onFinish={handleQuizFinish} seed={roomData?.seed}/>;
+  if(phase==="quiz") return <QuizScreen maxNum={roomData?.maxNum||maxNum} minNum={roomData?.minNum||1} quizMode={quizMode} directionMode={roomData?.directionMode||directionMode} subLevel={roomData?.subLevel||subLevel} difficulty={roomData?.difficulty||difficulty} onFinish={handleQuizFinish} seed={roomData?.seed}/>;
   if(phase==="result") return <ResultScreen result={quizResult} nickname={nickname} maxNum={maxNum} quizMode={quizMode} subLevel={roomData?.subLevel||subLevel}
     battleResult={battleResult} onHome={()=>{clearInterval(pollRef.current);onBack();}} onRetry={()=>{clearInterval(pollRef.current);onBack();}}/>;
   if(phase==="result_wait"){
@@ -3002,10 +3094,10 @@ export default function App() {
           )}
           {screen==="setup"&&(
             <SetupScreen title={isIon?"イオンクイズ設定":"出題範囲を選択"} quizMode={quizMode} onBack={goHome}
-              onStart={(mn,dm,sl,dif)=>{setMaxNum(mn||20);setDirectionMode(dm||"random");setSubLevel(sl||"junior");setDifficulty(dif||"normal");bgm.stop();setScreen("countdown");}}/>
+              onStart={(mn,dm,sl,dif)=>{if(mn&&typeof mn==="object"){setMinNum(mn.min||1);setMaxNum(mn.max||20);}else{setMinNum(1);setMaxNum(mn||20);}setDirectionMode(dm||"random");setSubLevel(sl||"junior");setDifficulty(dif||"normal");bgm.stop();setScreen("countdown");}}/>
           )}
           {screen==="countdown"&&<Countdown onDone={()=>setScreen("quiz")}/>}
-          {screen==="quiz"&&<QuizScreen maxNum={maxNum} quizMode={quizMode} directionMode={directionMode} subLevel={subLevel} difficulty={difficulty} onFinish={handleSoloFinish}/>}
+          {screen==="quiz"&&<QuizScreen maxNum={maxNum} minNum={minNum} quizMode={quizMode} directionMode={directionMode} subLevel={subLevel} difficulty={difficulty} onFinish={handleSoloFinish}/>}
           {screen==="result"&&quizResult&&(
             <ResultScreen result={quizResult} nickname={nickname} maxNum={maxNum} quizMode={quizMode} subLevel={subLevel}
               onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}
