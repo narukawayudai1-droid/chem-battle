@@ -1104,7 +1104,7 @@ function HowToModal({ onClose }) {
             <h3 style={{color:"#6366f1"}}>🧮 mol計算ドリル（5分）</h3>
             <p>・自分で計算して4択から選ぶ。10問・5分制限。</p>
             <p>・ヒント：最大3段階（①変換の方向 ②使う値 ③計算手順）。答えは表示しない。</p>
-            <p>・スキップ：+5秒ペナルティ、ミスとしてカウント。</p>
+            <p>・スキップ：次の問題へ。ミスとしてカウント。</p>
             <p>・モード：入門（g↔mol）/ 基礎（L↔mol・個数）/ 応用（2段変換）</p>
             <p>・対戦モードあり。同じ問題を解いて正解数を比較。</p>
             <p style={{marginTop:6,padding:"8px 10px",background:"var(--bg)",borderRadius:7,fontSize:".78rem"}}>
@@ -2546,9 +2546,12 @@ function MolQuizScreen({ mode, onFinish }) {
   useEffect(()=>{
     timerRef.current = setInterval(()=>{
       setTimeLeft(t=>{
-        if(t<=1){clearInterval(timerRef.current);finishGame();return 0;}
-        tlRef.current = t-1;
-        return t-1;
+        const next = t - 1;
+        if(next <= 0){clearInterval(timerRef.current);finishGame();return 0;}
+        // スキップペナルティで300秒超えた場合も終了
+        if(next >= 300){clearInterval(timerRef.current);finishGame();return 0;}
+        tlRef.current = next;
+        return next;
       });
     },1000);
     return()=>clearInterval(timerRef.current);
@@ -2576,8 +2579,6 @@ function MolQuizScreen({ mode, onFinish }) {
 
   const handleSkip = ()=>{
     missRef.current+=1; skipRef.current+=1; setMissCount(missRef.current); setSkipCount(skipRef.current);
-    setTimeLeft(t=>{ const nt=t+5; tlRef.current=nt; return nt; });
-    setPenaltyAnim(true); setTimeout(()=>setPenaltyAnim(false),1500);
     mistakesRef.current=[...mistakesRef.current,{q,yours:"スキップ"}]; setMistakes(mistakesRef.current);
     setSelected(null); setFeedback("none"); setHintLevel(0); setShowHint(false);
     if(qIdx+1>=questions.length) finishGame();
@@ -2654,7 +2655,7 @@ function MolQuizScreen({ mode, onFinish }) {
             💡 ヒント {hintLevel>0?`(${hintLevel}/3)`:""}</button>
           <button className="btn btn-s btn-sm" style={{flex:1,color:"#f59e0b",borderColor:"#f59e0b"}}
             onClick={handleSkip} disabled={selected!==null}>
-            ⏭ スキップ (+5秒)</button>
+            ⏭ スキップ</button>
         </div>
       </div>
     </div>
