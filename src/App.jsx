@@ -244,6 +244,41 @@ function shuffle(arr) {
   return a;
 }
 
+// ── スコア計算 ────────────────────────────────────────────
+// 元素/イオン/化学式クイズ：時間点 + 正解率ボーナス
+function calcQuizScore(correct, total, rawScore) {
+  if (total === 0) return 0;
+  const acc = correct / total;
+  const accBonus = Math.round(acc * acc * 200); // 正解率²×200点
+  return rawScore + accBonus;
+}
+
+// mol計算：正解数×100 + 正解率ボーナス + 残り時間ボーナス
+function calcMolScore(correct, total, timeLeft) {
+  if (total === 0) return 0;
+  const acc = correct / total;
+  const base = correct * 100;
+  const accBonus = Math.round(acc * acc * 100);
+  const timeBonus = Math.round(timeLeft * 0.5);
+  return base + accBonus + timeBonus;
+}
+
+// タイムアタック：正解数×100 + タイムボーナス（早いほど高得点）
+function calcTimeAttackScore(correct, total, elapsedSec) {
+  if (total === 0) return 0;
+  const acc = correct / total;
+  const base = correct * 100;
+  const accBonus = Math.round(acc * acc * 100);
+  const timeBonus = Math.max(0, Math.round((600 - elapsedSec) * 1));
+  return base + accBonus + timeBonus;
+}
+
+// 日付フォーマット
+function fmtDate(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function seededRng(seed) {
   let s = seed;
   return () => { s=(s*1664525+1013904223)&0xffffffff; return (s>>>0)/0x100000000; };
@@ -257,48 +292,143 @@ function seededRng(seed) {
 // ── イオン用ダミー ──────────────────────────────────────────
 // 各イオンに「似ているイオン」を事前定義
 const ION_SIMILAR = {
-  "H⁺":    { normal:["Li⁺","Na⁺","K⁺"],        hard:["H²⁺","H⁻","H₂⁺"] },
-  "Na⁺":   { normal:["K⁺","Li⁺","Mg²⁺"],        hard:["Na²⁺","Na⁻","Na₂⁺"] },
-  "K⁺":    { normal:["Na⁺","Li⁺","Rb⁺"],        hard:["K²⁺","K⁻","K₂⁺"] },
-  "Ca²⁺":  { normal:["Mg²⁺","Sr²⁺","Ca⁺"],      hard:["Ca⁺","Ca³⁺","Ca²⁻"] },
-  "Mg²⁺":  { normal:["Ca²⁺","Zn²⁺","Mg⁺"],      hard:["Mg⁺","Mg³⁺","Mg²⁻"] },
-  "Ba²⁺":  { normal:["Ca²⁺","Sr²⁺","Ba⁺"],      hard:["Ba⁺","Ba³⁺","Ba²⁻"] },
-  "Cu²⁺":  { normal:["Zn²⁺","Fe²⁺","Cu⁺"],      hard:["Cu⁺","Cu³⁺","Cu²⁻"] },
-  "Zn²⁺":  { normal:["Cu²⁺","Ni²⁺","Zn⁺"],      hard:["Zn⁺","Zn³⁺","Zn²⁻"] },
-  "Fe²⁺":  { normal:["Fe³⁺","Cu²⁺","Mn²⁺"],     hard:["Fe³⁺","Fe⁺","Fe²⁻"] },
-  "Fe³⁺":  { normal:["Fe²⁺","Al³⁺","Cr³⁺"],     hard:["Fe²⁺","Fe⁴⁺","Fe³⁻"] },
-  "Al³⁺":  { normal:["Fe³⁺","Cr³⁺","Al²⁺"],     hard:["Al²⁺","Al⁴⁺","Al³⁻"] },
-  "NH₄⁺":  { normal:["Na⁺","K⁺","H⁺"],          hard:["NH₃⁺","NH₅⁺","NH₄²⁺"] },
-  "Ag⁺":   { normal:["Na⁺","K⁺","Cu⁺"],         hard:["Ag²⁺","Ag⁻","Ag₂⁺"] },
-  "Cl⁻":   { normal:["Br⁻","I⁻","F⁻"],          hard:["Cl²⁻","Cl⁺","Cl₂⁻"] },
-  "OH⁻":   { normal:["F⁻","Cl⁻","O²⁻"],         hard:["OH²⁻","OH⁺","O₂H⁻"] },
-  "SO₄²⁻": { normal:["SO₃²⁻","CO₃²⁻","PO₄³⁻"],  hard:["SO₄³⁻","SO₄⁻","SO₃²⁻"] },
-  "NO₃⁻":  { normal:["NO₂⁻","SO₄²⁻","Cl⁻"],     hard:["NO₂⁻","NO₃²⁻","NO₄⁻"] },
-  "CO₃²⁻": { normal:["HCO₃⁻","SO₄²⁻","NO₃⁻"],   hard:["HCO₃⁻","CO₃⁻","CO₃³⁻"] },
-  "HCO₃⁻": { normal:["CO₃²⁻","HSO₄⁻","OH⁻"],    hard:["CO₃²⁻","H₂CO₃","HCO₄⁻"] },
-  "SO₃²⁻": { normal:["SO₄²⁻","CO₃²⁻","NO₂⁻"],   hard:["SO₄²⁻","SO₃⁻","SO₃³⁻"] },
-  "NO₂⁻":  { normal:["NO₃⁻","SO₃²⁻","Cl⁻"],     hard:["NO₃⁻","NO₂²⁻","N₂O⁻"] },
-  "PO₄³⁻": { normal:["SO₄²⁻","CO₃²⁻","NO₃⁻"],   hard:["PO₄²⁻","PO₄⁴⁻","HPO₄²⁻"] },
-  "HSO₄⁻": { normal:["SO₄²⁻","HCO₃⁻","OH⁻"],    hard:["SO₄²⁻","HSO₃⁻","H₂SO₄"] },
-  "MnO₄⁻": { normal:["Cr₂O₇²⁻","SO₄²⁻","NO₃⁻"], hard:["MnO₄²⁻","MnO₃⁻","Mn₂O₄⁻"] },
-  "Cr₂O₇²⁻":{ normal:["MnO₄⁻","SO₄²⁻","CO₃²⁻"], hard:["CrO₄²⁻","Cr₂O₆²⁻","Cr₂O₇³⁻"] },
-  "CH₃COO⁻":{ normal:["HCOO⁻","OH⁻","HCO₃⁻"],   hard:["CH₃CO⁻","CH₂COO⁻","CH₃COO²⁻"] },
-  "F⁻":    { normal:["Cl⁻","Br⁻","OH⁻"],         hard:["F²⁻","F⁺","F₂⁻"] },
-  "Br⁻":   { normal:["Cl⁻","I⁻","F⁻"],           hard:["Br²⁻","Br⁺","Br₂⁻"] },
-  "I⁻":    { normal:["Br⁻","Cl⁻","F⁻"],          hard:["I²⁻","I⁺","I₃⁻"] },
-  "S²⁻":   { normal:["O²⁻","Cl⁻","SO₄²⁻"],       hard:["S⁻","S³⁻","S²⁺"] },
-  "O²⁻":   { normal:["S²⁻","OH⁻","F⁻"],          hard:["O⁻","O³⁻","O²⁺"] },
-  "Li⁺":   { normal:["Na⁺","K⁺","H⁺"],           hard:["Li²⁺","Li⁻","Li₂⁺"] },
-  "Mn²⁺":  { normal:["Fe²⁺","Cu²⁺","Zn²⁺"],      hard:["Mn³⁺","Mn⁺","Mn²⁻"] },
-  "Pb²⁺":  { normal:["Sn²⁺","Cu²⁺","Zn²⁺"],      hard:["Pb⁺","Pb³⁺","Pb²⁻"] },
-  "Ni²⁺":  { normal:["Cu²⁺","Co²⁺","Zn²⁺"],      hard:["Ni³⁺","Ni⁺","Ni²⁻"] },
-  "Cr³⁺":  { normal:["Fe³⁺","Al³⁺","Mn³⁺"],      hard:["Cr²⁺","Cr⁴⁺","Cr³⁻"] },
-  "H₃O⁺":  { normal:["NH₄⁺","H⁺","Na⁺"],         hard:["H₂O⁺","H₄O⁺","H₃O²⁺"] },
-  "CN⁻":   { normal:["Cl⁻","OH⁻","NO₂⁻"],        hard:["CN²⁻","CN⁺","C₂N⁻"] },
-  "SCN⁻":  { normal:["CN⁻","Cl⁻","NO₃⁻"],        hard:["SCN²⁻","SCN⁻","SC₂N⁻"] },
+  // 陽イオン
+  "H⁺":    { normal:["ナトリウムイオン","カリウムイオン","リチウムイオン"],           hard:["水酸化物イオン","フッ化物イオン","アンモニウムイオン"] },
+  "Na⁺":   { normal:["カリウムイオン","リチウムイオン","マグネシウムイオン"],          hard:["ナトリウムイオン(2価)","Na²⁺","ナトリウムアニオン"] },
+  "K⁺":    { normal:["ナトリウムイオン","リチウムイオン","ルビジウムイオン"],           hard:["カリウムイオン(2価)","K²⁺","カリウムアニオン"] },
+  "Ca²⁺":  { normal:["マグネシウムイオン","バリウムイオン","銅イオン"],               hard:["カルシウムイオン(1価)","カルシウムイオン(3価)","カルシウムアニオン"] },
+  "Mg²⁺":  { normal:["カルシウムイオン","亜鉛イオン","バリウムイオン"],               hard:["マグネシウムイオン(1価)","マグネシウムイオン(3価)","マグネシウムアニオン"] },
+  "Ba²⁺":  { normal:["カルシウムイオン","マグネシウムイオン","ストロンチウムイオン"],   hard:["バリウムイオン(1価)","バリウムイオン(3価)","バリウムアニオン"] },
+  "Cu²⁺":  { normal:["亜鉛イオン","鉄(II)イオン","ニッケルイオン"],                  hard:["銅イオン(1価)","銅イオン(3価)","銅アニオン"] },
+  "Zn²⁺":  { normal:["銅イオン","ニッケルイオン","鉄(II)イオン"],                    hard:["亜鉛イオン(1価)","亜鉛イオン(3価)","亜鉛アニオン"] },
+  "Fe²⁺":  { normal:["鉄(III)イオン","銅イオン","マンガン(II)イオン"],               hard:["鉄(III)イオン","鉄(I)イオン","鉄アニオン"] },
+  "Fe³⁺":  { normal:["鉄(II)イオン","アルミニウムイオン","クロム(III)イオン"],        hard:["鉄(II)イオン","鉄(IV)イオン","鉄アニオン"] },
+  "Al³⁺":  { normal:["鉄(III)イオン","クロム(III)イオン","アルミニウムイオン(2価)"],  hard:["アルミニウムイオン(2価)","アルミニウムイオン(4価)","アルミニウムアニオン"] },
+  "NH₄⁺":  { normal:["ナトリウムイオン","カリウムイオン","水素イオン"],               hard:["アンモニウムイオン(2価)","アンモニアイオン","アンモニウムアニオン"] },
+  "Ag⁺":   { normal:["ナトリウムイオン","カリウムイオン","銅イオン"],                 hard:["銀イオン(2価)","銀アニオン","銀イオン(0価)"] },
+  "Li⁺":   { normal:["ナトリウムイオン","カリウムイオン","水素イオン"],               hard:["リチウムイオン(2価)","リチウムアニオン","Li²⁺"] },
+  "Mn²⁺":  { normal:["鉄(II)イオン","銅イオン","亜鉛イオン"],                        hard:["マンガン(III)イオン","マンガン(I)イオン","マンガンアニオン"] },
+  "Pb²⁺":  { normal:["銅イオン","亜鉛イオン","鉄(II)イオン"],                        hard:["鉛イオン(1価)","鉛イオン(4価)","鉛アニオン"] },
+  "Ni²⁺":  { normal:["銅イオン","亜鉛イオン","コバルトイオン"],                       hard:["ニッケルイオン(3価)","ニッケルイオン(1価)","ニッケルアニオン"] },
+  "Cr³⁺":  { normal:["鉄(III)イオン","アルミニウムイオン","マンガン(III)イオン"],     hard:["クロム(II)イオン","クロム(IV)イオン","クロムアニオン"] },
+  "H₃O⁺":  { normal:["アンモニウムイオン","水素イオン","ナトリウムイオン"],            hard:["オキソニウムイオン(2価)","水分子イオン","H₂O⁺"] },
+  // 陰イオン
+  "Cl⁻":   { normal:["臭化物イオン","ヨウ化物イオン","フッ化物イオン"],               hard:["塩化物イオン(2価)","塩化物アニオン(2価)","Cl²⁻"] },
+  "OH⁻":   { normal:["フッ化物イオン","塩化物イオン","酸化物イオン"],                 hard:["水酸化物イオン(2価)","酸素イオン","O²⁻"] },
+  "SO₄²⁻": { normal:["亜硫酸イオン","炭酸イオン","リン酸イオン"],                    hard:["亜硫酸イオン","硫酸水素イオン","硫酸イオン(1価)"] },
+  "NO₃⁻":  { normal:["亜硝酸イオン","硫酸イオン","塩化物イオン"],                    hard:["亜硝酸イオン","硝酸イオン(2価)","NO₄⁻"] },
+  "CO₃²⁻": { normal:["炭酸水素イオン","硫酸イオン","亜硫酸イオン"],                  hard:["炭酸水素イオン","炭酸イオン(1価)","炭酸イオン(3価)"] },
+  "HCO₃⁻": { normal:["炭酸イオン","硫酸水素イオン","水酸化物イオン"],                hard:["炭酸イオン","炭酸水素イオン(2価)","HCO₄⁻"] },
+  "SO₃²⁻": { normal:["硫酸イオン","炭酸イオン","亜硝酸イオン"],                      hard:["硫酸イオン","亜硫酸イオン(1価)","亜硫酸イオン(3価)"] },
+  "NO₂⁻":  { normal:["硝酸イオン","亜硫酸イオン","塩化物イオン"],                    hard:["硝酸イオン","亜硝酸イオン(2価)","N₂O⁻"] },
+  "PO₄³⁻": { normal:["硫酸イオン","炭酸イオン","硝酸イオン"],                        hard:["リン酸イオン(2価)","リン酸イオン(4価)","HPO₄²⁻"] },
+  "HSO₄⁻": { normal:["硫酸イオン","炭酸水素イオン","水酸化物イオン"],                hard:["硫酸イオン","亜硫酸水素イオン","H₂SO₄"] },
+  "MnO₄⁻": { normal:["二クロム酸イオン","硫酸イオン","硝酸イオン"],                  hard:["過マンガン酸イオン(2価)","マンガン酸イオン","MnO₃⁻"] },
+  "Cr₂O₇²⁻":{ normal:["過マンガン酸イオン","硫酸イオン","炭酸イオン"],              hard:["クロム酸イオン","二クロム酸イオン(3価)","Cr₂O₆²⁻"] },
+  "CH₃COO⁻":{ normal:["ギ酸イオン","水酸化物イオン","炭酸水素イオン"],              hard:["酢酸イオン(2価)","プロピオン酸イオン","CH₂COO⁻"] },
+  "F⁻":    { normal:["塩化物イオン","臭化物イオン","水酸化物イオン"],                hard:["フッ化物イオン(2価)","F²⁻","フッ化物アニオン(2価)"] },
+  "Br⁻":   { normal:["塩化物イオン","ヨウ化物イオン","フッ化物イオン"],              hard:["臭化物イオン(2価)","Br²⁻","臭化物アニオン(2価)"] },
+  "I⁻":    { normal:["臭化物イオン","塩化物イオン","フッ化物イオン"],               hard:["ヨウ化物イオン(2価)","I₃⁻","ヨウ化物アニオン(2価)"] },
+  "S²⁻":   { normal:["酸化物イオン","塩化物イオン","硫酸イオン"],                   hard:["硫化物イオン(1価)","硫化物イオン(3価)","S²⁺"] },
+  "O²⁻":   { normal:["硫化物イオン","水酸化物イオン","フッ化物イオン"],              hard:["酸化物イオン(1価)","酸化物イオン(3価)","O²⁺"] },
+  "CN⁻":   { normal:["塩化物イオン","水酸化物イオン","亜硝酸イオン"],               hard:["シアン化物イオン(2価)","C₂N⁻","チオシアン酸イオン"] },
+  "SCN⁻":  { normal:["シアン化物イオン","塩化物イオン","硝酸イオン"],               hard:["チオシアン酸イオン(2価)","SC₂N⁻","シアン化物イオン"] },
 };
 
-// ── 化学式用ダミー ───────────────────────────────────────────
+const FORMULA_SIMILAR = {
+  // 単体
+  "H₂":    { normal:["酸素","窒素","塩素"],                   hard:["水素(原子)","三水素","過酸化水素"] },
+  "O₂":    { normal:["窒素","水素","塩素"],                   hard:["オゾン","酸素(原子)","過酸化物"] },
+  "N₂":    { normal:["酸素","水素","一酸化窒素"],              hard:["一酸化窒素","二酸化窒素","アンモニア"] },
+  "Cl₂":   { normal:["塩化水素（塩酸）","臭素","フッ素"],       hard:["塩化水素（塩酸）","一塩化物","次亜塩素酸"] },
+  // 化合物（中学）
+  "H₂O":   { normal:["二酸化炭素","塩化水素（塩酸）","アンモニア"],      hard:["過酸化水素","水酸化物","H₃O"] },
+  "CO₂":   { normal:["一酸化炭素","二酸化硫黄","水"],                   hard:["一酸化炭素","三酸化炭素","炭酸"] },
+  "CO":    { normal:["二酸化炭素","一酸化窒素","二酸化硫黄"],            hard:["二酸化炭素","炭素","二酸化炭素"] },
+  "HCl":   { normal:["塩化ナトリウム（食塩）","水素","塩素"],            hard:["塩素","塩化物","二塩化水素"] },
+  "NaCl":  { normal:["水酸化ナトリウム","塩化カリウム","塩化マグネシウム"], hard:["塩化ナトリウム(2)","二塩化ナトリウム","NaCl₂"] },
+  "NaOH":  { normal:["水酸化カリウム","塩化ナトリウム（食塩）","炭酸ナトリウム"], hard:["水酸化ナトリウム(2価)","酸化ナトリウム","Na₂OH"] },
+  "H₂SO₄": { normal:["亜硫酸","硝酸","リン酸"],                hard:["亜硫酸","硫酸水素","三硫酸"] },
+  "HNO₃":  { normal:["亜硝酸","硫酸","塩化水素（塩酸）"],      hard:["亜硝酸","二硝酸","硝酸(2価)"] },
+  "NH₃":   { normal:["窒素","水素","ヒドラジン"],              hard:["アンモニウム","二水素化窒素","NH₂"] },
+  "H₂O₂":  { normal:["水","酸素","過酸化物"],                  hard:["水","HOO","三酸化水素"] },
+  "CaCO₃": { normal:["炭酸ナトリウム","酸化カルシウム","水酸化カルシウム"], hard:["炭酸カルシウム(1)","炭酸二カルシウム","Ca₂CO₃"] },
+  "Ca(OH)₂":{ normal:["炭酸カルシウム","酸化カルシウム","水酸化マグネシウム"], hard:["水酸化カルシウム(1価)","CaOH","Ca₂(OH)₂"] },
+  "CuO":   { normal:["酸化銅(I)","酸化鉄(II)","酸化亜鉛"],    hard:["酸化銅(I)","二酸化銅","Cu₂O"] },
+  "Fe₂O₃": { normal:["酸化鉄(II)","四酸化三鉄","酸化アルミニウム"], hard:["酸化鉄(II)","四酸化三鉄","Fe₃O₄"] },
+  "MgO":   { normal:["酸化カルシウム","酸化亜鉛","酸化アルミニウム"], hard:["酸化マグネシウム(2価)","二酸化マグネシウム","Mg₂O"] },
+  "Al₂O₃": { normal:["酸化鉄(III)","二酸化ケイ素","酸化マグネシウム"], hard:["酸化アルミニウム(2価)","三酸化二アルミニウム","AlO"] },
+  "Na₂O":  { normal:["水酸化ナトリウム","炭酸ナトリウム","酸化カリウム"], hard:["過酸化ナトリウム","酸化ナトリウム(1価)","NaO"] },
+  // 化合物（高校）
+  "CH₄":   { normal:["エタン","エチレン","アンモニア"],         hard:["エタン","プロパン","メチル"] },
+  "C₂H₅OH":{ normal:["メタノール","エタン","酢酸"],            hard:["エタノール(別表記)","メタノール","C₂H₄OH"] },
+  "SO₂":   { normal:["三酸化硫黄","二酸化炭素","二酸化窒素"],   hard:["三酸化硫黄","亜硫酸","硫黄酸化物"] },
+  "SO₃":   { normal:["二酸化硫黄","二酸化炭素","三酸化硫黄"],   hard:["二酸化硫黄","硫酸","S₂O₃"] },
+  "NO":    { normal:["二酸化窒素","一酸化炭素","亜酸化窒素"],   hard:["二酸化窒素","三酸化窒素","N₂O"] },
+  "NO₂":   { normal:["一酸化窒素","亜硝酸","四酸化二窒素"],     hard:["一酸化窒素","四酸化二窒素","三酸化窒素"] },
+  "KOH":   { normal:["水酸化ナトリウム","水酸化カリウム(2価)","塩化カリウム"], hard:["水酸化カリウム(2価)","K₂OH","KOOH"] },
+  "Ba(OH)₂":{ normal:["水酸化カルシウム","酸化バリウム","水酸化マグネシウム"], hard:["水酸化バリウム(1価)","Ba(OH)","Ba₂(OH)₂"] },
+  "NH₄Cl": { normal:["塩化ナトリウム（食塩）","アンモニア","塩化水素（塩酸）"], hard:["塩化アンモニウム(2価)","NH₃Cl","(NH₄)₂Cl"] },
+  "CuSO₄": { normal:["硫酸亜鉛","塩化銅(II)","炭酸カルシウム"],  hard:["硫酸銅(I)","亜硫酸銅","Cu₂SO₄"] },
+  "FeCl₂": { normal:["塩化鉄(III)","塩化ナトリウム（食塩）","塩化マグネシウム"], hard:["塩化鉄(III)","塩化鉄","FeCl₃"] },
+  "FeCl₃": { normal:["塩化鉄(II)","塩化アルミニウム","塩化ナトリウム（食塩）"], hard:["塩化鉄(II)","塩化鉄(IV)","Fe₂Cl₃"] },
+  "NaHCO₃":{ normal:["炭酸ナトリウム","水酸化ナトリウム","炭酸カルシウム"], hard:["炭酸ナトリウム","炭酸水素ナトリウム(2価)","NaCO₃"] },
+  "Na₂CO₃":{ normal:["炭酸水素ナトリウム","酸化ナトリウム","水酸化ナトリウム"], hard:["炭酸水素ナトリウム","炭酸ナトリウム(1価)","Na₃CO₃"] },
+  "SiO₂":  { normal:["二酸化炭素","二酸化硫黄","酸化アルミニウム"], hard:["一酸化ケイ素","三酸化ケイ素","Si₂O₃"] },
+  "O₃":    { normal:["酸素","二酸化硫黄","三酸化硫黄"],         hard:["酸素","四酸素","O₄"] },
+  "H₂S":   { normal:["塩化水素（塩酸）","二酸化硫黄","水"],      hard:["硫化水素(1価)","HS","H₂S₂"] },
+  "H₃PO₄": { normal:["硫酸","硝酸","亜リン酸"],                 hard:["亜リン酸","リン酸(2価)","H₂PO₄"] },
+};
+
+// 難易度別ダミー選択肢生成
+// ============================================================
+
+// ── イオン用ダミー ──────────────────────────────────────────
+// 各イオンに「似ているイオン」を事前定義
+const ION_SIMILAR = {
+  // 陽イオン
+  "H⁺":    { normal:["ナトリウムイオン","カリウムイオン","リチウムイオン"],           hard:["水酸化物イオン","フッ化物イオン","アンモニウムイオン"] },
+  "Na⁺":   { normal:["カリウムイオン","リチウムイオン","マグネシウムイオン"],          hard:["ナトリウムイオン(2価)","Na²⁺","ナトリウムアニオン"] },
+  "K⁺":    { normal:["ナトリウムイオン","リチウムイオン","ルビジウムイオン"],           hard:["カリウムイオン(2価)","K²⁺","カリウムアニオン"] },
+  "Ca²⁺":  { normal:["マグネシウムイオン","バリウムイオン","銅イオン"],               hard:["カルシウムイオン(1価)","カルシウムイオン(3価)","カルシウムアニオン"] },
+  "Mg²⁺":  { normal:["カルシウムイオン","亜鉛イオン","バリウムイオン"],               hard:["マグネシウムイオン(1価)","マグネシウムイオン(3価)","マグネシウムアニオン"] },
+  "Ba²⁺":  { normal:["カルシウムイオン","マグネシウムイオン","ストロンチウムイオン"],   hard:["バリウムイオン(1価)","バリウムイオン(3価)","バリウムアニオン"] },
+  "Cu²⁺":  { normal:["亜鉛イオン","鉄(II)イオン","ニッケルイオン"],                  hard:["銅イオン(1価)","銅イオン(3価)","銅アニオン"] },
+  "Zn²⁺":  { normal:["銅イオン","ニッケルイオン","鉄(II)イオン"],                    hard:["亜鉛イオン(1価)","亜鉛イオン(3価)","亜鉛アニオン"] },
+  "Fe²⁺":  { normal:["鉄(III)イオン","銅イオン","マンガン(II)イオン"],               hard:["鉄(III)イオン","鉄(I)イオン","鉄アニオン"] },
+  "Fe³⁺":  { normal:["鉄(II)イオン","アルミニウムイオン","クロム(III)イオン"],        hard:["鉄(II)イオン","鉄(IV)イオン","鉄アニオン"] },
+  "Al³⁺":  { normal:["鉄(III)イオン","クロム(III)イオン","アルミニウムイオン(2価)"],  hard:["アルミニウムイオン(2価)","アルミニウムイオン(4価)","アルミニウムアニオン"] },
+  "NH₄⁺":  { normal:["ナトリウムイオン","カリウムイオン","水素イオン"],               hard:["アンモニウムイオン(2価)","アンモニアイオン","アンモニウムアニオン"] },
+  "Ag⁺":   { normal:["ナトリウムイオン","カリウムイオン","銅イオン"],                 hard:["銀イオン(2価)","銀アニオン","銀イオン(0価)"] },
+  "Li⁺":   { normal:["ナトリウムイオン","カリウムイオン","水素イオン"],               hard:["リチウムイオン(2価)","リチウムアニオン","Li²⁺"] },
+  "Mn²⁺":  { normal:["鉄(II)イオン","銅イオン","亜鉛イオン"],                        hard:["マンガン(III)イオン","マンガン(I)イオン","マンガンアニオン"] },
+  "Pb²⁺":  { normal:["銅イオン","亜鉛イオン","鉄(II)イオン"],                        hard:["鉛イオン(1価)","鉛イオン(4価)","鉛アニオン"] },
+  "Ni²⁺":  { normal:["銅イオン","亜鉛イオン","コバルトイオン"],                       hard:["ニッケルイオン(3価)","ニッケルイオン(1価)","ニッケルアニオン"] },
+  "Cr³⁺":  { normal:["鉄(III)イオン","アルミニウムイオン","マンガン(III)イオン"],     hard:["クロム(II)イオン","クロム(IV)イオン","クロムアニオン"] },
+  "H₃O⁺":  { normal:["アンモニウムイオン","水素イオン","ナトリウムイオン"],            hard:["オキソニウムイオン(2価)","水分子イオン","H₂O⁺"] },
+  // 陰イオン
+  "Cl⁻":   { normal:["臭化物イオン","ヨウ化物イオン","フッ化物イオン"],               hard:["塩化物イオン(2価)","塩化物アニオン(2価)","Cl²⁻"] },
+  "OH⁻":   { normal:["フッ化物イオン","塩化物イオン","酸化物イオン"],                 hard:["水酸化物イオン(2価)","酸素イオン","O²⁻"] },
+  "SO₄²⁻": { normal:["亜硫酸イオン","炭酸イオン","リン酸イオン"],                    hard:["亜硫酸イオン","硫酸水素イオン","硫酸イオン(1価)"] },
+  "NO₃⁻":  { normal:["亜硝酸イオン","硫酸イオン","塩化物イオン"],                    hard:["亜硝酸イオン","硝酸イオン(2価)","NO₄⁻"] },
+  "CO₃²⁻": { normal:["炭酸水素イオン","硫酸イオン","亜硫酸イオン"],                  hard:["炭酸水素イオン","炭酸イオン(1価)","炭酸イオン(3価)"] },
+  "HCO₃⁻": { normal:["炭酸イオン","硫酸水素イオン","水酸化物イオン"],                hard:["炭酸イオン","炭酸水素イオン(2価)","HCO₄⁻"] },
+  "SO₃²⁻": { normal:["硫酸イオン","炭酸イオン","亜硝酸イオン"],                      hard:["硫酸イオン","亜硫酸イオン(1価)","亜硫酸イオン(3価)"] },
+  "NO₂⁻":  { normal:["硝酸イオン","亜硫酸イオン","塩化物イオン"],                    hard:["硝酸イオン","亜硝酸イオン(2価)","N₂O⁻"] },
+  "PO₄³⁻": { normal:["硫酸イオン","炭酸イオン","硝酸イオン"],                        hard:["リン酸イオン(2価)","リン酸イオン(4価)","HPO₄²⁻"] },
+  "HSO₄⁻": { normal:["硫酸イオン","炭酸水素イオン","水酸化物イオン"],                hard:["硫酸イオン","亜硫酸水素イオン","H₂SO₄"] },
+  "MnO₄⁻": { normal:["二クロム酸イオン","硫酸イオン","硝酸イオン"],                  hard:["過マンガン酸イオン(2価)","マンガン酸イオン","MnO₃⁻"] },
+  "Cr₂O₇²⁻":{ normal:["過マンガン酸イオン","硫酸イオン","炭酸イオン"],              hard:["クロム酸イオン","二クロム酸イオン(3価)","Cr₂O₆²⁻"] },
+  "CH₃COO⁻":{ normal:["ギ酸イオン","水酸化物イオン","炭酸水素イオン"],              hard:["酢酸イオン(2価)","プロピオン酸イオン","CH₂COO⁻"] },
+  "F⁻":    { normal:["塩化物イオン","臭化物イオン","水酸化物イオン"],                hard:["フッ化物イオン(2価)","F²⁻","フッ化物アニオン(2価)"] },
+  "Br⁻":   { normal:["塩化物イオン","ヨウ化物イオン","フッ化物イオン"],              hard:["臭化物イオン(2価)","Br²⁻","臭化物アニオン(2価)"] },
+  "I⁻":    { normal:["臭化物イオン","塩化物イオン","フッ化物イオン"],               hard:["ヨウ化物イオン(2価)","I₃⁻","ヨウ化物アニオン(2価)"] },
+  "S²⁻":   { normal:["酸化物イオン","塩化物イオン","硫酸イオン"],                   hard:["硫化物イオン(1価)","硫化物イオン(3価)","S²⁺"] },
+  "O²⁻":   { normal:["硫化物イオン","水酸化物イオン","フッ化物イオン"],              hard:["酸化物イオン(1価)","酸化物イオン(3価)","O²⁺"] },
+  "CN⁻":   { normal:["塩化物イオン","水酸化物イオン","亜硝酸イオン"],               hard:["シアン化物イオン(2価)","C₂N⁻","チオシアン酸イオン"] },
+  "SCN⁻":  { normal:["シアン化物イオン","塩化物イオン","硝酸イオン"],               hard:["チオシアン酸イオン(2価)","SC₂N⁻","シアン化物イオン"] },
+};
+
 const FORMULA_SIMILAR = {
   "H₂O":    { normal:["CO₂","H₂","HCl"],           hard:["H₂O₂","HO","H₃O"] },
   "CO₂":    { normal:["CO","SO₂","H₂O"],            hard:["CO","CO₃","C₂O₄"] },
@@ -342,44 +472,39 @@ const FORMULA_SIMILAR = {
 };
 
 // 難易度に応じたダミー選択肢を生成
+// ION_SIMILAR / FORMULA_SIMILAR の値は「名前の文字列リスト」
+// → 式→名前 でも 名前→式 でも正しく使える
 function getDifficultyCandidates(item, allItems, difficulty, mode) {
-  // mode: "ion" | "formula" | "element"
   const similarMap = mode==="ion" ? ION_SIMILAR : mode==="formula" ? FORMULA_SIMILAR : null;
   const key = mode==="ion" ? item.formula : mode==="formula" ? item.formula : item.symbol;
 
   if (difficulty === "easy" || !similarMap || !similarMap[key]) {
-    // 易：完全にランダムから選ぶ（デフォルト動作）
     return shuffle(allItems.filter(x => (mode==="element"?x.symbol:x.formula) !== key)).slice(0,3);
   }
 
   const similar = similarMap[key];
-  if (difficulty === "normal") {
-    // 普通：similarMap.normalを使う（足りなければランダム補完）
-    const pool = similar.normal || [];
-    const needed = 3;
-    const result = pool.slice(0, needed).map(f => ({formula:f, name:"?", _dummy:true}));
-    if (result.length < needed) {
-      const extras = shuffle(allItems.filter(x => (mode==="element"?x.symbol:x.formula) !== key))
-        .slice(0, needed - result.length);
-      return [...result, ...extras];
-    }
-    return result;
-  }
+  const nameList = difficulty === "hard"
+    ? (similar.hard || similar.normal || [])
+    : (similar.normal || []);
 
-  if (difficulty === "hard") {
-    // 難：similarMap.hardを使う
-    const pool = similar.hard || similar.normal || [];
-    const needed = 3;
-    const result = pool.slice(0, needed).map(f => ({formula:f, name:"?", _dummy:true}));
-    if (result.length < needed) {
-      const extras = shuffle(allItems.filter(x => (mode==="element"?x.symbol:x.formula) !== key))
-        .slice(0, needed - result.length);
-      return [...result, ...extras];
-    }
-    return result;
-  }
+  // nameListは「名前の文字列」→ allItemsから名前で検索、なければダミーオブジェクト生成
+  const results = nameList.slice(0, 3).map(name => {
+    const found = allItems.find(x => x.name === name);
+    if (found) return found;
+    // 実在しない名前のダミー: 式と名前の両方をその名前にする（表示上は名前が出る）
+    return { formula: name, name: name, _dummy: true };
+  });
 
-  return shuffle(allItems.filter(x => (mode==="element"?x.symbol:x.formula) !== key)).slice(0,3);
+  // 3個未満なら補完
+  if (results.length < 3) {
+    const usedKeys = results.map(r => r._dummy ? r.name : (mode==="ion"?r.formula:r.formula));
+    const extras = shuffle(allItems.filter(x => {
+      const k = mode==="ion"?x.formula:x.formula;
+      return k !== key && !usedKeys.includes(k);
+    })).slice(0, 3 - results.length);
+    return [...results, ...extras];
+  }
+  return results;
 }
 
 // 元素用ダミー（難易度別）
@@ -435,19 +560,12 @@ function generateIonQ(ions, rng, directionMode="random", difficulty="normal") {
   const ion = ions[Math.floor(rand()*ions.length)];
   const isF2N = directionMode==="f2n" ? true : directionMode==="n2f" ? false : rand() > 0.5;
   const wrongCandidates = getDifficultyCandidates(ion, ions, difficulty, "ion");
-  // normal/hard のダミーは _dummy:true フラグ付き（名前なし）
-  // 式→名前: choices=name, 正解=ion.name
-  // 名前→式: choices=formula, 正解=ion.formula
   const choiceItems = shuffle([ion, ...wrongCandidates]);
-  const choices = choiceItems.map(c => {
-    if (c._dummy) return isF2N ? `(${c.formula})` : c.formula;
-    return isF2N ? c.name : c.formula;
-  });
-  // ダミーを使う場合: 式→名前ならダミーの式も「式」として出す
-  // 名前→式ならダミーの式をそのまま選択肢に
+  // 式→名前: 選択肢は名前。名前がない(_dummy)場合は式をそのまま表示
+  // 名前→式: 選択肢は式
   const finalChoices = choiceItems.map(c => {
-    if (!c._dummy) return isF2N ? c.name : c.formula;
-    return c.formula; // ダミーは式だけ持っている
+    if (isF2N) return c.name || c.formula;
+    return c.formula;
   });
   return {
     id: ion.formula+isF2N,
@@ -468,8 +586,8 @@ function generateFormulaQ(formulas, rng, directionMode="random", difficulty="nor
   const wrongCandidates = getDifficultyCandidates(item, formulas, difficulty, "formula");
   const choiceItems = shuffle([item, ...wrongCandidates]);
   const finalChoices = choiceItems.map(c => {
-    if (!c._dummy) return isF2N ? c.name : c.formula;
-    return c.formula; // ダミーは式だけ
+    if (isF2N) return c.name || c.formula;
+    return c.formula;
   });
   return {
     id: item.formula+isF2N,
@@ -894,6 +1012,17 @@ input[type=range]{width:100%;accent-color:var(--primary);}
 .memo-sub{font-size:.7rem;color:var(--muted);}
 .memo-num{font-size:.68rem;color:var(--muted);font-family:"Space Mono",monospace;}
 .footer-copy{text-align:center;padding:18px 10px 10px;color:var(--muted);font-size:.72rem;line-height:1.6;}
+/* ranking card */
+.rcard{background:#fff;border-radius:10px;padding:12px;box-shadow:var(--shadow);margin-bottom:8px;border-left:4px solid var(--primary);}
+.rcard.me{border-left-color:var(--accent);background:#fffbeb;}
+.rcard-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.rcard-rank{font-family:'Space Mono',monospace;font-weight:700;font-size:1.1rem;width:30px;}
+.rcard-name{flex:1;font-weight:700;font-size:.95rem;}
+.rcard-score{font-family:'Space Mono',monospace;font-weight:700;color:var(--primary);font-size:1.1rem;}
+.rcard-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:.72rem;color:var(--muted);}
+.rcard-stat{background:var(--bg);padding:2px 7px;border-radius:10px;}
+/* timeattack */
+.ta-badge{display:inline-block;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:700;}
 `;
 
 // ── Countdown ──────────────────────────────────────────────────
@@ -912,28 +1041,31 @@ function Countdown({ onDone }) {
 }
 
 // ── ランキング登録モーダル ─────────────────────────────────────
-function RankingModal({ score, nickname, quizMode, maxNum, subLevel="junior", difficulty="normal", onDone }) {
+function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLevel="junior", difficulty="normal", onDone }) {
   const [saving, setSaving] = useState(false);
+  const acc = total > 0 ? Math.round(correct/total*100) : 0;
 
   const doSave = async () => {
     setSaving(true);
-    const key = quizMode==="ion" ? "ranking:ion" : quizMode==="formula" ? "ranking:formula" : "ranking:v2";
+    const key = quizMode==="ion" ? "ranking:ion"
+      : quizMode==="formula" ? "ranking:formula"
+      : quizMode==="mol" ? "ranking:mol"
+      : quizMode==="timeattack" ? "ranking:timeattack"
+      : "ranking:v2";
     const res = await sGet(key, true);
     let all = [];
     try { if(res) all=JSON.parse(res.value); } catch{}
-    const field = quizMode==="ion" ? "ion" : null;
     // 同じニックネーム＋条件の古い記録を削除
     const filtered = all.filter(r => {
       if(r.name!==nickname) return true;
       if(quizMode==="ion"||quizMode==="formula") return r.subLevel!==subLevel;
+      if(quizMode==="mol") return r.molMode!==subLevel;
       return r.maxNum!==maxNum;
     });
-    const entry = (quizMode==="ion"||quizMode==="formula")
-      ? { name:nickname, score, quizMode, subLevel, difficulty, date:Date.now() }
-      : { name:nickname, score, maxNum, quizMode:"element", difficulty, date:Date.now() };
+    const entry = { name:nickname, score, correct, total, acc, quizMode, subLevel, maxNum, difficulty, date:Date.now() };
     filtered.push(entry);
     filtered.sort((a,b)=>b.score-a.score);
-    await sSet(key, JSON.stringify(filtered.slice(0,50)), true);
+    await sSet(key, JSON.stringify(filtered.slice(0,100)), true);
     setSaving(false);
     onDone(true);
   };
@@ -942,7 +1074,13 @@ function RankingModal({ score, nickname, quizMode, maxNum, subLevel="junior", di
     <div className="modal-bg">
       <div className="modal">
         <h3>🏆 スコアを登録しますか？</h3>
-        <p style={{fontSize:"1.5rem",fontWeight:900,color:"var(--primary)",marginBottom:4}}>{score}点</p>
+        <div style={{textAlign:"center",marginBottom:12}}>
+          <div style={{fontSize:"2rem",fontWeight:900,color:"var(--primary)"}}>{score}点</div>
+          <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:6,fontSize:".85rem"}}>
+            <span style={{background:"var(--bg)",padding:"3px 10px",borderRadius:10}}>正解 <b>{correct}/{total}</b></span>
+            <span style={{background:"var(--bg)",padding:"3px 10px",borderRadius:10}}>正答率 <b>{acc}%</b></span>
+          </div>
+        </div>
         <p>{nickname} さんのスコアをランキングに載せます</p>
         <div style={{display:"flex",gap:10,flexDirection:"column"}}>
           <button className="btn btn-g btn-blk" onClick={doSave} disabled={saving}>
@@ -975,7 +1113,7 @@ function RangeSelector({ maxNum, onChange }) {
 }
 
 // ── HomeScreen ─────────────────────────────────────────────────
-function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMemo, bgmOn, onToggleBgm }) {
+function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, onTimeAttack, bgmOn, onToggleBgm }) {
   const [edit,setEdit]=useState(false);
   const [ni,setNi]=useState(nickname||"");
   const save=()=>{if(ni.trim()){onSetNickname(ni.trim());setEdit(false);}};
@@ -1037,6 +1175,17 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
       </div>
 
       <div style={{marginBottom:10}}>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"#6366f1",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧮 mol計算ドリル</div>
+        <div className="g2" style={{gridTemplateColumns:"1fr"}}>
+          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol()}>
+            <div className="ic">🧮</div>
+            <div className="nm">mol計算ドリル</div>
+            <div className="ds">10問・5分・高校化学基礎</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{marginBottom:10}}>
         <div style={{fontWeight:800,fontSize:".78rem",color:"var(--form)",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧬 化学式クイズ</div>
         <div className="g2">
           <div className="sc form-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onSolo("formula")}>
@@ -1051,6 +1200,21 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
       {!nickname&&(
         <div className="tc" style={{marginTop:3,marginBottom:8}}>
           <span className="hero-nologin">✋ ニックネームを登録してスタート！</span>
+        </div>
+      )}
+      {nickname&&(
+        <div style={{marginBottom:10}}>
+          <div style={{fontWeight:800,fontSize:".78rem",color:"#f59e0b",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>⏱ タイムアタック</div>
+          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{borderColor:"#f59e0b"}} onClick={()=>nickname&&onTimeAttack()}>
+            <div style={{display:"flex",alignItems:"center",gap:10,padding:"2px 0"}}>
+              <span style={{fontSize:"1.6rem"}}>⏱</span>
+              <div>
+                <div style={{fontWeight:700,fontSize:".95rem"}}>タイムアタック</div>
+                <div style={{fontSize:".72rem",color:"var(--muted)"}}>10問を最速クリア！正解するまで次へ進めない</div>
+              </div>
+              <span className="ta-badge" style={{marginLeft:"auto"}}>NEW</span>
+            </div>
+          </div>
         </div>
       )}
       <div style={{display:"flex",gap:8,marginBottom:8}}>
@@ -1223,6 +1387,8 @@ function QuizScreen({ maxNum, quizMode, directionMode="random", subLevel="junior
   const [selected,setSelected]=useState(null);
   const [feedback,setFeedback]=useState("none");
   const [bgmOn,setBgmOn]=useState(true);
+  const [molMode,setMolMode]=useState("intro");
+  const [taSettings,setTaSettings]=useState(null);
   const sRef=useRef(0),cRef=useRef(0),aRef=useRef(0),mRef=useRef([]);
 
   useEffect(()=>{
@@ -1231,7 +1397,8 @@ function QuizScreen({ maxNum, quizMode, directionMode="random", subLevel="junior
       setTimeLeft(prev=>{
         if(prev<=1){
           clearInterval(t); bgm.stop(); bgm.se("finish");
-          onFinish({score:sRef.current,correct:cRef.current,total:aRef.current,mistakes:mRef.current});
+          const finalScore = calcQuizScore(cRef.current, aRef.current, sRef.current);
+          onFinish({score:finalScore,rawScore:sRef.current,correct:cRef.current,total:aRef.current,mistakes:mRef.current});
           return 0;
         }
         return prev-1;
@@ -1303,7 +1470,7 @@ function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", o
     <div>
       {/* ランキング登録モーダル（対戦モード以外） */}
       {showRankModal && !battleResult && (
-        <RankingModal score={result.score} nickname={nickname} quizMode={quizMode} maxNum={maxNum} subLevel={result.subLevel||"junior"} difficulty={result.difficulty||"normal"}
+        <RankingModal score={result.score} correct={result.correct||0} total={result.total||0} nickname={nickname} quizMode={quizMode} maxNum={maxNum} subLevel={result.subLevel||"junior"} difficulty={result.difficulty||"normal"}
           onDone={(saved)=>{setRankSaved(saved);setShowRankModal(false);}}/>
       )}
 
@@ -1378,18 +1545,35 @@ function RankingScreen({ onBack, myNickname }) {
 
   const load=async()=>{
     setLoading(true);
-    const isIon=tab==="ion";
-    const isFormula=tab==="formula";
-    const key=isIon?"ranking:ion":isFormula?"ranking:formula":"ranking:v2";
+    let key;
+    if(tab==="ion") key="ranking:ion";
+    else if(tab==="formula") key="ranking:formula";
+    else if(tab==="mol") key="ranking:mol";
+    else if(tab==="timeattack") key="ranking:timeattack";
+    else key="ranking:v2";
     const res=await sGet(key,true);
     let all=[];
     try{if(res)all=JSON.parse(res.value);}catch{}
-    if(tab==="element_all"||isIon||isFormula) setRanks(all);
+    if(["element_all","ion","formula","mol","timeattack"].includes(tab)) setRanks(all);
     else setRanks(all.filter(r=>r.maxNum===Number(tab)));
     setLoading(false);
   };
 
-  const tabs=[["element_all","元素:総合"],["20","元素:〜20"],["56","元素:〜56"],["82","元素:全"],["ion","⚡イオン"],["formula","🧬化学式"]];
+  const tabs=[
+    ["element_all","⚛️元素"],["ion","⚡イオン"],["formula","🧬化学式"],
+    ["mol","🧮mol"],["timeattack","⏱TA"],
+  ];
+
+  const modeLabel = (r) => {
+    if(r.quizMode==="ion") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--ion-l)", color:"var(--ion)"};
+    if(r.quizMode==="formula") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--form-l)", color:"var(--form)"};
+    if(r.quizMode==="mol") return {text:({intro:"入門",basic:"基礎",adv:"応用",random:"乱"})[r.subLevel]||r.subLevel, bg:"#ede9fe", color:"#6366f1"};
+    if(r.quizMode==="timeattack") return {text:"TA", bg:"#fef3c7", color:"#d97706"};
+    if(r.maxNum) return {text:`〜${r.maxNum}`, bg:"var(--pl)", color:"var(--primary)"};
+    return null;
+  };
+
+  const medal = (i) => i===0?"🥇":i===1?"🥈":i===2?"🥉":null;
 
   return (
     <div>
@@ -1403,26 +1587,43 @@ function RankingScreen({ onBack, myNickname }) {
             <button key={v} className={`tab ${tab===v?"on":""}`} onClick={()=>setTab(v)}>{l}</button>
           ))}
         </div>
-        {loading?<p className="tc muted">読み込み中...</p>
-          :ranks.length===0?<p className="tc muted">まだ記録がありません</p>
-          :(
-            <ul className="rlist">
-              {ranks.map((r,i)=>(
-                <li key={i} className={`ri ${r.name===myNickname?"rhl":""}`}>
-                  <span className={`rn ${i===0?"rn1":i===1?"rn2":i===2?"rn3":""}`}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1}</span>
-                  <span className="rname">{r.name}{r.name===myNickname&&<span className="bdg by" style={{marginLeft:5}}>あなた</span>}</span>
-                  {r.quizMode==="ion"&&<span className="bdg bion" style={{marginRight:4}}>⚡</span>}
-                  {r.quizMode==="formula"&&<span className="bdg bform" style={{marginRight:4}}>🧬</span>}
-                  {r.difficulty&&(()=>{const d=DIFFICULTY_OPTIONS.find(o=>o.value===r.difficulty);return d?<span style={{fontSize:".68rem",padding:"1px 5px",borderRadius:10,background:d.light,color:d.color,fontWeight:700,marginRight:3}}>{d.label}</span>:null;})()}
-                  {r.maxNum&&<span className="muted" style={{fontSize:".73rem",marginRight:5}}>〜{r.maxNum}番</span>}
-                  <span className="rsc">{r.score}点</span>
-                </li>
-              ))}
-            </ul>
-          )
-        }
-        <p className="muted tc" style={{marginTop:7,fontSize:".71rem"}}>※ランキングは全ユーザーに公開されます</p>
       </div>
+      {loading?<p className="tc muted" style={{padding:16}}>読み込み中...</p>
+        :ranks.length===0?<p className="tc muted" style={{padding:16}}>まだ記録がありません</p>
+        :(
+          <div>
+            {ranks.map((r,i)=>{
+              const ml = modeLabel(r);
+              const diff = DIFFICULTY_OPTIONS.find(o=>o.value===r.difficulty);
+              const isMe = r.name===myNickname;
+              return (
+                <div key={i} className={`rcard ${isMe?"me":""}`}>
+                  <div className="rcard-top">
+                    <span className="rcard-rank">{medal(i)||<span style={{fontSize:".85rem",color:"var(--muted)"}}>{i+1}</span>}</span>
+                    <span className="rcard-name">
+                      {r.name}
+                      {isMe&&<span className="bdg by" style={{marginLeft:5}}>あなた</span>}
+                    </span>
+                    {ml&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:ml.bg,color:ml.color,fontWeight:700}}>{ml.text}</span>}
+                    {diff&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:diff.light,color:diff.color,fontWeight:700}}>{diff.label.split(" ")[0]}</span>}
+                    <span className="rcard-score">{r.score}点</span>
+                  </div>
+                  <div className="rcard-meta">
+                    {r.correct!=null&&r.total!=null&&(
+                      <span className="rcard-stat">正解 <b style={{color:"var(--success)"}}>{r.correct}/{r.total}</b></span>
+                    )}
+                    {r.acc!=null&&(
+                      <span className="rcard-stat">正答率 <b style={{color:"var(--primary)"}}>{r.acc}%</b></span>
+                    )}
+                    {r.date&&<span className="rcard-stat">{fmtDate(r.date)}</span>}
+                  </div>
+                </div>
+              );
+            })}
+            <p className="muted tc" style={{marginTop:7,fontSize:".71rem",paddingBottom:8}}>※ランキングは全ユーザーに公開されます</p>
+          </div>
+        )
+      }
     </div>
   );
 }
@@ -1527,6 +1728,846 @@ function MemoScreen({ onBack }) {
             </div>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+
+// ============================================================
+// mol計算ドリル
+// ============================================================
+const AVOGADRO = 6.0e23;
+const MOL_CONST_TEXT = "H=1.0  C=12  O=16  N=14  Na=23  Cl=35.5  Cu=64  S=32　　アボガドロ数: 6.0×10²³/mol";
+
+// 答えを見やすい文字列に
+function fmtAns(v) {
+  if (typeof v === "string") return v;
+  if (v >= 1e23) return `${(v/1e23).toFixed(1).replace(/\.0$/,"")}×10²³`;
+  if (v >= 1e22) return `${(v/1e22).toFixed(1).replace(/\.0$/,"")}×10²²`;
+  if (Number.isInteger(v) || (v*10)%1===0) return String(v);
+  return String(v);
+}
+
+// 典型ミスからダミー生成
+function genMolDummies(correct, qtype) {
+  const c = correct;
+  let dummies = [];
+  if (qtype === "g_to_mol" || qtype === "mol_to_g") {
+    dummies = [c*2, c/2, c*3, c/3, c+1, c-1, c*4].filter(x=>x>0&&x!==c);
+  } else if (qtype === "mol_to_L" || qtype === "L_to_mol") {
+    dummies = [c*2, c/2, c+22.4, c-22.4, c*3, c/3].filter(x=>x>0&&x!==c);
+  } else if (qtype === "mol_to_N" || qtype === "N_to_mol") {
+    // アボガドロ数絡み
+    dummies = [c*2, c/2, c*3, c/3, c*0.5].filter(x=>x>0&&x!==c);
+  } else if (qtype === "g_to_L" || qtype === "L_to_g") {
+    dummies = [c*2, c/2, c+11.2, c*3, c/3].filter(x=>x>0&&x!==c);
+  } else if (qtype === "g_to_N" || qtype === "N_to_g") {
+    dummies = [c*2, c/2, c*3, c/3].filter(x=>x>0&&x!==c);
+  } else if (qtype === "L_to_N" || qtype === "N_to_L") {
+    dummies = [c*2, c/2, c*3, c/3].filter(x=>x>0&&x!==c);
+  } else {
+    dummies = [c*2, c/2, c*3, c-c*0.5].filter(x=>x>0&&x!==c);
+  }
+  return shuffle([...new Set(dummies)]).slice(0,3);
+}
+
+// ヒント生成
+function getMolHints(q) {
+  const hints = [];
+  if (q.qtype==="g_to_mol")  { hints.push("g → mol の変換：mol = g ÷ モル質量"); hints.push(`${q.substance}のモル質量 = ${q.molarMass} g/mol`); hints.push(`mol = ${q.given} ÷ ${q.molarMass}`); }
+  else if (q.qtype==="mol_to_g") { hints.push("mol → g の変換：g = mol × モル質量"); hints.push(`${q.substance}のモル質量 = ${q.molarMass} g/mol`); hints.push(`g = ${q.given} × ${q.molarMass}`); }
+  else if (q.qtype==="mol_to_L") { hints.push("mol → L の変換（標準状態）：L = mol × 22.4"); hints.push(`22.4 L/mol を使う`); hints.push(`L = ${q.given} × 22.4`); }
+  else if (q.qtype==="L_to_mol") { hints.push("L → mol の変換（標準状態）：mol = L ÷ 22.4"); hints.push(`22.4 L/mol を使う`); hints.push(`mol = ${q.given} ÷ 22.4`); }
+  else if (q.qtype==="mol_to_N") { hints.push("mol → 個数の変換：個 = mol × 6.0×10²³"); hints.push(`アボガドロ数 6.0×10²³ を使う`); hints.push(`個 = ${q.given} × 6.0×10²³`); }
+  else if (q.qtype==="N_to_mol") { hints.push("個数 → mol の変換：mol = 個数 ÷ 6.0×10²³"); hints.push(`アボガドロ数 6.0×10²³ で割る`); hints.push(`mol = ${q.numer}×10²³ ÷ 6.0×10²³`); }
+  else if (q.qtype==="g_to_L")   { hints.push("g → mol → L の2段変換"); hints.push(`モル質量 ${q.molarMass} g/mol → mol、次に × 22.4`); hints.push(`mol = ${q.given} ÷ ${q.molarMass}、L = mol × 22.4`); }
+  else if (q.qtype==="L_to_g")   { hints.push("L → mol → g の2段変換"); hints.push(`22.4で割って mol、次に × モル質量 ${q.molarMass}`); hints.push(`mol = ${q.given} ÷ 22.4、g = mol × ${q.molarMass}`); }
+  else if (q.qtype==="g_to_N")   { hints.push("g → mol → 個数 の2段変換"); hints.push(`モル質量 ${q.molarMass} g/mol で割って mol、次に × 6.0×10²³`); hints.push(`mol = ${q.given} ÷ ${q.molarMass}、個 = mol × 6.0×10²³`); }
+  else if (q.qtype==="N_to_g")   { hints.push("個数 → mol → g の2段変換"); hints.push(`6.0×10²³ で割って mol、次に × モル質量 ${q.molarMass}`); hints.push(`mol = ${q.numer}×10²³ ÷ 6.0×10²³、g = mol × ${q.molarMass}`); }
+  else if (q.qtype==="L_to_N")   { hints.push("L → mol → 個数 の2段変換"); hints.push(`22.4で割って mol、次に × 6.0×10²³`); hints.push(`mol = ${q.given} ÷ 22.4、個 = mol × 6.0×10²³`); }
+  else if (q.qtype==="N_to_L")   { hints.push("個数 → mol → L の2段変換"); hints.push(`6.0×10²³ で割って mol、次に × 22.4`); hints.push(`mol = ${q.numer}×10²³ ÷ 6.0×10²³、L = mol × 22.4`); }
+  return hints;
+}
+
+const MOL_QUESTIONS_RAW = [
+  // 1-10: g→mol
+  {id:1,  q:"CO₂ 44gは何molか？",    ans:1,     qtype:"g_to_mol",  substance:"CO₂", molarMass:44, given:44},
+  {id:2,  q:"CO 28gは何molか？",     ans:1,     qtype:"g_to_mol",  substance:"CO",  molarMass:28, given:28},
+  {id:3,  q:"NH₃ 34gは何molか？",    ans:2,     qtype:"g_to_mol",  substance:"NH₃", molarMass:17, given:34},
+  {id:4,  q:"HCl 73gは何molか？",    ans:2,     qtype:"g_to_mol",  substance:"HCl", molarMass:36.5, given:73},
+  {id:5,  q:"CH₄ 8gは何molか？",     ans:0.5,   qtype:"g_to_mol",  substance:"CH₄", molarMass:16, given:8},
+  {id:6,  q:"H₂SO₄ 49gは何molか？",  ans:0.5,   qtype:"g_to_mol",  substance:"H₂SO₄", molarMass:98, given:49},
+  {id:7,  q:"HNO₃ 126gは何molか？",  ans:2,     qtype:"g_to_mol",  substance:"HNO₃", molarMass:63, given:126},
+  {id:8,  q:"Cu 64gは何molか？",     ans:1,     qtype:"g_to_mol",  substance:"Cu",  molarMass:64, given:64},
+  {id:9,  q:"NaOH 40gは何molか？",   ans:1,     qtype:"g_to_mol",  substance:"NaOH",molarMass:40, given:40},
+  {id:10, q:"H₂O 54gは何molか？",    ans:3,     qtype:"g_to_mol",  substance:"H₂O", molarMass:18, given:54},
+  // 11-20: mol→g
+  {id:11, q:"CO₂ 2molは何gか？",     ans:88,    qtype:"mol_to_g",  substance:"CO₂", molarMass:44, given:2},
+  {id:12, q:"CO 1molは何gか？",      ans:28,    qtype:"mol_to_g",  substance:"CO",  molarMass:28, given:1},
+  {id:13, q:"NH₃ 3molは何gか？",     ans:51,    qtype:"mol_to_g",  substance:"NH₃", molarMass:17, given:3},
+  {id:14, q:"HCl 1molは何gか？",     ans:36.5,  qtype:"mol_to_g",  substance:"HCl", molarMass:36.5, given:1},
+  {id:15, q:"CH₄ 0.5molは何gか？",   ans:8,     qtype:"mol_to_g",  substance:"CH₄", molarMass:16, given:0.5},
+  {id:16, q:"H₂SO₄ 0.5molは何gか？", ans:49,    qtype:"mol_to_g",  substance:"H₂SO₄", molarMass:98, given:0.5},
+  {id:17, q:"HNO₃ 3molは何gか？",    ans:189,   qtype:"mol_to_g",  substance:"HNO₃", molarMass:63, given:3},
+  {id:18, q:"Cu 2molは何gか？",      ans:128,   qtype:"mol_to_g",  substance:"Cu",  molarMass:64, given:2},
+  {id:19, q:"NaOH 4molは何gか？",    ans:160,   qtype:"mol_to_g",  substance:"NaOH",molarMass:40, given:4},
+  {id:20, q:"H₂O 5molは何gか？",     ans:90,    qtype:"mol_to_g",  substance:"H₂O", molarMass:18, given:5},
+  // 21-30: mol→L
+  {id:21, q:"CO₂ 1molは標準状態の気体で何Lか？",      ans:22.4,  qtype:"mol_to_L", substance:"CO₂", given:1},
+  {id:22, q:"CO 2molは標準状態の気体で何Lか？",       ans:44.8,  qtype:"mol_to_L", substance:"CO",  given:2},
+  {id:23, q:"NH₃ 0.875molは標準状態の気体で何Lか？",  ans:19.6,  qtype:"mol_to_L", substance:"NH₃", given:0.875},
+  {id:24, q:"HCl 0.25molは標準状態の気体で何Lか？",   ans:5.6,   qtype:"mol_to_L", substance:"HCl", given:0.25},
+  {id:25, q:"CH₄ 0.75molは標準状態の気体で何Lか？",   ans:16.8,  qtype:"mol_to_L", substance:"CH₄", given:0.75},
+  {id:26, q:"H₂SO₄ 0.5molは標準状態の気体で何Lか？",  ans:11.2,  qtype:"mol_to_L", substance:"H₂SO₄", given:0.5},
+  {id:27, q:"HNO₃ 0.125molは標準状態の気体で何Lか？", ans:2.8,   qtype:"mol_to_L", substance:"HNO₃", given:0.125},
+  {id:28, q:"C₂H₆ 0.375molは何Lか？",               ans:8.4,   qtype:"mol_to_L", substance:"C₂H₆", given:0.375},
+  {id:29, q:"Ar 0.25molは何Lか？",                   ans:5.6,   qtype:"mol_to_L", substance:"Ar",  given:0.25},
+  {id:30, q:"H₂O 0.625molは標準状態の気体で何Lか？",  ans:14,    qtype:"mol_to_L", substance:"H₂O", given:0.625},
+  // 31-40: L→mol
+  {id:31, q:"CO₂ 標準状態で22.4Lの気体は何molか？",  ans:1,     qtype:"L_to_mol", substance:"CO₂", given:22.4},
+  {id:32, q:"CO 標準状態で44.8Lの気体は何molか？",   ans:2,     qtype:"L_to_mol", substance:"CO",  given:44.8},
+  {id:33, q:"NH₃ 標準状態で19.6Lの気体は何molか？",  ans:0.875, qtype:"L_to_mol", substance:"NH₃", given:19.6},
+  {id:34, q:"HCl 標準状態で5.6Lの気体は何molか？",   ans:0.25,  qtype:"L_to_mol", substance:"HCl", given:5.6},
+  {id:35, q:"CH₄ 標準状態で16.8Lの気体は何molか？",  ans:0.75,  qtype:"L_to_mol", substance:"CH₄", given:16.8},
+  {id:36, q:"H₂SO₄ 標準状態で11.2Lの気体は何molか？",ans:0.5,   qtype:"L_to_mol", substance:"H₂SO₄", given:11.2},
+  {id:37, q:"HNO₃ 標準状態で2.8Lの気体は何molか？",  ans:0.125, qtype:"L_to_mol", substance:"HNO₃", given:2.8},
+  {id:38, q:"C₂H₆ 標準状態で8.4Lの気体は何molか？",  ans:0.375, qtype:"L_to_mol", substance:"C₂H₆", given:8.4},
+  {id:39, q:"Ar 標準状態で5.6Lの気体は何molか？",     ans:0.25,  qtype:"L_to_mol", substance:"Ar",  given:5.6},
+  {id:40, q:"H₂O 14Lは何molか？",                   ans:0.625, qtype:"L_to_mol", substance:"H₂O", given:14},
+  // 41-50: mol→個数
+  {id:41, q:"CO₂ 1molの分子数は何個か？",             ans:"6.0×10²³", qtype:"mol_to_N", substance:"CO₂", given:1, numer:6.0},
+  {id:42, q:"CO 2molの分子数は何個か？",              ans:"1.2×10²⁴", qtype:"mol_to_N", substance:"CO",  given:2, numer:12.0},
+  {id:43, q:"NH₄⁺ 3molのイオン数は何個か？",          ans:"1.8×10²⁴", qtype:"mol_to_N", substance:"NH₄⁺", given:3, numer:18.0},
+  {id:44, q:"NaOH 0.25molのNa⁺のイオン数は何個か？",  ans:"1.5×10²³", qtype:"mol_to_N", substance:"NaOH", given:0.25, numer:1.5},
+  {id:45, q:"CH₄ 0.5molの分子数は何個か？",           ans:"3.0×10²³", qtype:"mol_to_N", substance:"CH₄", given:0.5, numer:3.0},
+  {id:46, q:"H₂SO₄ 0.5molのH⁺のイオン数は何個か？",  ans:"6.0×10²³", qtype:"mol_to_N", substance:"H₂SO₄", given:0.5, numer:6.0},
+  {id:47, q:"HNO₃ 3molのイオンの総数は何個か？",      ans:"3.6×10²⁴", qtype:"mol_to_N", substance:"HNO₃", given:3, numer:36.0},
+  {id:48, q:"Cu(OH)₂ 2molのOH⁻のイオン数は何個か？", ans:"2.4×10²⁴", qtype:"mol_to_N", substance:"Cu(OH)₂", given:2, numer:24.0},
+  {id:49, q:"NaOH 0.25molのイオンの総数は何個か？",   ans:"3.0×10²³", qtype:"mol_to_N", substance:"NaOH", given:0.25, numer:3.0},
+  {id:50, q:"H₂O 3molの分子数は何個か？",             ans:"1.8×10²⁴", qtype:"mol_to_N", substance:"H₂O", given:3, numer:18.0},
+  // 51-60: 個数→mol
+  {id:51, q:"CO₂の分子数が6.0×10²³個ある時何molか？", ans:1,    qtype:"N_to_mol", substance:"CO₂", numer:6.0},
+  {id:52, q:"COの分子数が12.0×10²³個ある時何molか？", ans:2,    qtype:"N_to_mol", substance:"CO",  numer:12.0},
+  {id:53, q:"NH₃の分子数が18.0×10²³個ある時何molか？",ans:3,    qtype:"N_to_mol", substance:"NH₃", numer:18.0},
+  {id:54, q:"HClの分子数が3.0×10²³個ある時何molか？", ans:0.5,  qtype:"N_to_mol", substance:"HCl", numer:3.0},
+  {id:55, q:"CH₄ 分子数が12.0×10²³個ある時何molか？",ans:2,    qtype:"N_to_mol", substance:"CH₄", numer:12.0},
+  {id:56, q:"H₂SO₄の分子数が24.0×10²³個ある時何molか？",ans:4, qtype:"N_to_mol", substance:"H₂SO₄", numer:24.0},
+  {id:57, q:"HNO₃の分子数が3.0×10²³個ある時何molか？",ans:0.5, qtype:"N_to_mol", substance:"HNO₃", numer:3.0},
+  {id:58, q:"Cuの分子数が18.0×10²³個ある時何molか？", ans:3,    qtype:"N_to_mol", substance:"Cu",  numer:18.0},
+  {id:59, q:"NaOHの分子数が12.0×10²³個ある時何molか？",ans:2,  qtype:"N_to_mol", substance:"NaOH", numer:12.0},
+  {id:60, q:"H₂O 分子数が24.0×10²³個ある時何molか？",ans:4,    qtype:"N_to_mol", substance:"H₂O", numer:24.0},
+  // 61-70: g→L（2段変換）
+  {id:61, q:"CO₂ 44gは標準状態の気体で何Lか？",    ans:22.4,  qtype:"g_to_L", substance:"CO₂", molarMass:44, given:44},
+  {id:62, q:"CO 28gは標準状態の気体で何Lか？",     ans:22.4,  qtype:"g_to_L", substance:"CO",  molarMass:28, given:28},
+  {id:63, q:"NH₃ 34gは標準状態の気体で何Lか？",    ans:44.8,  qtype:"g_to_L", substance:"NH₃", molarMass:17, given:34},
+  {id:64, q:"HCl 73gは標準状態の気体で何Lか？",    ans:44.8,  qtype:"g_to_L", substance:"HCl", molarMass:36.5, given:73},
+  {id:65, q:"CH₄ 8gは標準状態の気体で何Lか？",     ans:11.2,  qtype:"g_to_L", substance:"CH₄", molarMass:16, given:8},
+  {id:66, q:"H₂SO₄ 49gは標準状態の気体で何Lか？",  ans:11.2,  qtype:"g_to_L", substance:"H₂SO₄", molarMass:98, given:49},
+  {id:67, q:"HNO₃ 126gは標準状態の気体で何Lか？",  ans:44.8,  qtype:"g_to_L", substance:"HNO₃", molarMass:63, given:126},
+  {id:68, q:"C₂H₆ 60gは標準状態の気体で何Lか？",   ans:44.8,  qtype:"g_to_L", substance:"C₂H₆", molarMass:30, given:60},
+  {id:69, q:"SO₂ 64gは標準状態の気体で何Lか？",    ans:22.4,  qtype:"g_to_L", substance:"SO₂", molarMass:64, given:64},
+  {id:70, q:"H₂O 54gは標準状態の気体で何Lか？",    ans:67.2,  qtype:"g_to_L", substance:"H₂O", molarMass:18, given:54},
+  // 71-80: g→個数
+  {id:71, q:"CO₂ 44gの分子数はいくらか？",   ans:"6.0×10²³", qtype:"g_to_N", substance:"CO₂", molarMass:44, given:44, numer:6.0},
+  {id:72, q:"CO 28gの分子数はいくらか？",    ans:"6.0×10²³", qtype:"g_to_N", substance:"CO",  molarMass:28, given:28, numer:6.0},
+  {id:73, q:"NH₃ 34gの分子数はいくらか？",   ans:"1.2×10²⁴", qtype:"g_to_N", substance:"NH₃", molarMass:17, given:34, numer:12.0},
+  {id:74, q:"HCl 73gの分子数はいくらか？",   ans:"1.2×10²⁴", qtype:"g_to_N", substance:"HCl", molarMass:36.5, given:73, numer:12.0},
+  {id:75, q:"CH₄ 8gの分子数はいくらか？",    ans:"3.0×10²³", qtype:"g_to_N", substance:"CH₄", molarMass:16, given:8, numer:3.0},
+  {id:76, q:"H₂SO₄ 49gの分子数はいくらか？", ans:"3.0×10²³", qtype:"g_to_N", substance:"H₂SO₄", molarMass:98, given:49, numer:3.0},
+  {id:77, q:"HNO₃ 126gの分子数はいくらか？", ans:"1.2×10²⁴", qtype:"g_to_N", substance:"HNO₃", molarMass:63, given:126, numer:12.0},
+  {id:78, q:"Cu 64gの分子数はいくらか？",    ans:"6.0×10²³", qtype:"g_to_N", substance:"Cu",  molarMass:64, given:64, numer:6.0},
+  {id:79, q:"NaOH 40gの分子数はいくらか？",  ans:"6.0×10²³", qtype:"g_to_N", substance:"NaOH",molarMass:40, given:40, numer:6.0},
+  {id:80, q:"H₂O 54gの分子数はいくらか？",   ans:"1.8×10²⁴", qtype:"g_to_N", substance:"H₂O", molarMass:18, given:54, numer:18.0},
+  // 81-90: 個数→L
+  {id:81, q:"CO₂の分子数が6.0×10²³個ある時、標準状態の気体で何Lか？",   ans:22.4, qtype:"N_to_L", substance:"CO₂", numer:6.0},
+  {id:82, q:"COの分子数が12.0×10²³個ある時、標準状態の気体で何Lか？",   ans:44.8, qtype:"N_to_L", substance:"CO",  numer:12.0},
+  {id:83, q:"NH₃の分子数が18.0×10²³個ある時、標準状態の気体で何Lか？",  ans:67.2, qtype:"N_to_L", substance:"NH₃", numer:18.0},
+  {id:84, q:"HClの分子数が3.0×10²³個ある時、標準状態の気体で何Lか？",   ans:11.2, qtype:"N_to_L", substance:"HCl", numer:3.0},
+  {id:85, q:"CH₄ 分子数が12.0×10²³個ある時、標準状態の気体で何Lか？",   ans:44.8, qtype:"N_to_L", substance:"CH₄", numer:12.0},
+  {id:86, q:"H₂SO₄の分子数が24.0×10²³個ある時、標準状態の気体で何Lか？",ans:89.6, qtype:"N_to_L", substance:"H₂SO₄", numer:24.0},
+  {id:87, q:"HNO₃の分子数が3.0×10²³個ある時、標準状態の気体で何Lか？",  ans:11.2, qtype:"N_to_L", substance:"HNO₃", numer:3.0},
+  {id:88, q:"SO₂の分子数が18.0×10²³個ある時、標準状態の気体で何Lか？",  ans:67.2, qtype:"N_to_L", substance:"SO₂", numer:18.0},
+  {id:89, q:"Heの分子数が12.0×10²³個ある時、標準状態の気体で何Lか？",   ans:44.8, qtype:"N_to_L", substance:"He",  numer:12.0},
+  {id:90, q:"H₂O 分子数が24.0×10²³個ある時、標準状態の気体で何Lか？",   ans:89.6, qtype:"N_to_L", substance:"H₂O", numer:24.0},
+  // 91-100: L→g
+  {id:91,  q:"CO₂ 22.4Lの標準状態の気体は何gか？",   ans:44,   qtype:"L_to_g", substance:"CO₂", molarMass:44, given:22.4},
+  {id:92,  q:"CO 67.2Lの標準状態の気体は何gか？",    ans:84,   qtype:"L_to_g", substance:"CO",  molarMass:28, given:67.2},
+  {id:93,  q:"NH₃ 44.8Lの標準状態の気体は何gか？",   ans:34,   qtype:"L_to_g", substance:"NH₃", molarMass:17, given:44.8},
+  {id:94,  q:"HCl 22.4Lの標準状態の気体は何gか？",   ans:36.5, qtype:"L_to_g", substance:"HCl", molarMass:36.5, given:22.4},
+  {id:95,  q:"CH₄ 5.6Lの標準状態の気体は何gか？",    ans:4,    qtype:"L_to_g", substance:"CH₄", molarMass:16, given:5.6},
+  {id:96,  q:"H₂SO₄ 44.8Lの標準状態の気体は何gか？", ans:196,  qtype:"L_to_g", substance:"H₂SO₄", molarMass:98, given:44.8},
+  {id:97,  q:"HNO₃ 67.2Lの標準状態の気体は何gか？",  ans:189,  qtype:"L_to_g", substance:"HNO₃", molarMass:63, given:67.2},
+  {id:98,  q:"C₂H₆ 5.6Lの標準状態の気体は何gか？",   ans:7.5,  qtype:"L_to_g", substance:"C₂H₆", molarMass:30, given:5.6},
+  {id:99,  q:"SO₂ 11.2Lの標準状態の気体は何gか？",   ans:32,   qtype:"L_to_g", substance:"SO₂", molarMass:64, given:11.2},
+  {id:100, q:"H₂O 44.8Lの標準状態の気体は何gか？",   ans:36,   qtype:"L_to_g", substance:"H₂O", molarMass:18, given:44.8},
+  // 101-110: 個数→g
+  {id:101, q:"CO₂の分子数が6.0×10²³個ある時何gか？",    ans:44,  qtype:"N_to_g", substance:"CO₂", molarMass:44, numer:6.0},
+  {id:102, q:"COの分子数が12.0×10²³個ある時何gか？",    ans:56,  qtype:"N_to_g", substance:"CO",  molarMass:28, numer:12.0},
+  {id:103, q:"NH₃の分子数が18.0×10²³個ある時何gか？",   ans:51,  qtype:"N_to_g", substance:"NH₃", molarMass:17, numer:18.0},
+  {id:104, q:"HClの分子数が12.0×10²³個ある時何gか？",   ans:73,  qtype:"N_to_g", substance:"HCl", molarMass:36.5, numer:12.0},
+  {id:105, q:"CH₄ 分子数が12.0×10²³個ある時何gか？",    ans:32,  qtype:"N_to_g", substance:"CH₄", molarMass:16, numer:12.0},
+  {id:106, q:"H₂SO₄の分子数が24.0×10²³個ある時何gか？", ans:392, qtype:"N_to_g", substance:"H₂SO₄", molarMass:98, numer:24.0},
+  {id:107, q:"HNO₃の分子数が3.0×10²³個ある時何gか？",   ans:31.5,qtype:"N_to_g", substance:"HNO₃", molarMass:63, numer:3.0},
+  {id:108, q:"Cuの分子数が18.0×10²³個ある時何gか？",    ans:192, qtype:"N_to_g", substance:"Cu",  molarMass:64, numer:18.0},
+  {id:109, q:"NaOHの分子数が12.0×10²³個ある時何gか？",  ans:80,  qtype:"N_to_g", substance:"NaOH",molarMass:40, numer:12.0},
+  {id:110, q:"H₂O 分子数が24.0×10²³個ある時何gか？",    ans:72,  qtype:"N_to_g", substance:"H₂O", molarMass:18, numer:24.0},
+  // 111-120: L→個数
+  {id:111, q:"CO₂の標準状態で22.4Lの気体の分子数はいくらか？",    ans:"6.0×10²³", qtype:"L_to_N", substance:"CO₂", given:22.4, numer:6.0},
+  {id:112, q:"COの標準状態で67.2Lの気体の分子数はいくらか？",     ans:"1.8×10²⁴", qtype:"L_to_N", substance:"CO",  given:67.2, numer:18.0},
+  {id:113, q:"NH₃の標準状態で44.8Lの気体の分子数はいくらか？",    ans:"1.2×10²⁴", qtype:"L_to_N", substance:"NH₃", given:44.8, numer:12.0},
+  {id:114, q:"HClの標準状態で11.2Lの気体の分子数はいくらか？",    ans:"3.0×10²³", qtype:"L_to_N", substance:"HCl", given:11.2, numer:3.0},
+  {id:115, q:"CH₄の標準状態で5.6Lの気体の分子数はいくらか？",     ans:"1.5×10²³", qtype:"L_to_N", substance:"CH₄", given:5.6, numer:1.5},
+  {id:116, q:"H₂SO₄の標準状態で44.8Lの気体の分子数はいくらか？",  ans:"1.2×10²⁴", qtype:"L_to_N", substance:"H₂SO₄", given:44.8, numer:12.0},
+  {id:117, q:"HNO₃の標準状態で67.2Lの気体の分子数はいくらか？",   ans:"1.8×10²⁴", qtype:"L_to_N", substance:"HNO₃", given:67.2, numer:18.0},
+  {id:118, q:"SO₂の標準状態で5.6Lの気体の分子数はいくらか？",     ans:"1.5×10²³", qtype:"L_to_N", substance:"SO₂", given:5.6, numer:1.5},
+  {id:119, q:"Arの標準状態で11.2Lの気体の分子数はいくらか？",     ans:"3.0×10²³", qtype:"L_to_N", substance:"Ar",  given:11.2, numer:3.0},
+  {id:120, q:"H₂Oの標準状態で44.8Lの気体の分子数はいくらか？",    ans:"1.2×10²⁴", qtype:"L_to_N", substance:"H₂O", given:44.8, numer:12.0},
+];
+
+function getMolQuestions(mode) {
+  let pool;
+  if (mode==="intro")  pool = MOL_QUESTIONS_RAW.filter(q=>q.id<=20);
+  else if (mode==="basic") pool = MOL_QUESTIONS_RAW.filter(q=>q.id>=21&&q.id<=60);
+  else if (mode==="adv")   pool = MOL_QUESTIONS_RAW.filter(q=>q.id>=61);
+  else pool = MOL_QUESTIONS_RAW;
+  return shuffle(pool).slice(0,10);
+}
+
+// ── MolSetupScreen ─────────────────────────────────────────
+function MolSetupScreen({ onStart, onBack }) {
+  const [mode, setMode] = useState("intro");
+  const modes = [
+    { value:"intro", label:"🌱 入門",   desc:"問題1〜20（g↔mol）",      color:"#22c55e", light:"#dcfce7" },
+    { value:"basic", label:"📘 基礎",   desc:"問題21〜60（L↔mol・個数）", color:"#3b82f6", light:"#dbeafe" },
+    { value:"adv",   label:"🔥 応用",   desc:"問題61〜120（2段変換）",    color:"#ef4444", light:"#fee2e2" },
+    { value:"random",label:"🎲 ランダム",desc:"全120問からランダム10問",   color:"#8b5cf6", light:"#ede9fe" },
+  ];
+  return (
+    <div className="card">
+      <div className="fb2 mb13">
+        <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
+        <span style={{fontWeight:700}}>🧮 mol計算ドリル</span><span/>
+      </div>
+      <div style={{background:"#f8fafc",borderRadius:9,padding:"10px 12px",marginBottom:14,fontSize:".75rem",color:"#475569",lineHeight:1.7}}>
+        <div style={{fontWeight:700,marginBottom:3}}>📌 原子量・定数</div>
+        <div style={{fontFamily:"monospace",fontSize:".72rem"}}>{MOL_CONST_TEXT}</div>
+      </div>
+      <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>モードを選択</div>
+      <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:16}}>
+        {modes.map(m=>{
+          const active = mode===m.value;
+          return (
+            <div key={m.value} onClick={()=>setMode(m.value)}
+              style={{border:`2px solid ${active?m.color:"var(--border)"}`,borderRadius:9,padding:"11px 14px",cursor:"pointer",background:active?m.light:"#fff",display:"flex",alignItems:"center",gap:12,transition:"all .12s"}}>
+              <span style={{fontSize:"1.3rem"}}>{m.label.split(" ")[0]}</span>
+              <div>
+                <div style={{fontWeight:700,fontSize:".95rem",color:active?m.color:"var(--text)"}}>{m.label.split(" ").slice(1).join(" ")}</div>
+                <div style={{fontSize:".75rem",color:"var(--muted)"}}>{m.desc}</div>
+              </div>
+              {active&&<span style={{marginLeft:"auto",color:m.color,fontWeight:700}}>✓</span>}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <button className="btn btn-blk" style={{flex:2,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",color:"#fff",fontWeight:700}} onClick={()=>onStart(mode,"solo")}>
+          🎮 ひとりで挑戦
+        </button>
+        <button className="btn btn-blk" style={{flex:1,background:"linear-gradient(135deg,#f59e0b,#ef4444)",color:"#fff",fontWeight:700}} onClick={()=>onStart(mode,"battle")}>
+          ⚔️ 対戦
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+// ============================================================
+// タイムアタックモード（元素/イオン/化学式を10問・最速で）
+// ============================================================
+function TimeAttackSetupScreen({ onStart, onBack }) {
+  const [quizMode, setQMode] = useState("element");
+  const [maxNum, setMaxNum] = useState(20);
+  const [subLevel, setSubLevel] = useState("junior");
+
+  const modes = [
+    { value:"element", label:"⚛️ 元素記号", color:"var(--primary)", light:"var(--pl)" },
+    { value:"ion",     label:"⚡ イオン",   color:"var(--ion)",     light:"var(--ion-l)" },
+    { value:"formula", label:"🧬 化学式",   color:"var(--form)",    light:"var(--form-l)" },
+  ];
+
+  return (
+    <div className="card">
+      <div className="fb2 mb13">
+        <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
+        <span style={{fontWeight:700}}>⏱ タイムアタック</span><span/>
+      </div>
+      <div style={{textAlign:"center",marginBottom:14}}>
+        <span className="ta-badge">10問を最速クリア！</span>
+        <p className="muted" style={{marginTop:6,fontSize:".82rem"}}>全問正解するまで終わらない。速さを競おう！</p>
+      </div>
+      <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>クイズの種類</div>
+      <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:14}}>
+        {modes.map(m=>{
+          const active=quizMode===m.value;
+          return (
+            <div key={m.value} onClick={()=>setQMode(m.value)}
+              style={{border:`2px solid ${active?m.color:"var(--border)"}`,borderRadius:9,padding:"10px 14px",cursor:"pointer",background:active?m.light:"#fff",display:"flex",alignItems:"center",gap:10,transition:"all .12s"}}>
+              <span style={{fontSize:"1.2rem"}}>{m.label.split(" ")[0]}</span>
+              <span style={{fontWeight:700,color:active?m.color:"var(--text)"}}>{m.label.split(" ").slice(1).join(" ")}</span>
+              {active&&<span style={{marginLeft:"auto",color:m.color,fontWeight:700}}>✓</span>}
+            </div>
+          );
+        })}
+      </div>
+      {quizMode==="element"&&(
+        <div style={{marginBottom:14}}>
+          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:6}}>出題範囲</div>
+          <RangeSelector maxNum={maxNum} onChange={setMaxNum}/>
+        </div>
+      )}
+      {(quizMode==="ion"||quizMode==="formula")&&(
+        <div style={{marginBottom:14}}>
+          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:6}}>レベル</div>
+          <div className="g2" style={{margin:0}}>
+            {[["junior","📗 中学"],["senior","📕 高校"]].map(([v,l])=>(
+              <div key={v} onClick={()=>setSubLevel(v)}
+                style={{border:`2px solid ${subLevel===v?"var(--primary)":"var(--border)"}`,borderRadius:9,padding:"9px 10px",cursor:"pointer",textAlign:"center",background:subLevel===v?"var(--pl)":"#fff",fontWeight:700,fontSize:".88rem",transition:"all .12s"}}>
+                {l}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <button className="btn btn-blk" style={{background:"linear-gradient(135deg,#f59e0b,#ef4444)",color:"#fff",fontWeight:700}}
+        onClick={()=>onStart({quizMode,maxNum,subLevel})}>
+        ⏱ スタート！
+      </button>
+    </div>
+  );
+}
+
+function TimeAttackQuizScreen({ settings, onFinish }) {
+  const { quizMode, maxNum, subLevel } = settings;
+  const isIon = quizMode==="ion";
+  const isFormula = quizMode==="formula";
+  const elements = isFormula ? getFormulas(subLevel) : isIon ? getIons(subLevel) : getElements(maxNum);
+  const genQ = isFormula ? generateFormulaQ : isIon ? generateIonQ : generateElementQ;
+  const [q, setQ] = useState(()=>genQ(elements, null, "random", "normal"));
+  const [elapsed, setElapsed] = useState(0);
+  const [answered, setAnswered] = useState(0);
+  const [correct, setCorrect] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [feedback, setFeedback] = useState("none");
+  const correctRef = useRef(0), answeredRef = useRef(0);
+  const startTime = useRef(Date.now());
+  const timerRef = useRef();
+
+  useEffect(()=>{
+    bgm.start("play");
+    timerRef.current = setInterval(()=>setElapsed(Math.floor((Date.now()-startTime.current)/1000)),100);
+    return()=>{clearInterval(timerRef.current);bgm.stop();};
+  },[]);
+
+  const handleChoice = (choice) => {
+    if(selected!==null) return;
+    const isOk = choice===q.answer;
+    setSelected(choice); setFeedback(isOk?"ok":"ng");
+    answeredRef.current+=1; setAnswered(answeredRef.current);
+    if(isOk){ correctRef.current+=1; setCorrect(correctRef.current); bgm.se("correct"); }
+    else bgm.se("wrong");
+
+    setTimeout(()=>{
+      if(isOk && correctRef.current>=10){
+        clearInterval(timerRef.current); bgm.stop(); bgm.se("finish");
+        const t = Math.floor((Date.now()-startTime.current)/1000);
+        const score = calcTimeAttackScore(10, 10, t);
+        onFinish({score, correct:10, total:10, elapsed:t, totalAnswered:answeredRef.current});
+      } else {
+        setQ(genQ(elements, null, "random", "normal"));
+        setSelected(null); setFeedback("none");
+      }
+    }, isOk ? 300 : 500);
+  };
+
+  const mins = Math.floor(elapsed/60);
+  const secs = elapsed%60;
+
+  return (
+    <div>
+      <div className="card">
+        <div className="qhd">
+          <div style={{fontFamily:"Space Mono,monospace",fontSize:"1.3rem",fontWeight:700,color:"#f59e0b"}}>
+            ⏱ {mins}:{String(secs).padStart(2,"0")}
+          </div>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            <span className="ta-badge">{correct}/10</span>
+            <span className="muted" style={{fontSize:".78rem"}}>#{answeredRef.current+1}</span>
+          </div>
+          <div className="scd">✓{correct}</div>
+        </div>
+        <div style={{marginBottom:10}}>
+          <div style={{height:8,background:"var(--border)",borderRadius:4,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${correct/10*100}%`,background:"linear-gradient(90deg,#f59e0b,#ef4444)",borderRadius:4,transition:"width .3s"}}/>
+          </div>
+        </div>
+        <div className={`fb fb-${feedback}`}/>
+        <div className="qc">
+          <div className="ql">{q.label}</div>
+          <div className={`qe ${q.isSymbol?"":"sm"}`}>{q.display}</div>
+        </div>
+        <div className="chs">
+          {q.choices.map((c,i)=>(
+            <button key={i}
+              className={`ch ${q.isSymbol?"cn":""} ${selected!==null?"dis":""} ${selected!==null&&c===q.answer?"ok":""} ${selected===c&&c!==q.answer?"ng":""}`}
+              onClick={()=>handleChoice(c)}>{c}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TimeAttackResultScreen({ result, nickname, settings, onHome, onRetry }) {
+  const [showRankModal, setShowRankModal] = useState(true);
+  const [rankSaved, setRankSaved] = useState(false);
+  const mins = Math.floor(result.elapsed/60);
+  const secs = result.elapsed%60;
+  const acc = Math.round(result.correct/result.totalAnswered*100);
+
+  return (
+    <div>
+      {showRankModal&&(
+        <RankingModal score={result.score} correct={result.correct} total={result.totalAnswered}
+          nickname={nickname} quizMode="timeattack" maxNum={settings?.maxNum} subLevel={settings?.subLevel||"junior"} difficulty="normal"
+          onDone={(saved)=>{setRankSaved(saved);setShowRankModal(false);}}/>
+      )}
+      <div className="card">
+        <div style={{textAlign:"center",padding:"14px 0"}}>
+          <div style={{fontSize:"1.7rem",marginBottom:4}}>🏁 クリア！</div>
+          <div style={{fontSize:"3rem",fontWeight:900,color:"#f59e0b",fontFamily:"Space Mono,monospace"}}>{mins}:{String(secs).padStart(2,"0")}</div>
+          <div style={{color:"var(--muted)",fontSize:".82rem"}}>クリアタイム</div>
+          {rankSaved&&<div style={{marginTop:6,fontSize:".82rem",color:"var(--success)",fontWeight:700}}>✅ ランキングに登録しました！</div>}
+        </div>
+        <div className="s3">
+          <div className="sb"><div className="sv" style={{color:"var(--primary)"}}>{result.score}</div><div className="sk">スコア</div></div>
+          <div className="sb"><div className="sv">{result.totalAnswered}</div><div className="sk">解答数</div></div>
+          <div className="sb"><div className="sv">{acc}%</div><div className="sk">正答率</div></div>
+        </div>
+        <p className="muted tc" style={{fontSize:".78rem"}}>10問正解するまでの総解答数 {result.totalAnswered}問</p>
+      </div>
+      <div className="gap8">
+        <button className="btn" style={{flex:1,background:"linear-gradient(135deg,#f59e0b,#ef4444)",color:"#fff",fontWeight:700}} onClick={onRetry}>🔁 もう一度</button>
+        <button className="btn btn-s" style={{flex:1}} onClick={onHome}>🏠 ホーム</button>
+      </div>
+    </div>
+  );
+}
+
+// ── MolBattleLobby ──────────────────────────────────────────
+function MolBattleLobby({ nickname, onBack }) {
+  const [phase, setPhase] = useState("menu");
+  const [molMode, setMolMode] = useState("intro");
+  const [roomCode, setRoomCode] = useState("");
+  const [joinCode, setJoinCode] = useState("");
+  const [roomData, setRoomData] = useState(null);
+  const [quizResult, setQuizResult] = useState(null);
+  const [battleResult, setBattleResult] = useState(null);
+  const [isHost, setIsHost] = useState(false);
+  const pollRef = useRef();
+
+  const genCode = () => Math.random().toString(36).slice(2,6).toUpperCase();
+
+  const createRoom = async (mode) => {
+    const code = genCode();
+    const seed = Math.floor(Math.random()*100000);
+    const room = { code, molMode:mode, host:nickname, seed,
+      players:[{name:nickname, status:"waiting", score:0, miss:0}],
+      status:"waiting", createdAt:Date.now() };
+    await sSet(`mol_room:${code}`, JSON.stringify(room), true);
+    setRoomCode(code); setRoomData(room); setMolMode(mode); setIsHost(true); setPhase("waiting");
+    startPoll(code);
+  };
+
+  const joinRoom = async () => {
+    const code = joinCode.toUpperCase().trim();
+    const res = await sGet(`mol_room:${code}`, true);
+    if (!res) { alert("ルームが見つかりません"); return; }
+    try {
+      const room = JSON.parse(res.value);
+      if (room.status !== "waiting") { alert("すでに対戦が始まっています"); return; }
+      if (!room.players.find(p=>p.name===nickname))
+        room.players.push({name:nickname, status:"waiting", score:0, miss:0});
+      await sSet(`mol_room:${code}`, JSON.stringify(room), true);
+      setRoomCode(code); setRoomData(room); setMolMode(room.molMode); setIsHost(false); setPhase("waiting");
+      startPoll(code);
+    } catch { alert("エラーが発生しました"); }
+  };
+
+  const startPoll = (code) => {
+    clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      const res = await sGet(`mol_room:${code}`, true);
+      if (!res) return;
+      try {
+        const room = JSON.parse(res.value);
+        setRoomData(room);
+        if (room.status === "playing") { clearInterval(pollRef.current); setPhase("quiz"); }
+      } catch {}
+    }, 1500);
+  };
+
+  const startGame = async () => {
+    const res = await sGet(`mol_room:${roomCode}`, true);
+    if (!res) return;
+    const room = JSON.parse(res.value);
+    room.status = "playing";
+    await sSet(`mol_room:${roomCode}`, JSON.stringify(room), true);
+    clearInterval(pollRef.current); setPhase("quiz");
+  };
+
+  const handleQuizFinish = async (result) => {
+    setQuizResult(result);
+    const res = await sGet(`mol_room:${roomCode}`, true);
+    if (res) {
+      const room = JSON.parse(res.value);
+      const pl = room.players.find(p=>p.name===nickname);
+      if (pl) { pl.score = result.total - result.miss; pl.miss = result.miss; pl.status = "done"; }
+      if (room.players.every(p=>p.status==="done")) room.status = "done";
+      await sSet(`mol_room:${roomCode}`, JSON.stringify(room), true);
+      setRoomData(room);
+    }
+    setPhase("result_wait");
+    pollRef.current = setInterval(async () => {
+      const r = await sGet(`mol_room:${roomCode}`, true);
+      if (r) {
+        const rm = JSON.parse(r.value);
+        setRoomData(rm);
+        if (rm.status==="done" || rm.players.every(p=>p.status==="done")) {
+          clearInterval(pollRef.current);
+          const sorted = [...rm.players].sort((a,b)=>b.score-a.score);
+          setBattleResult(sorted.map(p=>({name:p.name, score:p.score, miss:p.miss, isMe:p.name===nickname})));
+          setPhase("result");
+        }
+      }
+    }, 1500);
+  };
+
+  useEffect(()=>()=>clearInterval(pollRef.current),[]);
+
+  const modeLabels = {intro:"入門",basic:"基礎",adv:"応用",random:"ランダム"};
+
+  if (phase==="quiz") return <MolQuizScreen mode={molMode} onFinish={handleQuizFinish}/>;
+
+  if (phase==="result") return (
+    <div>
+      <div className="card">
+        <div style={{fontWeight:700,marginBottom:10}}>⚔️ mol対戦結果</div>
+        {battleResult.map((p,i)=>(
+          <div key={i} className="btr" style={p.isMe?{background:"#ede9fe"}:{}}>
+            <span style={{fontSize:"1.25rem"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":`${i+1}位`}</span>
+            <span style={{flex:1,fontWeight:700}}>{p.name}{p.isMe&&<span className="bdg by" style={{marginLeft:5}}>あなた</span>}</span>
+            <span style={{fontFamily:"Space Mono",fontWeight:700,color:"#6366f1"}}>{p.score}/10正解</span>
+          </div>
+        ))}
+      </div>
+      <MolResultScreen result={quizResult}
+        onHome={()=>{clearInterval(pollRef.current);onBack();}}
+        onRetry={()=>{clearInterval(pollRef.current);onBack();}}/>
+    </div>
+  );
+
+  if (phase==="result_wait") {
+    const w = roomData?.players.filter(p=>p.status!=="done").length||0;
+    return <div className="card tc"><p style={{fontSize:"2rem",marginBottom:10}}>⏳</p>
+      <h3 style={{fontWeight:700,marginBottom:6}}>正解数: {quizResult?.total - quizResult?.miss}問</h3>
+      <p className="muted">他のプレイヤーを待っています... ({w}人)</p></div>;
+  }
+
+  if (phase==="waiting") return (
+    <div>
+      <div className="card">
+        <div className="fb2 mb13">
+          <button className="btn btn-s btn-sm" onClick={()=>{clearInterval(pollRef.current);setPhase("menu");}}>← 戻る</button>
+          <span style={{fontWeight:700}}>{isHost?"ルーム作成":"参加中"}</span><span/>
+        </div>
+        <p className="muted tc mb8">ルームコードを共有しよう</p>
+        <div className="rc">{roomCode}</div>
+        <p className="muted tc" style={{fontSize:".75rem",marginBottom:13}}>
+          mol計算({modeLabels[molMode]}) ｜ このコードを友達に伝えてね
+        </p>
+        <h4 style={{fontWeight:700,marginBottom:6}}>参加者 ({roomData?.players?.length||0}人)</h4>
+        <ul className="rlist">
+          {roomData?.players?.map((p,i)=>(
+            <li key={i} className="pli">
+              <span className="pldot"/>
+              <span style={{flex:1,fontWeight:700}}>{p.name}</span>
+              {p.name===roomData.host&&<span className="bdg bh">ホスト</span>}
+              {p.name===nickname&&<span className="bdg by">あなた</span>}
+            </li>
+          ))}
+        </ul>
+        {!isHost&&<p className="muted tc" style={{marginTop:10}}>ホストがゲームを開始するまでお待ちください</p>}
+      </div>
+      {isHost&&<button className="btn btn-blk" style={{background:"linear-gradient(135deg,#f59e0b,#ef4444)",color:"#fff",fontWeight:700}} onClick={startGame}>
+        🚀 ゲーム開始！ ({roomData?.players?.length||0}人)
+      </button>}
+    </div>
+  );
+
+  if (phase==="create") return (
+    <MolSetupScreen
+      onBack={()=>setPhase("menu")}
+      onStart={(mode,_)=>createRoom(mode)}/>
+  );
+
+  if (phase==="join") return (
+    <div className="card">
+      <div className="fb2 mb13">
+        <button className="btn btn-s btn-sm" onClick={()=>setPhase("menu")}>← 戻る</button>
+        <span style={{fontWeight:700}}>ルームに参加</span><span/>
+      </div>
+      <div className="ig">
+        <label>ルームコードを入力</label>
+        <input className="inp" value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())}
+          placeholder="例: AB12" maxLength={4}
+          style={{fontFamily:"Space Mono",fontSize:"1.4rem",letterSpacing:6,textAlign:"center"}}/>
+      </div>
+      <button className="btn btn-blk" style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",color:"#fff",fontWeight:700}}
+        onClick={joinRoom} disabled={joinCode.length<4}>参加する</button>
+    </div>
+  );
+
+  // menu
+  return (
+    <div>
+      <div className="card">
+        <div className="fb2 mb13">
+          <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
+          <span style={{fontWeight:700}}>⚔️ mol対戦モード</span><span/>
+        </div>
+        <p className="muted tc mb13">友達とルームコードで同時対戦！<br/>同じ問題を解いて正解数を競おう</p>
+        <div className="g2">
+          <div className="sc" onClick={()=>setPhase("create")} style={{borderColor:"#6366f1"}}>
+            <div className="ic">🏠</div><div className="nm">ルームを作る</div>
+          </div>
+          <div className="sc" onClick={()=>setPhase("join")} style={{borderColor:"#6366f1"}}>
+            <div className="ic">🚪</div><div className="nm">ルームに入る</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MolQuizScreen ──────────────────────────────────────────
+function MolQuizScreen({ mode, onFinish }) {
+  const [questions] = useState(()=>getMolQuestions(mode));
+  const [qIdx, setQIdx] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(300);
+  const [selected, setSelected] = useState(null);
+  const [feedback, setFeedback] = useState("none");
+  const [missCount, setMissCount] = useState(0);
+  const [hintCount, setHintCount] = useState(0);
+  const [skipCount, setSkipCount] = useState(0);
+  const [hintLevel, setHintLevel] = useState(0);
+  const [showHint, setShowHint] = useState(false);
+  const [penaltyAnim, setPenaltyAnim] = useState(false);
+  const [mistakes, setMistakes] = useState([]);
+  const timerRef = useRef();
+  const tlRef = useRef(300);
+  const missRef = useRef(0), hintRef = useRef(0), skipRef = useRef(0), mistakesRef = useRef([]);
+
+  const q = questions[qIdx];
+  const hints = getMolHints(q);
+
+  // 選択肢生成
+  const [choices] = useState(()=>{
+    return questions.map(qq=>{
+      const dummies = genMolDummies(typeof qq.ans==="string"?parseFloat(qq.ans.replace(/×10[²³⁴]*/,"e").replace("²³","23").replace("²⁴","24")):qq.ans, qq.qtype);
+      return shuffle([qq.ans, ...dummies.slice(0,3).map(d=>{
+        if(typeof qq.ans==="string") {
+          // 指数表記
+          const base = d / 1e23;
+          if(base >= 10) return `${(d/1e24).toFixed(1).replace(/\.0$/,"")}×10²⁴`;
+          return `${base.toFixed(1).replace(/\.0$/,"")}×10²³`;
+        }
+        return String(Math.round(d*1000)/1000);
+      })]);
+    });
+  });
+
+  useEffect(()=>{
+    timerRef.current = setInterval(()=>{
+      setTimeLeft(t=>{
+        if(t<=1){clearInterval(timerRef.current);finishGame();return 0;}
+        tlRef.current = t-1;
+        return t-1;
+      });
+    },1000);
+    return()=>clearInterval(timerRef.current);
+  },[]);
+
+  const finishGame = ()=>{
+    clearInterval(timerRef.current);
+    onFinish({timeLeft:tlRef.current, miss:missRef.current, hints:hintRef.current, skips:skipRef.current, total:questions.length, mistakes:mistakesRef.current, questions});
+  };
+
+  const handleChoice = (choice)=>{
+    if(selected!==null) return;
+    const isOk = String(choice) === String(q.ans);
+    setSelected(choice); setFeedback(isOk?"ok":"ng");
+    if(!isOk){ missRef.current+=1; setMissCount(missRef.current); mistakesRef.current=[...mistakesRef.current,{q,yours:choice}]; setMistakes(mistakesRef.current); bgm.se("wrong"); }
+    else bgm.se("correct");
+    setTimeout(()=>{
+      setSelected(null); setFeedback("none"); setHintLevel(0); setShowHint(false);
+      if(qIdx+1>=questions.length) finishGame();
+      else setQIdx(i=>i+1);
+    },500);
+  };
+
+  const handleSkip = ()=>{
+    missRef.current+=1; skipRef.current+=1; setMissCount(missRef.current); setSkipCount(skipRef.current);
+    setTimeLeft(t=>{ const nt=t+5; tlRef.current=nt; return nt; });
+    setPenaltyAnim(true); setTimeout(()=>setPenaltyAnim(false),1500);
+    mistakesRef.current=[...mistakesRef.current,{q,yours:"スキップ"}]; setMistakes(mistakesRef.current);
+    setSelected(null); setFeedback("none"); setHintLevel(0); setShowHint(false);
+    if(qIdx+1>=questions.length) finishGame();
+    else setQIdx(i=>i+1);
+  };
+
+  const handleHint = ()=>{
+    if(hintLevel<3){ const nl=hintLevel+1; setHintLevel(nl); setShowHint(true); if(nl===1){hintRef.current+=1;setHintCount(hintRef.current);} }
+  };
+
+  const mins = Math.floor(timeLeft/60);
+  const secs = timeLeft%60;
+  const lamps = 5;
+  const litLamps = Math.ceil((timeLeft/300)*lamps);
+  const urgent = timeLeft<=60;
+
+  return (
+    <div>
+      {/* 原子量定数バー */}
+      <div style={{background:"#1e293b",color:"#94a3b8",fontSize:".65rem",padding:"6px 12px",borderRadius:8,marginBottom:10,fontFamily:"monospace",lineHeight:1.6}}>
+        {MOL_CONST_TEXT}
+      </div>
+      <div className="card">
+        {/* ヘッダー */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div style={{fontFamily:"Space Mono,monospace",fontSize:"1.3rem",fontWeight:700,color:urgent?"var(--danger)":"var(--primary)",animation:urgent?"pulse .5s infinite alternate":"none"}}>
+            ⏱ {mins}:{String(secs).padStart(2,"0")}
+            <span style={{marginLeft:8,fontSize:".9rem"}}>
+              {Array(lamps).fill(0).map((_,i)=>(
+                <span key={i} style={{color:i<litLamps?(urgent?"#ef4444":"#3b82f6"):"#cbd5e1"}}>●</span>
+              ))}
+            </span>
+            {penaltyAnim&&<span style={{color:"#f59e0b",marginLeft:6,fontSize:".85rem",fontWeight:700}}>+5秒</span>}
+          </div>
+          <div style={{fontSize:".8rem",display:"flex",gap:8}}>
+            <span style={{color:"#ef4444",fontWeight:700}}>✗{missCount}</span>
+            <span style={{color:"#3b82f6",fontWeight:700}}>💡{hintCount}</span>
+            <span style={{color:"#f59e0b",fontWeight:700}}>⏭{skipCount}</span>
+          </div>
+          <div style={{fontFamily:"Space Mono,monospace",fontSize:".85rem",color:"var(--muted)"}}>{qIdx+1}/10</div>
+        </div>
+
+        <div className={`fb fb-${feedback}`}/>
+
+        {/* 問題 */}
+        <div style={{textAlign:"center",marginBottom:16}}>
+          <div style={{fontSize:".8rem",color:"var(--muted)",marginBottom:6,fontWeight:700,letterSpacing:".5px"}}>🧮 mol計算問題</div>
+          <div style={{fontSize:"1.2rem",fontWeight:700,color:"var(--text)",lineHeight:1.5}}>{q.q}</div>
+        </div>
+
+        {/* ヒント */}
+        {showHint&&(
+          <div style={{background:"#eff6ff",border:"1px solid #93c5fd",borderRadius:8,padding:"10px 12px",marginBottom:12,fontSize:".82rem",color:"#1e40af"}}>
+            {hints.slice(0,hintLevel).map((h,i)=><div key={i} style={{marginBottom:i<hintLevel-1?4:0}}>💡 {h}</div>)}
+          </div>
+        )}
+
+        {/* 選択肢 */}
+        <div className="chs" style={{marginBottom:12}}>
+          {(choices[qIdx]||[]).map((c,i)=>(
+            <button key={i}
+              className={`ch ${selected!==null?"dis":""} ${selected!==null&&String(c)===String(q.ans)?"ok":""} ${selected===c&&String(c)!==String(q.ans)?"ng":""}`}
+              style={{fontFamily:"Space Mono,monospace",fontSize:".95rem"}}
+              onClick={()=>handleChoice(c)}>{c}</button>
+          ))}
+        </div>
+
+        {/* ヒント・スキップ */}
+        <div style={{display:"flex",gap:8}}>
+          <button className="btn btn-s btn-sm" style={{flex:1,color:"#3b82f6",borderColor:"#3b82f6"}}
+            onClick={handleHint} disabled={hintLevel>=hints.length||selected!==null}>
+            💡 ヒント {hintLevel>0?`(${hintLevel}/3)`:""}</button>
+          <button className="btn btn-s btn-sm" style={{flex:1,color:"#f59e0b",borderColor:"#f59e0b"}}
+            onClick={handleSkip} disabled={selected!==null}>
+            ⏭ スキップ (+5秒)</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MolResultScreen ─────────────────────────────────────────
+function MolResultScreen({ result, nickname="", onHome, onRetry }) {
+  const [showMiss, setShowMiss] = useState(false);
+  const [showRankModal, setShowRankModal] = useState(!!nickname);
+  const [rankSaved, setRankSaved] = useState(false);
+  const correct = result.correct ?? (result.total - result.miss);
+  const acc = Math.round(correct/result.total*100);
+  const mins = Math.floor((300-result.timeLeft)/60);
+  const secs = (300-result.timeLeft)%60;
+
+  return (
+    <div>
+      {showRankModal&&nickname&&(
+        <RankingModal score={result.score||0} correct={correct} total={result.total}
+          nickname={nickname} quizMode="mol" maxNum={null} subLevel={result.molMode||"random"} difficulty="normal"
+          onDone={(saved)=>{setRankSaved(saved);setShowRankModal(false);}}/>
+      )}
+      <div className="card">
+        <div style={{textAlign:"center",padding:"14px 0"}}>
+          <div style={{fontSize:"1.7rem",marginBottom:4}}>
+            {acc>=90?"🥇 完璧！":acc>=70?"🥈 よくできました！":acc>=50?"🥉 もう少し！":"📚 練習しよう！"}
+          </div>
+          <div style={{fontSize:"2.5rem",fontWeight:900,color:"#6366f1",fontFamily:"Space Mono,monospace"}}>{result.score||0}</div>
+          <div style={{color:"var(--muted)",fontSize:".82rem"}}>点</div>
+          {rankSaved&&<div style={{marginTop:6,fontSize:".82rem",color:"var(--success)",fontWeight:700}}>✅ ランキングに登録しました！</div>}
+        </div>
+        <div className="s3">
+          <div className="sb"><div className="sv" style={{color:"var(--success)"}}>{correct}</div><div className="sk">正解</div></div>
+          <div className="sb"><div className="sv">{acc}%</div><div className="sk">正答率</div></div>
+          <div className="sb"><div className="sv">{mins}:{String(secs).padStart(2,"0")}</div><div className="sk">タイム</div></div>
+        </div>
+        <div style={{display:"flex",gap:12,justifyContent:"center",fontSize:".85rem",marginTop:4}}>
+          <span style={{color:"#3b82f6",fontWeight:700}}>💡 ヒント {result.hints}回</span>
+          <span style={{color:"#f59e0b",fontWeight:700}}>⏭ スキップ {result.skips}回</span>
+        </div>
+      </div>
+
+      {result.mistakes&&result.mistakes.length>0&&(
+        <div className="card">
+          <div className="fb2 mb8">
+            <span style={{fontWeight:700}}>❌ 間違えた問題 ({result.mistakes.length}問)</span>
+            <button className="btn btn-s btn-sm" onClick={()=>setShowMiss(v=>!v)}>{showMiss?"閉じる":"見る"}</button>
+          </div>
+          {showMiss&&result.mistakes.map((m,i)=>(
+            <div key={i} style={{padding:"8px 0",borderBottom:"1px solid var(--border)",fontSize:".83rem"}}>
+              <div style={{fontWeight:700,marginBottom:3}}>{m.q.q}</div>
+              <div style={{color:"var(--success)"}}>✓ 正解: {m.q.ans}</div>
+              <div style={{color:"var(--danger)"}}>✗ あなた: {m.yours}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="gap8">
+        <button className="btn btn-p" style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}} onClick={onRetry}>🔁 もう一度</button>
+        <button className="btn btn-s" style={{flex:1}} onClick={onHome}>🏠 ホーム</button>
       </div>
     </div>
   );
@@ -1700,6 +2741,8 @@ export default function App() {
   const [difficulty,setDifficulty]=useState("normal");
   const [quizResult,setQuizResult]=useState(null);
   const [bgmOn,setBgmOn]=useState(true);
+  const [molMode,setMolMode]=useState("intro");
+  const [taSettings,setTaSettings]=useState(null);
 
   useEffect(()=>{
     const start=()=>{bgm.start("home");document.removeEventListener("click",start);};
@@ -1748,6 +2791,8 @@ export default function App() {
               onSolo={goSetup} onBattle={goBattle}
               onRanking={()=>setScreen("ranking")}
               onMemo={()=>setScreen("memo")}
+              onMol={()=>{bgm.stop();setScreen("mol_setup");}}
+              onTimeAttack={()=>{bgm.stop();setScreen("ta_setup");}}
               bgmOn={bgmOn} onToggleBgm={toggleBgm}/>
           )}
           {screen==="setup"&&(
@@ -1763,6 +2808,13 @@ export default function App() {
           )}
           {screen==="ranking"&&<RankingScreen myNickname={nickname} onBack={()=>setScreen("home")}/>}
           {screen==="memo"&&<MemoScreen onBack={()=>setScreen("home")}/>}
+          {screen==="mol_setup"&&<MolSetupScreen onBack={()=>setScreen("home")} onStart={(m,t)=>{setMolMode(m);bgm.stop();if(t==="battle")setScreen("mol_battle");else setScreen("mol_quiz");}}/>}
+          {screen==="mol_battle"&&<MolBattleLobby nickname={nickname} onBack={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
+          {screen==="mol_quiz"&&<MolQuizScreen mode={molMode} onFinish={r=>{bgm.stop();bgm.se("finish");setQuizResult({...r,_mol:true,molMode});setScreen("mol_result");}}/>}
+          {screen==="mol_result"&&quizResult?._mol&&<MolResultScreen result={quizResult} nickname={nickname} onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}} onRetry={()=>{bgm.stop();setScreen("mol_quiz");}}/>}
+          {screen==="ta_setup"&&<TimeAttackSetupScreen onBack={()=>setScreen("home")} onStart={s=>{setTaSettings(s);bgm.stop();setScreen("ta_quiz");}}/>}
+          {screen==="ta_quiz"&&taSettings&&<TimeAttackQuizScreen settings={taSettings} onFinish={r=>{bgm.stop();setQuizResult({...r,_ta:true});setScreen("ta_result");}}/>}
+          {screen==="ta_result"&&quizResult?._ta&&<TimeAttackResultScreen result={quizResult} nickname={nickname} settings={taSettings} onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}} onRetry={()=>{bgm.stop();setScreen("ta_quiz");}}/>}
           {screen==="battle"&&<BattleLobby nickname={nickname} quizMode={quizMode} directionMode={directionMode} subLevel={subLevel} difficulty={difficulty} onBack={goHome}/>}
         </div>
       </div>
