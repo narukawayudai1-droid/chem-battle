@@ -529,28 +529,38 @@ function generateIonQ(ions, rng, directionMode="random", difficulty="normal") {
   const rand = rng || Math.random.bind(Math);
   const ion = ions[Math.floor(rand()*ions.length)];
   const isF2N = directionMode==="f2n" ? true : directionMode==="n2f" ? false : rand() > 0.5;
-  const wrongCandidates = getDifficultyCandidates(ion, ions, difficulty, "ion");
-  const choiceItems = shuffle([ion, ...wrongCandidates]);
-  // 式→名前: 選択肢は名前。名前がない(_dummy)場合は式をそのまま表示
-  // 名前→式: 選択肢は式
-  const finalChoices = choiceItems.map(c => {
-    if (isF2N) {
-      // 式→名前: 選択肢は名前
-      return c.name;
-    } else {
-      // 名前→式: 選択肢は式。_dummyの場合nameをそのまま選択肢に（ダミー式として）
-      return c._dummy ? c.name : c.formula;
-    }
-  });
-  return {
-    id: ion.formula+isF2N,
-    display: isF2N ? ion.formula : ion.name,
-    label: isF2N ? "このイオン式の名前は？" : "このイオンの式は？",
-    choices: finalChoices,
-    answer: isF2N ? ion.name : ion.formula,
-    isSymbol: isF2N,
-    meta: { symbol:ion.formula, name:ion.name },
-  };
+
+  if (isF2N) {
+    // 式→名前：選択肢は「名前」のみ
+    // ダミーはION_SIMILARの名前リストから（実在するものはname、しないものはname文字列）
+    const wrongCandidates = getDifficultyCandidates(ion, ions, difficulty, "ion");
+    const choiceItems = shuffle([ion, ...wrongCandidates]);
+    const finalChoices = choiceItems.map(c => c.name);
+    return {
+      id: ion.formula+isF2N,
+      display: ion.formula,
+      label: "このイオン式の名前は？",
+      choices: finalChoices,
+      answer: ion.name,
+      isSymbol: true,
+      meta: { symbol:ion.formula, name:ion.name },
+    };
+  } else {
+    // 名前→式：選択肢は「式」のみ
+    // ダミーは必ずallItemsから選ぶ（式を持つ実在データのみ）
+    const wrong = shuffle(ions.filter(i => i.formula !== ion.formula)).slice(0, 3);
+    const choiceItems = shuffle([ion, ...wrong]);
+    const finalChoices = choiceItems.map(c => c.formula);
+    return {
+      id: ion.formula+isF2N,
+      display: ion.name,
+      label: "このイオンの式は？",
+      choices: finalChoices,
+      answer: ion.formula,
+      isSymbol: false,
+      meta: { symbol:ion.formula, name:ion.name },
+    };
+  }
 }
 
 // 化学式クイズ用問題生成 directionMode: "f2n"=式→名前, "n2f"=名前→式, "random"
@@ -558,26 +568,37 @@ function generateFormulaQ(formulas, rng, directionMode="random", difficulty="nor
   const rand = rng || Math.random.bind(Math);
   const item = formulas[Math.floor(rand()*formulas.length)];
   const isF2N = directionMode==="f2n" ? true : directionMode==="n2f" ? false : rand() > 0.5;
-  const wrongCandidates = getDifficultyCandidates(item, formulas, difficulty, "formula");
-  const choiceItems = shuffle([item, ...wrongCandidates]);
-  const finalChoices = choiceItems.map(c => {
-    if (isF2N) {
-      // 式→名前: 選択肢は名前
-      return c.name;
-    } else {
-      // 名前→式: 選択肢は式。_dummyの場合nameをそのまま（ダミー式として）
-      return c._dummy ? c.name : c.formula;
-    }
-  });
-  return {
-    id: item.formula+isF2N,
-    display: isF2N ? item.formula : item.name,
-    label: isF2N ? "この化学式の物質名は？" : "この物質の化学式は？",
-    choices: finalChoices,
-    answer: isF2N ? item.name : item.formula,
-    isSymbol: !isF2N,
-    meta: { symbol:item.formula, name:item.name },
-  };
+
+  if (isF2N) {
+    // 式→名前：選択肢は「名前」のみ
+    const wrongCandidates = getDifficultyCandidates(item, formulas, difficulty, "formula");
+    const choiceItems = shuffle([item, ...wrongCandidates]);
+    const finalChoices = choiceItems.map(c => c.name);
+    return {
+      id: item.formula+isF2N,
+      display: item.formula,
+      label: "この化学式の物質名は？",
+      choices: finalChoices,
+      answer: item.name,
+      isSymbol: false,
+      meta: { symbol:item.formula, name:item.name },
+    };
+  } else {
+    // 名前→式：選択肢は「式」のみ
+    // ダミーは必ずallItemsから選ぶ
+    const wrong = shuffle(formulas.filter(f => f.formula !== item.formula)).slice(0, 3);
+    const choiceItems = shuffle([item, ...wrong]);
+    const finalChoices = choiceItems.map(c => c.formula);
+    return {
+      id: item.formula+isF2N,
+      display: item.name,
+      label: "この物質の化学式は？",
+      choices: finalChoices,
+      answer: item.formula,
+      isSymbol: true,
+      meta: { symbol:item.formula, name:item.name },
+    };
+  }
 }
 
 
