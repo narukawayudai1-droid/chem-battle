@@ -87,6 +87,27 @@ const ALL_ELEMENTS = [
   { number:80, symbol:"Hg", name:"水銀" },
   { number:81, symbol:"Tl", name:"タリウム" },
   { number:82, symbol:"Pb", name:"鉛" },
+  { number:83, symbol:"Bi", name:"ビスマス" },
+  { number:84, symbol:"Po", name:"ポロニウム" },
+  { number:85, symbol:"At", name:"アスタチン" },
+  { number:86, symbol:"Rn", name:"ラドン" },
+  { number:87, symbol:"Fr", name:"フランシウム" },
+  { number:88, symbol:"Ra", name:"ラジウム" },
+  { number:89, symbol:"Ac", name:"アクチニウム" },
+  { number:90, symbol:"Th", name:"トリウム" },
+  { number:91, symbol:"Pa", name:"プロトアクチニウム" },
+  { number:92, symbol:"U",  name:"ウラン" },
+  { number:93, symbol:"Np", name:"ネプツニウム" },
+  { number:94, symbol:"Pu", name:"プルトニウム" },
+  { number:95, symbol:"Am", name:"アメリシウム" },
+  { number:96, symbol:"Cm", name:"キュリウム" },
+  { number:97, symbol:"Bk", name:"バークリウム" },
+  { number:98, symbol:"Cf", name:"カリホルニウム" },
+  { number:99, symbol:"Es", name:"アインスタイニウム" },
+  { number:100,symbol:"Fm", name:"フェルミウム" },
+  { number:101,symbol:"Md", name:"メンデレビウム" },
+  { number:102,symbol:"No", name:"ノーベリウム" },
+  { number:103,symbol:"Lr", name:"ローレンシウム" },
 ];
 
 // イオンデータ: question=イオン式, answer=名前 の両方向出題
@@ -397,11 +418,12 @@ function getDifficultyCandidates(item, allItems, difficulty, mode) {
     : (similar.normal || []);
 
   // nameListは「名前の文字列」→ allItemsから名前で検索、なければダミーオブジェクト生成
-  const results = nameList.slice(0, 3).map(name => {
-    const found = allItems.find(x => x.name === name);
+  const results = nameList.slice(0, 3).map(dummyName => {
+    const found = allItems.find(x => x.name === dummyName);
     if (found) return found;
-    // 実在しない名前のダミー: 式と名前の両方をその名前にする（表示上は名前が出る）
-    return { formula: name, name: name, _dummy: true };
+    // 実在しない名前のダミー
+    // formula（式として使う値）は空文字にして、表示側でname（名前）を使う
+    return { formula: "???", name: dummyName, _dummy: true };
   });
 
   // 3個未満なら補完
@@ -473,8 +495,13 @@ function generateIonQ(ions, rng, directionMode="random", difficulty="normal") {
   // 式→名前: 選択肢は名前。名前がない(_dummy)場合は式をそのまま表示
   // 名前→式: 選択肢は式
   const finalChoices = choiceItems.map(c => {
-    if (isF2N) return c.name || c.formula;
-    return c.formula;
+    if (isF2N) {
+      // 式→名前: 選択肢は名前
+      return c.name;
+    } else {
+      // 名前→式: 選択肢は式。_dummyの場合nameをそのまま選択肢に（ダミー式として）
+      return c._dummy ? c.name : c.formula;
+    }
   });
   return {
     id: ion.formula+isF2N,
@@ -495,8 +522,13 @@ function generateFormulaQ(formulas, rng, directionMode="random", difficulty="nor
   const wrongCandidates = getDifficultyCandidates(item, formulas, difficulty, "formula");
   const choiceItems = shuffle([item, ...wrongCandidates]);
   const finalChoices = choiceItems.map(c => {
-    if (isF2N) return c.name || c.formula;
-    return c.formula;
+    if (isF2N) {
+      // 式→名前: 選択肢は名前
+      return c.name;
+    } else {
+      // 名前→式: 選択肢は式。_dummyの場合nameをそのまま（ダミー式として）
+      return c._dummy ? c.name : c.formula;
+    }
   });
   return {
     id: item.formula+isF2N,
@@ -947,8 +979,6 @@ input[type=range]{width:100%;accent-color:var(--primary);}
 .rcard-score{font-family:'Space Mono',monospace;font-weight:700;color:var(--primary);font-size:1.1rem;}
 .rcard-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:.72rem;color:var(--muted);}
 .rcard-stat{background:var(--bg);padding:2px 7px;border-radius:10px;}
-/* timeattack */
-.ta-badge{display:inline-block;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:700;}
 `;
 
 // ── Countdown ──────────────────────────────────────────────────
@@ -976,7 +1006,6 @@ function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLe
     const key = quizMode==="ion" ? "ranking:ion"
       : quizMode==="formula" ? "ranking:formula"
       : quizMode==="mol" ? "ranking:mol"
-      : quizMode==="timeattack" ? "ranking:timeattack"
       : "ranking:v2";
     const res = await sGet(key, true);
     let all = [];
@@ -1027,7 +1056,7 @@ function RangeSelector({ maxNum, onChange }) {
         <span style={{fontWeight:700,fontSize:".88rem"}}>出題範囲: 1〜{maxNum}番</span>
         <span className="muted">{getElements(maxNum).length}元素</span>
       </div>
-      <input type="range" min={4} max={82} value={maxNum} onChange={e=>onChange(Number(e.target.value))}/>
+      <input type="range" min={4} max={82} value={maxNum} onChange={e=>onChange(Number(e.target.value))} max={103}/>
       <div className="rlbls"><span>4</span><span>20</span><span>36</span><span>56</span><span>82</span></div>
       <div className="pbtns">
         {PRESETS.map(p=>(
@@ -1070,16 +1099,6 @@ function HowToModal({ onClose }) {
             </p>
           </div>
 
-          {/* タイムアタック */}
-          <div className="howto-section">
-            <h3 style={{color:"#f59e0b"}}>⏱ タイムアタック</h3>
-            <p>・10問正解するまでタイムを計測。間違えても何度でも答えられる。</p>
-            <p>・スキップ不可。必ず正解しないと次へ進めない。</p>
-            <p style={{marginTop:6,padding:"8px 10px",background:"var(--bg)",borderRadius:7,fontSize:".78rem"}}>
-              <b>スコア</b> ＝ 正解数×100 ＋ 正答率²×100 ＋ (600-タイム)
-            </p>
-          </div>
-
           {/* mol計算 */}
           <div className="howto-section">
             <h3 style={{color:"#6366f1"}}>🧮 mol計算ドリル（5分）</h3>
@@ -1111,7 +1130,7 @@ function HowToModal({ onClose }) {
 }
 
 // ── HomeScreen ─────────────────────────────────────────────────
-function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, onTimeAttack, bgmOn, onToggleBgm }) {
+function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm }) {
   const [edit,setEdit]=useState(false);
   const [ni,setNi]=useState(nickname||"");
   const [showHowTo,setShowHowTo]=useState(false);
@@ -1198,26 +1217,17 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
         </div>
       )}
       <div style={{marginBottom:10}}>
-        <div style={{fontWeight:800,fontSize:".78rem",color:"#f59e0b",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>⏱ タイムアタック</div>
-        <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#f59e0b"}:{borderColor:"#f59e0b"}} onClick={()=>nickname&&onTimeAttack()}>
-          <div style={{display:"flex",alignItems:"center",gap:10,padding:"2px 0"}}>
-            <span style={{fontSize:"1.6rem"}}>⏱</span>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:700,fontSize:".95rem"}}>タイムアタック</div>
-              <span className="rule-tag" style={{display:"inline-block"}}>10問正解するまでのタイムを競え！</span>
-            </div>
-            <span className="ta-badge">NEW</span>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"#6366f1",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧮 mol計算ドリル</div>
+        <div className="g2">
+          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#6366f1"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol("solo")}>
+            <div className="ic">🎮</div>
+            <div className="nm">ひとりで挑戦</div>
+            <span className="rule-tag">計算して正しい答えを選べ！</span>
           </div>
-        </div>
-      </div>
-
-      <div style={{marginBottom:10}}>
-        <div style={{fontWeight:800,fontSize:".78rem",color:"#6366f1",marginBottom:5,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧮 mol計算ドリル</div>
-        <div className="g2" style={{gridTemplateColumns:"1fr"}}>
-          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol()}>
-            <div className="ic">🧮</div>
-            <div className="nm">mol計算ドリル</div>
-            <span className="rule-tag">計算して正しい答えを選べ！5分で10問</span>
+          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#6366f1"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol("battle")}>
+            <div className="ic">⚔️</div>
+            <div className="nm">対戦する</div>
+            <span className="rule-tag">同時に解いて正解数比較</span>
           </div>
         </div>
       </div>
@@ -1400,7 +1410,6 @@ function QuizScreen({ maxNum, quizMode, directionMode="random", subLevel="junior
   const [feedback,setFeedback]=useState("none");
   const [bgmOn,setBgmOn]=useState(true);
   const [molMode,setMolMode]=useState("intro");
-  const [taSettings,setTaSettings]=useState(null);
   const sRef=useRef(0),cRef=useRef(0),aRef=useRef(0),mRef=useRef([]);
 
   useEffect(()=>{
@@ -1562,12 +1571,11 @@ function RankingScreen({ onBack, myNickname }) {
     if(tab==="ion") key="ranking:ion";
     else if(tab==="formula") key="ranking:formula";
     else if(tab==="mol") key="ranking:mol";
-    else if(tab==="timeattack") key="ranking:timeattack";
     else key="ranking:v2";
     const res=await sGet(key,true);
     let all=[];
     try{if(res)all=JSON.parse(res.value);}catch{}
-    if(!["element_all","ion","formula","mol","timeattack"].includes(tab))
+    if(!["element_all","ion","formula","mol"].includes(tab))
       all=all.filter(r=>r.maxNum===Number(tab));
     setAllRanks(all);
     setDiffFilter("all");
@@ -1581,7 +1589,7 @@ function RankingScreen({ onBack, myNickname }) {
 
   const tabs=[
     ["element_all","⚛️元素"],["ion","⚡イオン"],["formula","🧬化学式"],
-    ["mol","🧮mol"],["timeattack","⏱TA"],
+    ["mol","🧮mol"],
   ];
 
   // 難易度フィルターボタン（元素・イオン・化学式のみ表示）
@@ -1591,7 +1599,6 @@ function RankingScreen({ onBack, myNickname }) {
     if(r.quizMode==="ion") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--ion-l)", color:"var(--ion)"};
     if(r.quizMode==="formula") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--form-l)", color:"var(--form)"};
     if(r.quizMode==="mol") return {text:({intro:"入門",basic:"基礎",adv:"応用",random:"乱"})[r.subLevel]||r.subLevel, bg:"#ede9fe", color:"#6366f1"};
-    if(r.quizMode==="timeattack") return {text:"TA", bg:"#fef3c7", color:"#d97706"};
     if(r.maxNum) return {text:`〜${r.maxNum}`, bg:"var(--pl)", color:"var(--primary)"};
     return null;
   };
@@ -2057,14 +2064,9 @@ function MolSetupScreen({ onStart, onBack }) {
           );
         })}
       </div>
-      <div style={{display:"flex",gap:8}}>
-        <button className="btn btn-blk" style={{flex:2,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",color:"#fff",fontWeight:700}} onClick={()=>onStart(mode,"solo")}>
-          🎮 ひとりで挑戦
-        </button>
-        <button className="btn btn-blk" style={{flex:1,background:"linear-gradient(135deg,#f59e0b,#ef4444)",color:"#fff",fontWeight:700}} onClick={()=>onStart(mode,"battle")}>
-          ⚔️ 対戦
-        </button>
-      </div>
+      <button className="btn btn-blk" style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",color:"#fff",fontWeight:700}} onClick={()=>onStart(mode,"solo")}>
+        🚀 スタート！
+      </button>
     </div>
   );
 }
@@ -2873,7 +2875,6 @@ export default function App() {
   const [quizResult,setQuizResult]=useState(null);
   const [bgmOn,setBgmOn]=useState(true);
   const [molMode,setMolMode]=useState("intro");
-  const [taSettings,setTaSettings]=useState(null);
 
   useEffect(()=>{
     const start=()=>{bgm.start("home");document.removeEventListener("click",start);};
@@ -2922,8 +2923,7 @@ export default function App() {
               onSolo={goSetup} onBattle={goBattle}
               onRanking={()=>setScreen("ranking")}
               onMemo={()=>setScreen("memo")}
-              onMol={()=>{bgm.stop();setScreen("mol_setup");}}
-              onTimeAttack={()=>{bgm.stop();setScreen("ta_setup");}}
+              onMol={(t)=>{bgm.stop();if(t==="battle")setScreen("mol_battle");else setScreen("mol_setup");}}
               bgmOn={bgmOn} onToggleBgm={toggleBgm}/>
           )}
           {screen==="setup"&&(
@@ -2939,15 +2939,11 @@ export default function App() {
           )}
           {screen==="ranking"&&<RankingScreen myNickname={nickname} onBack={()=>setScreen("home")}/>}
           {screen==="memo"&&<MemoScreen onBack={()=>setScreen("home")}/>}
-          {screen==="mol_setup"&&<MolSetupScreen onBack={()=>setScreen("home")} onStart={(m,t)=>{setMolMode(m);bgm.stop();if(t==="battle")setScreen("mol_battle");else setScreen("mol_countdown");}}/>}
+          {screen==="mol_setup"&&<MolSetupScreen onBack={()=>setScreen("home")} onStart={(m,t)=>{setMolMode(m);bgm.stop();setScreen("mol_countdown");}}/>}
           {screen==="mol_battle"&&<MolBattleLobby nickname={nickname} onBack={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
           {screen==="mol_countdown"&&<Countdown onDone={()=>setScreen("mol_quiz")}/>}
           {screen==="mol_quiz"&&<MolQuizScreen mode={molMode} onFinish={r=>{bgm.stop();bgm.se("finish");setQuizResult({...r,_mol:true,molMode});setScreen("mol_result");}}/>}
           {screen==="mol_result"&&quizResult?._mol&&<MolResultScreen result={quizResult} nickname={nickname} onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}} onRetry={()=>{bgm.stop();setScreen("mol_quiz");}}/>}
-          {screen==="ta_setup"&&<TimeAttackSetupScreen onBack={()=>setScreen("home")} onStart={s=>{setTaSettings(s);bgm.stop();setScreen("ta_countdown");}}/>}
-          {screen==="ta_countdown"&&<Countdown onDone={()=>setScreen("ta_quiz")}/>}
-          {screen==="ta_quiz"&&taSettings&&<TimeAttackQuizScreen settings={taSettings} onFinish={r=>{bgm.stop();setQuizResult({...r,_ta:true});setScreen("ta_result");}}/>}
-          {screen==="ta_result"&&quizResult?._ta&&<TimeAttackResultScreen result={quizResult} nickname={nickname} settings={taSettings} onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}} onRetry={()=>{bgm.stop();setScreen("ta_quiz");}}/>}
           {screen==="battle"&&<BattleLobby nickname={nickname} quizMode={quizMode} directionMode={directionMode} subLevel={subLevel} difficulty={difficulty} onBack={goHome}/>}
         </div>
       </div>
