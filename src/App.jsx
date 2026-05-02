@@ -2,7 +2,7 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
-// 笏笏 Firebase蛻晄悄蛹・笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── Firebase初期化 ──────────────────────────────────────────
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -15,161 +15,163 @@ const firebaseApp = getApps().length ? getApps()[0] : initializeApp(firebaseConf
 const db = getFirestore(firebaseApp);
 
 // ============================================================
-// 繝・・繧ｿ
+// データ
 // ============================================================
 const ALL_ELEMENTS = [
-  { number:1,  symbol:"H",  name:"豌ｴ邏" },
-  { number:2,  symbol:"He", name:"繝倥Μ繧ｦ繝" },
-  { number:3,  symbol:"Li", name:"繝ｪ繝√え繝" },
-  { number:4,  symbol:"Be", name:"繝吶Μ繝ｪ繧ｦ繝" },
-  { number:5,  symbol:"B",  name:"繝帙え邏" },
-  { number:6,  symbol:"C",  name:"轤ｭ邏" },
-  { number:7,  symbol:"N",  name:"遯堤ｴ" },
-  { number:8,  symbol:"O",  name:"驟ｸ邏" },
-  { number:9,  symbol:"F",  name:"繝輔ャ邏" },
-  { number:10, symbol:"Ne", name:"繝阪が繝ｳ" },
-  { number:11, symbol:"Na", name:"繝翫ヨ繝ｪ繧ｦ繝" },
-  { number:12, symbol:"Mg", name:"繝槭げ繝阪す繧ｦ繝" },
-  { number:13, symbol:"Al", name:"繧｢繝ｫ繝溘ル繧ｦ繝" },
-  { number:14, symbol:"Si", name:"繧ｱ繧､邏" },
-  { number:15, symbol:"P",  name:"繝ｪ繝ｳ" },
-  { number:16, symbol:"S",  name:"遑ｫ鮟・ },
-  { number:17, symbol:"Cl", name:"蝪ｩ邏" },
-  { number:18, symbol:"Ar", name:"繧｢繝ｫ繧ｴ繝ｳ" },
-  { number:19, symbol:"K",  name:"繧ｫ繝ｪ繧ｦ繝" },
-  { number:20, symbol:"Ca", name:"繧ｫ繝ｫ繧ｷ繧ｦ繝" },
-  { number:21, symbol:"Sc", name:"繧ｹ繧ｫ繝ｳ繧ｸ繧ｦ繝" },
-  { number:22, symbol:"Ti", name:"繝√ち繝ｳ" },
-  { number:23, symbol:"V",  name:"繝舌リ繧ｸ繧ｦ繝" },
-  { number:24, symbol:"Cr", name:"繧ｯ繝ｭ繝" },
-  { number:25, symbol:"Mn", name:"繝槭Φ繧ｬ繝ｳ" },
-  { number:26, symbol:"Fe", name:"驩・ },
-  { number:27, symbol:"Co", name:"繧ｳ繝舌Ν繝・ },
-  { number:28, symbol:"Ni", name:"繝九ャ繧ｱ繝ｫ" },
-  { number:29, symbol:"Cu", name:"驫・ },
-  { number:30, symbol:"Zn", name:"莠憺央" },
-  { number:31, symbol:"Ga", name:"繧ｬ繝ｪ繧ｦ繝" },
-  { number:32, symbol:"Ge", name:"繧ｲ繝ｫ繝槭ル繧ｦ繝" },
-  { number:33, symbol:"As", name:"繝堤ｴ" },
-  { number:34, symbol:"Se", name:"繧ｻ繝ｬ繝ｳ" },
-  { number:35, symbol:"Br", name:"閾ｭ邏" },
-  { number:36, symbol:"Kr", name:"繧ｯ繝ｪ繝励ヨ繝ｳ" },
-  { number:37, symbol:"Rb", name:"繝ｫ繝薙ず繧ｦ繝" },
-  { number:38, symbol:"Sr", name:"繧ｹ繝医Ο繝ｳ繝√え繝" },
-  { number:39, symbol:"Y",  name:"繧､繝・ヨ繝ｪ繧ｦ繝" },
-  { number:40, symbol:"Zr", name:"繧ｸ繝ｫ繧ｳ繝九え繝" },
-  { number:41, symbol:"Nb", name:"繝九が繝・ },
-  { number:42, symbol:"Mo", name:"繝｢繝ｪ繝悶ョ繝ｳ" },
-  { number:43, symbol:"Tc", name:"繝・け繝阪メ繧ｦ繝" },
-  { number:44, symbol:"Ru", name:"繝ｫ繝・ル繧ｦ繝" },
-  { number:45, symbol:"Rh", name:"繝ｭ繧ｸ繧ｦ繝" },
-  { number:46, symbol:"Pd", name:"繝代Λ繧ｸ繧ｦ繝" },
-  { number:47, symbol:"Ag", name:"驫" },
-  { number:48, symbol:"Cd", name:"繧ｫ繝峨Α繧ｦ繝" },
-  { number:49, symbol:"In", name:"繧､繝ｳ繧ｸ繧ｦ繝" },
-  { number:50, symbol:"Sn", name:"繧ｹ繧ｺ" },
-  { number:51, symbol:"Sb", name:"繧｢繝ｳ繝√Δ繝ｳ" },
-  { number:52, symbol:"Te", name:"繝・Ν繝ｫ" },
-  { number:53, symbol:"I",  name:"繝ｨ繧ｦ邏" },
-  { number:54, symbol:"Xe", name:"繧ｭ繧ｻ繝弱Φ" },
-  { number:55, symbol:"Cs", name:"繧ｻ繧ｷ繧ｦ繝" },
-  { number:56, symbol:"Ba", name:"繝舌Μ繧ｦ繝" },
-  { number:57, symbol:"La", name:"繝ｩ繝ｳ繧ｿ繝ｳ" },
-  { number:58, symbol:"Ce", name:"繧ｻ繝ｪ繧ｦ繝" },
-  { number:72, symbol:"Hf", name:"繝上ヵ繝九え繝" },
-  { number:73, symbol:"Ta", name:"繧ｿ繝ｳ繧ｿ繝ｫ" },
-  { number:74, symbol:"W",  name:"繧ｿ繝ｳ繧ｰ繧ｹ繝・Φ" },
-  { number:75, symbol:"Re", name:"繝ｬ繝九え繝" },
-  { number:76, symbol:"Os", name:"繧ｪ繧ｹ繝溘え繝" },
-  { number:77, symbol:"Ir", name:"繧､繝ｪ繧ｸ繧ｦ繝" },
-  { number:78, symbol:"Pt", name:"逋ｽ驥・ },
-  { number:79, symbol:"Au", name:"驥・ },
-  { number:80, symbol:"Hg", name:"豌ｴ驫" },
-  { number:81, symbol:"Tl", name:"繧ｿ繝ｪ繧ｦ繝" },
-  { number:82, symbol:"Pb", name:"驩・ },
-  { number:83, symbol:"Bi", name:"繝薙せ繝槭せ" },
-  { number:84, symbol:"Po", name:"繝昴Ο繝九え繝" },
-  { number:85, symbol:"At", name:"繧｢繧ｹ繧ｿ繝√Φ" },
-  { number:86, symbol:"Rn", name:"繝ｩ繝峨Φ" },
-  { number:87, symbol:"Fr", name:"繝輔Λ繝ｳ繧ｷ繧ｦ繝" },
-  { number:88, symbol:"Ra", name:"繝ｩ繧ｸ繧ｦ繝" },
-  { number:89, symbol:"Ac", name:"繧｢繧ｯ繝√ル繧ｦ繝" },
-  { number:90, symbol:"Th", name:"繝医Μ繧ｦ繝" },
-  { number:91, symbol:"Pa", name:"繝励Ο繝医い繧ｯ繝√ル繧ｦ繝" },
-  { number:92, symbol:"U",  name:"繧ｦ繝ｩ繝ｳ" },
-  { number:93, symbol:"Np", name:"繝阪・繝・ル繧ｦ繝" },
-  { number:94, symbol:"Pu", name:"繝励Ν繝医ル繧ｦ繝" },
-  { number:95, symbol:"Am", name:"繧｢繝｡繝ｪ繧ｷ繧ｦ繝" },
-  { number:96, symbol:"Cm", name:"繧ｭ繝･繝ｪ繧ｦ繝" },
-  { number:97, symbol:"Bk", name:"繝舌・繧ｯ繝ｪ繧ｦ繝" },
-  { number:98, symbol:"Cf", name:"繧ｫ繝ｪ繝帙Ν繝九え繝" },
-  { number:99, symbol:"Es", name:"繧｢繧､繝ｳ繧ｹ繧ｿ繧､繝九え繝" },
-  { number:100,symbol:"Fm", name:"繝輔ぉ繝ｫ繝溘え繝" },
-  { number:101,symbol:"Md", name:"繝｡繝ｳ繝・Ξ繝薙え繝" },
-  { number:102,symbol:"No", name:"繝弱・繝吶Μ繧ｦ繝" },
-  { number:103,symbol:"Lr", name:"繝ｭ繝ｼ繝ｬ繝ｳ繧ｷ繧ｦ繝" },
+  { number:1,  symbol:"H",  name:"水素" },
+  { number:2,  symbol:"He", name:"ヘリウム" },
+  { number:3,  symbol:"Li", name:"リチウム" },
+  { number:4,  symbol:"Be", name:"ベリリウム" },
+  { number:5,  symbol:"B",  name:"ホウ素" },
+  { number:6,  symbol:"C",  name:"炭素" },
+  { number:7,  symbol:"N",  name:"窒素" },
+  { number:8,  symbol:"O",  name:"酸素" },
+  { number:9,  symbol:"F",  name:"フッ素" },
+  { number:10, symbol:"Ne", name:"ネオン" },
+  { number:11, symbol:"Na", name:"ナトリウム" },
+  { number:12, symbol:"Mg", name:"マグネシウム" },
+  { number:13, symbol:"Al", name:"アルミニウム" },
+  { number:14, symbol:"Si", name:"ケイ素" },
+  { number:15, symbol:"P",  name:"リン" },
+  { number:16, symbol:"S",  name:"硫黄" },
+  { number:17, symbol:"Cl", name:"塩素" },
+  { number:18, symbol:"Ar", name:"アルゴン" },
+  { number:19, symbol:"K",  name:"カリウム" },
+  { number:20, symbol:"Ca", name:"カルシウム" },
+  { number:21, symbol:"Sc", name:"スカンジウム" },
+  { number:22, symbol:"Ti", name:"チタン" },
+  { number:23, symbol:"V",  name:"バナジウム" },
+  { number:24, symbol:"Cr", name:"クロム" },
+  { number:25, symbol:"Mn", name:"マンガン" },
+  { number:26, symbol:"Fe", name:"鉄" },
+  { number:27, symbol:"Co", name:"コバルト" },
+  { number:28, symbol:"Ni", name:"ニッケル" },
+  { number:29, symbol:"Cu", name:"銅" },
+  { number:30, symbol:"Zn", name:"亜鉛" },
+  { number:31, symbol:"Ga", name:"ガリウム" },
+  { number:32, symbol:"Ge", name:"ゲルマニウム" },
+  { number:33, symbol:"As", name:"ヒ素" },
+  { number:34, symbol:"Se", name:"セレン" },
+  { number:35, symbol:"Br", name:"臭素" },
+  { number:36, symbol:"Kr", name:"クリプトン" },
+  { number:37, symbol:"Rb", name:"ルビジウム" },
+  { number:38, symbol:"Sr", name:"ストロンチウム" },
+  { number:39, symbol:"Y",  name:"イットリウム" },
+  { number:40, symbol:"Zr", name:"ジルコニウム" },
+  { number:41, symbol:"Nb", name:"ニオブ" },
+  { number:42, symbol:"Mo", name:"モリブデン" },
+  { number:43, symbol:"Tc", name:"テクネチウム" },
+  { number:44, symbol:"Ru", name:"ルテニウム" },
+  { number:45, symbol:"Rh", name:"ロジウム" },
+  { number:46, symbol:"Pd", name:"パラジウム" },
+  { number:47, symbol:"Ag", name:"銀" },
+  { number:48, symbol:"Cd", name:"カドミウム" },
+  { number:49, symbol:"In", name:"インジウム" },
+  { number:50, symbol:"Sn", name:"スズ" },
+  { number:51, symbol:"Sb", name:"アンチモン" },
+  { number:52, symbol:"Te", name:"テルル" },
+  { number:53, symbol:"I",  name:"ヨウ素" },
+  { number:54, symbol:"Xe", name:"キセノン" },
+  { number:55, symbol:"Cs", name:"セシウム" },
+  { number:56, symbol:"Ba", name:"バリウム" },
+  { number:57, symbol:"La", name:"ランタン" },
+  { number:58, symbol:"Ce", name:"セリウム" },
+  { number:72, symbol:"Hf", name:"ハフニウム" },
+  { number:73, symbol:"Ta", name:"タンタル" },
+  { number:74, symbol:"W",  name:"タングステン" },
+  { number:75, symbol:"Re", name:"レニウム" },
+  { number:76, symbol:"Os", name:"オスミウム" },
+  { number:77, symbol:"Ir", name:"イリジウム" },
+  { number:78, symbol:"Pt", name:"白金" },
+  { number:79, symbol:"Au", name:"金" },
+  { number:80, symbol:"Hg", name:"水銀" },
+  { number:81, symbol:"Tl", name:"タリウム" },
+  { number:82, symbol:"Pb", name:"鉛" },
+  { number:83, symbol:"Bi", name:"ビスマス" },
+  { number:84, symbol:"Po", name:"ポロニウム" },
+  { number:85, symbol:"At", name:"アスタチン" },
+  { number:86, symbol:"Rn", name:"ラドン" },
+  { number:87, symbol:"Fr", name:"フランシウム" },
+  { number:88, symbol:"Ra", name:"ラジウム" },
+  { number:89, symbol:"Ac", name:"アクチニウム" },
+  { number:90, symbol:"Th", name:"トリウム" },
+  { number:91, symbol:"Pa", name:"プロトアクチニウム" },
+  { number:92, symbol:"U",  name:"ウラン" },
+  { number:93, symbol:"Np", name:"ネプツニウム" },
+  { number:94, symbol:"Pu", name:"プルトニウム" },
+  { number:95, symbol:"Am", name:"アメリシウム" },
+  { number:96, symbol:"Cm", name:"キュリウム" },
+  { number:97, symbol:"Bk", name:"バークリウム" },
+  { number:98, symbol:"Cf", name:"カリホルニウム" },
+  { number:99, symbol:"Es", name:"アインスタイニウム" },
+  { number:100,symbol:"Fm", name:"フェルミウム" },
+  { number:101,symbol:"Md", name:"メンデレビウム" },
+  { number:102,symbol:"No", name:"ノーベリウム" },
+  { number:103,symbol:"Lr", name:"ローレンシウム" },
 ];
 
-// 繧､繧ｪ繝ｳ繝・・繧ｿ: question=繧､繧ｪ繝ｳ蠑・ answer=蜷榊燕 縺ｮ荳｡譁ｹ蜷大・鬘・
+// イオンデータ: question=イオン式, answer=名前 の両方向出題
+
 
 const PRESETS = [
-  { label:"1縲・0逡ｪ", max:20 },
-  { label:"1縲・6逡ｪ", max:36 },
-  { label:"1縲・6逡ｪ", max:56 },
-  { label:"蜈ｨ遽・峇(縲・03逡ｪ)", max:103 },
+  { label:"1〜20番", max:20 },
+  { label:"1〜36番", max:36 },
+  { label:"1〜56番", max:56 },
+  { label:"全範囲(〜103番)", max:103 },
 ];
 
 function getElements(maxNum) { return ALL_ELEMENTS.filter(e => e.number <= maxNum); }
 
 
 // ============================================================
-// 繧､繧ｪ繝ｳ繝・・繧ｿ・井ｸｭ蟄ｦ繝ｻ鬮俶｡繝ｬ繝吶Ν蛻・￠・・// ============================================================
+// イオンデータ（中学・高校レベル分け）
+// ============================================================
 const IONS_JUNIOR = [
-  // 荳ｭ蟄ｦ逅・ｧ代〒蠢・医・髯ｽ繧､繧ｪ繝ｳ
-  { formula:"H竅ｺ",    name:"豌ｴ邏繧､繧ｪ繝ｳ" },
-  { formula:"Na竅ｺ",   name:"繝翫ヨ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ" },
-  { formula:"K竅ｺ",    name:"繧ｫ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ" },
-  { formula:"Caﾂｲ竅ｺ",  name:"繧ｫ繝ｫ繧ｷ繧ｦ繝繧､繧ｪ繝ｳ" },
-  { formula:"Mgﾂｲ竅ｺ",  name:"繝槭げ繝阪す繧ｦ繝繧､繧ｪ繝ｳ" },
-  { formula:"Cuﾂｲ竅ｺ",  name:"驫・う繧ｪ繝ｳ" },
-  { formula:"Znﾂｲ竅ｺ",  name:"莠憺央繧､繧ｪ繝ｳ" },
-  { formula:"Feﾂｲ竅ｺ",  name:"驩・II)繧､繧ｪ繝ｳ" },
-  { formula:"Alﾂｳ竅ｺ",  name:"繧｢繝ｫ繝溘ル繧ｦ繝繧､繧ｪ繝ｳ" },
-  { formula:"Baﾂｲ竅ｺ",  name:"繝舌Μ繧ｦ繝繧､繧ｪ繝ｳ" },
-  { formula:"NH竄・⊆",  name:"繧｢繝ｳ繝｢繝九え繝繧､繧ｪ繝ｳ" },
-  // 荳ｭ蟄ｦ逅・ｧ代〒蠢・医・髯ｰ繧､繧ｪ繝ｳ
-  { formula:"Cl竅ｻ",   name:"蝪ｩ蛹也黄繧､繧ｪ繝ｳ" },
-  { formula:"OH竅ｻ",   name:"豌ｴ驟ｸ蛹也黄繧､繧ｪ繝ｳ" },
-  { formula:"SO竄・ｲ竅ｻ", name:"遑ｫ驟ｸ繧､繧ｪ繝ｳ" },
-  { formula:"NO竄・⊇",  name:"遑晞・繧､繧ｪ繝ｳ" },
-  { formula:"CO竄δｲ竅ｻ", name:"轤ｭ驟ｸ繧､繧ｪ繝ｳ" },
-  { formula:"HCO竄・⊇", name:"轤ｭ驟ｸ豌ｴ邏繧､繧ｪ繝ｳ" },
+  // 中学理科で必須の陽イオン
+  { formula:"H⁺",    name:"水素イオン" },
+  { formula:"Na⁺",   name:"ナトリウムイオン" },
+  { formula:"K⁺",    name:"カリウムイオン" },
+  { formula:"Ca²⁺",  name:"カルシウムイオン" },
+  { formula:"Mg²⁺",  name:"マグネシウムイオン" },
+  { formula:"Cu²⁺",  name:"銅イオン" },
+  { formula:"Zn²⁺",  name:"亜鉛イオン" },
+  { formula:"Fe²⁺",  name:"鉄(II)イオン" },
+  { formula:"Al³⁺",  name:"アルミニウムイオン" },
+  { formula:"Ba²⁺",  name:"バリウムイオン" },
+  { formula:"NH₄⁺",  name:"アンモニウムイオン" },
+  // 中学理科で必須の陰イオン
+  { formula:"Cl⁻",   name:"塩化物イオン" },
+  { formula:"OH⁻",   name:"水酸化物イオン" },
+  { formula:"SO₄²⁻", name:"硫酸イオン" },
+  { formula:"NO₃⁻",  name:"硝酸イオン" },
+  { formula:"CO₃²⁻", name:"炭酸イオン" },
+  { formula:"HCO₃⁻", name:"炭酸水素イオン" },
 ];
 
 const IONS_SENIOR_EXTRA = [
-  // 鬮俶｡蛹門ｭｦ縺ｧ霑ｽ蜉縺輔ｌ繧九う繧ｪ繝ｳ
-  { formula:"Li竅ｺ",      name:"繝ｪ繝√え繝繧､繧ｪ繝ｳ" },
-  { formula:"Ag竅ｺ",      name:"驫繧､繧ｪ繝ｳ" },
-  { formula:"Feﾂｳ竅ｺ",     name:"驩・III)繧､繧ｪ繝ｳ" },
-  { formula:"Mnﾂｲ竅ｺ",     name:"繝槭Φ繧ｬ繝ｳ(II)繧､繧ｪ繝ｳ" },
-  { formula:"Pbﾂｲ竅ｺ",     name:"驩・II)繧､繧ｪ繝ｳ" },
-  { formula:"Niﾂｲ竅ｺ",     name:"繝九ャ繧ｱ繝ｫ繧､繧ｪ繝ｳ" },
-  { formula:"Crﾂｳ竅ｺ",     name:"繧ｯ繝ｭ繝(III)繧､繧ｪ繝ｳ" },
-  { formula:"H竄グ竅ｺ",     name:"繧ｪ繧ｭ繧ｽ繝九え繝繧､繧ｪ繝ｳ" },
-  { formula:"F竅ｻ",       name:"繝輔ャ蛹也黄繧､繧ｪ繝ｳ" },
-  { formula:"Br竅ｻ",      name:"閾ｭ蛹也黄繧､繧ｪ繝ｳ" },
-  { formula:"I竅ｻ",       name:"繝ｨ繧ｦ蛹也黄繧､繧ｪ繝ｳ" },
-  { formula:"Sﾂｲ竅ｻ",      name:"遑ｫ蛹也黄繧､繧ｪ繝ｳ" },
-  { formula:"Oﾂｲ竅ｻ",      name:"驟ｸ蛹也黄繧､繧ｪ繝ｳ" },
-  { formula:"SO竄δｲ竅ｻ",    name:"莠懃｡ｫ驟ｸ繧､繧ｪ繝ｳ" },
-  { formula:"NO竄や⊇",     name:"莠懃｡晞・繧､繧ｪ繝ｳ" },
-  { formula:"HSO竄・⊇",    name:"遑ｫ驟ｸ豌ｴ邏繧､繧ｪ繝ｳ" },
-  { formula:"PO竄・ｳ竅ｻ",    name:"繝ｪ繝ｳ驟ｸ繧､繧ｪ繝ｳ" },
-  { formula:"CH竄イOO竅ｻ",  name:"驟｢驟ｸ繧､繧ｪ繝ｳ" },
-  { formula:"MnO竄・⊇",    name:"驕弱・繝ｳ繧ｬ繝ｳ驟ｸ繧､繧ｪ繝ｳ" },
-  { formula:"Cr竄０竄・ｲ竅ｻ",  name:"莠後け繝ｭ繝驟ｸ繧､繧ｪ繝ｳ" },
-  { formula:"CN竅ｻ",      name:"繧ｷ繧｢繝ｳ蛹也黄繧､繧ｪ繝ｳ" },
-  { formula:"SCN竅ｻ",     name:"繝√が繧ｷ繧｢繝ｳ驟ｸ繧､繧ｪ繝ｳ" },
+  // 高校化学で追加されるイオン
+  { formula:"Li⁺",      name:"リチウムイオン" },
+  { formula:"Ag⁺",      name:"銀イオン" },
+  { formula:"Fe³⁺",     name:"鉄(III)イオン" },
+  { formula:"Mn²⁺",     name:"マンガン(II)イオン" },
+  { formula:"Pb²⁺",     name:"鉛(II)イオン" },
+  { formula:"Ni²⁺",     name:"ニッケルイオン" },
+  { formula:"Cr³⁺",     name:"クロム(III)イオン" },
+  { formula:"H₃O⁺",     name:"オキソニウムイオン" },
+  { formula:"F⁻",       name:"フッ化物イオン" },
+  { formula:"Br⁻",      name:"臭化物イオン" },
+  { formula:"I⁻",       name:"ヨウ化物イオン" },
+  { formula:"S²⁻",      name:"硫化物イオン" },
+  { formula:"O²⁻",      name:"酸化物イオン" },
+  { formula:"SO₃²⁻",    name:"亜硫酸イオン" },
+  { formula:"NO₂⁻",     name:"亜硝酸イオン" },
+  { formula:"HSO₄⁻",    name:"硫酸水素イオン" },
+  { formula:"PO₄³⁻",    name:"リン酸イオン" },
+  { formula:"CH₃COO⁻",  name:"酢酸イオン" },
+  { formula:"MnO₄⁻",    name:"過マンガン酸イオン" },
+  { formula:"Cr₂O₇²⁻",  name:"二クロム酸イオン" },
+  { formula:"CN⁻",      name:"シアン化物イオン" },
+  { formula:"SCN⁻",     name:"チオシアン酸イオン" },
 ];
 
 const IONS_SENIOR = [...IONS_JUNIOR, ...IONS_SENIOR_EXTRA];
@@ -179,70 +181,73 @@ function getIons(level) {
 }
 
 // ============================================================
-// 蛹門ｭｦ蠑上ョ繝ｼ繧ｿ・井ｸｭ蟄ｦ繝ｻ鬮俶｡繝ｬ繝吶Ν蛻・￠・・// ============================================================
+// 化学式データ（中学・高校レベル分け）
+// ============================================================
 const FORMULAS_JUNIOR = [
-  // 蜊倅ｽ・  { formula:"H竄・,    name:"豌ｴ邏" },
-  { formula:"O竄・,    name:"驟ｸ邏" },
-  { formula:"N竄・,    name:"遯堤ｴ" },
-  { formula:"Cl竄・,   name:"蝪ｩ邏" },
-  { formula:"C",     name:"轤ｭ邏" },
-  { formula:"S",     name:"遑ｫ鮟・ },
-  { formula:"Cu",    name:"驫・ },
-  { formula:"Fe",    name:"驩・ },
-  { formula:"Ag",    name:"驫" },
-  // 蛹門粋迚ｩ・井ｸｭ蟄ｦ蠢・茨ｼ・  { formula:"H竄０",   name:"豌ｴ" },
-  { formula:"CO竄・,   name:"莠碁・蛹也く邏" },
-  { formula:"CO",    name:"荳驟ｸ蛹也く邏" },
-  { formula:"HCl",   name:"蝪ｩ蛹匁ｰｴ邏・亥｡ｩ驟ｸ・・ },
-  { formula:"NaCl",  name:"蝪ｩ蛹悶リ繝医Μ繧ｦ繝・磯｣溷｡ｩ・・ },
-  { formula:"NaOH",  name:"豌ｴ驟ｸ蛹悶リ繝医Μ繧ｦ繝" },
-  { formula:"H竄４O竄・, name:"遑ｫ驟ｸ" },
-  { formula:"HNO竄・,  name:"遑晞・" },
-  { formula:"NH竄・,   name:"繧｢繝ｳ繝｢繝九い" },
-  { formula:"H竄０竄・,  name:"驕朱・蛹匁ｰｴ邏" },
-  { formula:"CaCO竄・, name:"轤ｭ驟ｸ繧ｫ繝ｫ繧ｷ繧ｦ繝" },
-  { formula:"Ca(OH)竄・,name:"豌ｴ驟ｸ蛹悶き繝ｫ繧ｷ繧ｦ繝" },
-  { formula:"CuO",   name:"驟ｸ蛹夜喝(II)" },
-  { formula:"Fe竄０竄・, name:"驟ｸ蛹夜延(III)" },
-  { formula:"MgO",   name:"驟ｸ蛹悶・繧ｰ繝阪す繧ｦ繝" },
-  { formula:"Al竄０竄・, name:"驟ｸ蛹悶い繝ｫ繝溘ル繧ｦ繝" },
-  { formula:"Na竄０",  name:"驟ｸ蛹悶リ繝医Μ繧ｦ繝" },
+  // 単体
+  { formula:"H₂",    name:"水素" },
+  { formula:"O₂",    name:"酸素" },
+  { formula:"N₂",    name:"窒素" },
+  { formula:"Cl₂",   name:"塩素" },
+  { formula:"C",     name:"炭素" },
+  { formula:"S",     name:"硫黄" },
+  { formula:"Cu",    name:"銅" },
+  { formula:"Fe",    name:"鉄" },
+  { formula:"Ag",    name:"銀" },
+  // 化合物（中学必須）
+  { formula:"H₂O",   name:"水" },
+  { formula:"CO₂",   name:"二酸化炭素" },
+  { formula:"CO",    name:"一酸化炭素" },
+  { formula:"HCl",   name:"塩化水素（塩酸）" },
+  { formula:"NaCl",  name:"塩化ナトリウム（食塩）" },
+  { formula:"NaOH",  name:"水酸化ナトリウム" },
+  { formula:"H₂SO₄", name:"硫酸" },
+  { formula:"HNO₃",  name:"硝酸" },
+  { formula:"NH₃",   name:"アンモニア" },
+  { formula:"H₂O₂",  name:"過酸化水素" },
+  { formula:"CaCO₃", name:"炭酸カルシウム" },
+  { formula:"Ca(OH)₂",name:"水酸化カルシウム" },
+  { formula:"CuO",   name:"酸化銅(II)" },
+  { formula:"Fe₂O₃", name:"酸化鉄(III)" },
+  { formula:"MgO",   name:"酸化マグネシウム" },
+  { formula:"Al₂O₃", name:"酸化アルミニウム" },
+  { formula:"Na₂O",  name:"酸化ナトリウム" },
 ];
 
 const FORMULAS_SENIOR_EXTRA = [
-  // 鬮俶｡蛹門ｭｦ縺ｧ霑ｽ蜉縺輔ｌ繧句喧蜷育黄
-  { formula:"CH竄・,      name:"繝｡繧ｿ繝ｳ" },
-  { formula:"C竄・竄・H",   name:"繧ｨ繧ｿ繝弱・繝ｫ" },
-  { formula:"C竄・竄≫ｂO竄・,  name:"繧ｰ繝ｫ繧ｳ繝ｼ繧ｹ" },
-  { formula:"C竄≫ｂH竄やｂO竄≫ａ",name:"繧ｹ繧ｯ繝ｭ繝ｼ繧ｹ・医す繝ｧ邉厄ｼ・ },
-  { formula:"SO竄・,      name:"莠碁・蛹也｡ｫ鮟・ },
-  { formula:"SO竄・,      name:"荳蛾・蛹也｡ｫ鮟・ },
-  { formula:"NO",       name:"荳驟ｸ蛹也ｪ堤ｴ" },
-  { formula:"NO竄・,      name:"莠碁・蛹也ｪ堤ｴ" },
-  { formula:"HF",       name:"繝輔ャ蛹匁ｰｴ邏" },
-  { formula:"HBr",      name:"閾ｭ蛹匁ｰｴ邏" },
-  { formula:"HI",       name:"繝ｨ繧ｦ蛹匁ｰｴ邏" },
-  { formula:"H竄４",      name:"遑ｫ蛹匁ｰｴ邏" },
-  { formula:"H竄ケO竄・,    name:"繝ｪ繝ｳ驟ｸ" },
-  { formula:"H竄・O竄・,    name:"轤ｭ驟ｸ" },
-  { formula:"KOH",      name:"豌ｴ驟ｸ蛹悶き繝ｪ繧ｦ繝" },
-  { formula:"Ba(OH)竄・,  name:"豌ｴ驟ｸ蛹悶ヰ繝ｪ繧ｦ繝" },
-  { formula:"Mg(OH)竄・,  name:"豌ｴ驟ｸ蛹悶・繧ｰ繝阪す繧ｦ繝" },
-  { formula:"Al(OH)竄・,  name:"豌ｴ驟ｸ蛹悶い繝ｫ繝溘ル繧ｦ繝" },
-  { formula:"Cu(OH)竄・,  name:"豌ｴ驟ｸ蛹夜喝(II)" },
-  { formula:"Fe(OH)竄・,  name:"豌ｴ驟ｸ蛹夜延(III)" },
-  { formula:"NH竄Гl",    name:"蝪ｩ蛹悶い繝ｳ繝｢繝九え繝" },
-  { formula:"CaSO竄・,    name:"遑ｫ驟ｸ繧ｫ繝ｫ繧ｷ繧ｦ繝" },
-  { formula:"CuSO竄・,    name:"遑ｫ驟ｸ驫・II)" },
-  { formula:"FeCl竄・,    name:"蝪ｩ蛹夜延(II)" },
-  { formula:"FeCl竄・,    name:"蝪ｩ蛹夜延(III)" },
-  { formula:"NaHCO竄・,   name:"轤ｭ驟ｸ豌ｴ邏繝翫ヨ繝ｪ繧ｦ繝" },
-  { formula:"Na竄・O竄・,   name:"轤ｭ驟ｸ繝翫ヨ繝ｪ繧ｦ繝" },
-  { formula:"CH竄イOOH",  name:"驟｢驟ｸ" },
-  { formula:"HCOOH",    name:"繧ｮ驟ｸ" },
-  { formula:"SiO竄・,     name:"莠碁・蛹悶こ繧､邏" },
-  { formula:"O竄・,       name:"繧ｪ繧ｾ繝ｳ" },
-  { formula:"P竄О竄≫・",    name:"蜊・・蛹門屁繝ｪ繝ｳ" },
+  // 高校化学で追加される化合物
+  { formula:"CH₄",      name:"メタン" },
+  { formula:"C₂H₅OH",   name:"エタノール" },
+  { formula:"C₆H₁₂O₆",  name:"グルコース" },
+  { formula:"C₁₂H₂₂O₁₁",name:"スクロース（ショ糖）" },
+  { formula:"SO₂",      name:"二酸化硫黄" },
+  { formula:"SO₃",      name:"三酸化硫黄" },
+  { formula:"NO",       name:"一酸化窒素" },
+  { formula:"NO₂",      name:"二酸化窒素" },
+  { formula:"HF",       name:"フッ化水素" },
+  { formula:"HBr",      name:"臭化水素" },
+  { formula:"HI",       name:"ヨウ化水素" },
+  { formula:"H₂S",      name:"硫化水素" },
+  { formula:"H₃PO₄",    name:"リン酸" },
+  { formula:"H₂CO₃",    name:"炭酸" },
+  { formula:"KOH",      name:"水酸化カリウム" },
+  { formula:"Ba(OH)₂",  name:"水酸化バリウム" },
+  { formula:"Mg(OH)₂",  name:"水酸化マグネシウム" },
+  { formula:"Al(OH)₃",  name:"水酸化アルミニウム" },
+  { formula:"Cu(OH)₂",  name:"水酸化銅(II)" },
+  { formula:"Fe(OH)₃",  name:"水酸化鉄(III)" },
+  { formula:"NH₄Cl",    name:"塩化アンモニウム" },
+  { formula:"CaSO₄",    name:"硫酸カルシウム" },
+  { formula:"CuSO₄",    name:"硫酸銅(II)" },
+  { formula:"FeCl₂",    name:"塩化鉄(II)" },
+  { formula:"FeCl₃",    name:"塩化鉄(III)" },
+  { formula:"NaHCO₃",   name:"炭酸水素ナトリウム" },
+  { formula:"Na₂CO₃",   name:"炭酸ナトリウム" },
+  { formula:"CH₃COOH",  name:"酢酸" },
+  { formula:"HCOOH",    name:"ギ酸" },
+  { formula:"SiO₂",     name:"二酸化ケイ素" },
+  { formula:"O₃",       name:"オゾン" },
+  { formula:"P₄O₁₀",    name:"十酸化四リン" },
 ];
 
 const FORMULAS_SENIOR = [...FORMULAS_JUNIOR, ...FORMULAS_SENIOR_EXTRA];
@@ -260,16 +265,16 @@ function shuffle(arr) {
   return a;
 }
 
-// 笏笏 繧ｹ繧ｳ繧｢險育ｮ・笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
-// 蜈・ｴ/繧､繧ｪ繝ｳ/蛹門ｭｦ蠑上け繧､繧ｺ・壽凾髢鍋せ + 豁｣隗｣邇・・繝ｼ繝翫せ
+// ── スコア計算 ────────────────────────────────────────────
+// 元素/イオン/化学式クイズ：時間点 + 正解率ボーナス
 function calcQuizScore(correct, total, rawScore) {
   if (total === 0) return 0;
   const acc = correct / total;
-  const accBonus = Math.round(acc * acc * 200); // 豁｣隗｣邇・ｲﾃ・00轤ｹ
+  const accBonus = Math.round(acc * acc * 200); // 正解率²×200点
   return rawScore + accBonus;
 }
 
-// mol險育ｮ暦ｼ壽ｭ｣隗｣謨ｰﾃ・00 + 豁｣隗｣邇・・繝ｼ繝翫せ + 谿九ｊ譎る俣繝懊・繝翫せ
+// mol計算：正解数×100 + 正解率ボーナス + 残り時間ボーナス
 function calcMolScore(correct, total, timeLeft) {
   if (total === 0) return 0;
   const acc = correct / total;
@@ -279,7 +284,8 @@ function calcMolScore(correct, total, timeLeft) {
   return base + accBonus + timeBonus;
 }
 
-// 繧ｿ繧､繝繧｢繧ｿ繝・け・壽ｭ｣隗｣謨ｰﾃ・00 + 繧ｿ繧､繝繝懊・繝翫せ・域掠縺・⊇縺ｩ鬮伜ｾ礼せ・・function calcTimeAttackScore(correct, total, elapsedSec) {
+// タイムアタック：正解数×100 + タイムボーナス（早いほど高得点）
+function calcTimeAttackScore(correct, total, elapsedSec) {
   if (total === 0) return 0;
   const acc = correct / total;
   const base = correct * 100;
@@ -288,7 +294,8 @@ function calcMolScore(correct, total, timeLeft) {
   return base + accBonus + timeBonus;
 }
 
-// 譌･莉倥ヵ繧ｩ繝ｼ繝槭ャ繝・function fmtDate(ts) {
+// 日付フォーマット
+function fmtDate(ts) {
   const d = new Date(ts);
   return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
 }
@@ -300,101 +307,103 @@ function seededRng(seed) {
 
 
 // ============================================================
-// 髮｣譏灘ｺｦ蛻･繝繝溘・驕ｸ謚櫁い逕滓・
+// 難易度別ダミー選択肢生成
 // ============================================================
 
-// 笏笏 繧､繧ｪ繝ｳ逕ｨ繝繝溘・ 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
-// 蜷・う繧ｪ繝ｳ縺ｫ縲御ｼｼ縺ｦ縺・ｋ繧､繧ｪ繝ｳ縲阪ｒ莠句燕螳夂ｾｩ
+// ── イオン用ダミー ──────────────────────────────────────────
+// 各イオンに「似ているイオン」を事前定義
 const ION_SIMILAR = {
-  // 髯ｽ繧､繧ｪ繝ｳ
-  "H竅ｺ":    { normal:["繝翫ヨ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ","繧ｫ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ","繝ｪ繝√え繝繧､繧ｪ繝ｳ"],           hard:["豌ｴ驟ｸ蛹也黄繧､繧ｪ繝ｳ","繝輔ャ蛹也黄繧､繧ｪ繝ｳ","繧｢繝ｳ繝｢繝九え繝繧､繧ｪ繝ｳ"] },
-  "Na竅ｺ":   { normal:["繧ｫ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ","繝ｪ繝√え繝繧､繧ｪ繝ｳ","繝槭げ繝阪す繧ｦ繝繧､繧ｪ繝ｳ"],          hard:["繝翫ヨ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ(2萓｡)","Naﾂｲ竅ｺ","繝翫ヨ繝ｪ繧ｦ繝繧｢繝九が繝ｳ"] },
-  "K竅ｺ":    { normal:["繝翫ヨ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ","繝ｪ繝√え繝繧､繧ｪ繝ｳ","繝ｫ繝薙ず繧ｦ繝繧､繧ｪ繝ｳ"],           hard:["繧ｫ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ(2萓｡)","Kﾂｲ竅ｺ","繧ｫ繝ｪ繧ｦ繝繧｢繝九が繝ｳ"] },
-  "Caﾂｲ竅ｺ":  { normal:["繝槭げ繝阪す繧ｦ繝繧､繧ｪ繝ｳ","繝舌Μ繧ｦ繝繧､繧ｪ繝ｳ","驫・う繧ｪ繝ｳ"],               hard:["繧ｫ繝ｫ繧ｷ繧ｦ繝繧､繧ｪ繝ｳ(1萓｡)","繧ｫ繝ｫ繧ｷ繧ｦ繝繧､繧ｪ繝ｳ(3萓｡)","繧ｫ繝ｫ繧ｷ繧ｦ繝繧｢繝九が繝ｳ"] },
-  "Mgﾂｲ竅ｺ":  { normal:["繧ｫ繝ｫ繧ｷ繧ｦ繝繧､繧ｪ繝ｳ","莠憺央繧､繧ｪ繝ｳ","繝舌Μ繧ｦ繝繧､繧ｪ繝ｳ"],               hard:["繝槭げ繝阪す繧ｦ繝繧､繧ｪ繝ｳ(1萓｡)","繝槭げ繝阪す繧ｦ繝繧､繧ｪ繝ｳ(3萓｡)","繝槭げ繝阪す繧ｦ繝繧｢繝九が繝ｳ"] },
-  "Baﾂｲ竅ｺ":  { normal:["繧ｫ繝ｫ繧ｷ繧ｦ繝繧､繧ｪ繝ｳ","繝槭げ繝阪す繧ｦ繝繧､繧ｪ繝ｳ","繧ｹ繝医Ο繝ｳ繝√え繝繧､繧ｪ繝ｳ"],   hard:["繝舌Μ繧ｦ繝繧､繧ｪ繝ｳ(1萓｡)","繝舌Μ繧ｦ繝繧､繧ｪ繝ｳ(3萓｡)","繝舌Μ繧ｦ繝繧｢繝九が繝ｳ"] },
-  "Cuﾂｲ竅ｺ":  { normal:["莠憺央繧､繧ｪ繝ｳ","驩・II)繧､繧ｪ繝ｳ","繝九ャ繧ｱ繝ｫ繧､繧ｪ繝ｳ"],                  hard:["驫・う繧ｪ繝ｳ(1萓｡)","驫・う繧ｪ繝ｳ(3萓｡)","驫・い繝九が繝ｳ"] },
-  "Znﾂｲ竅ｺ":  { normal:["驫・う繧ｪ繝ｳ","繝九ャ繧ｱ繝ｫ繧､繧ｪ繝ｳ","驩・II)繧､繧ｪ繝ｳ"],                    hard:["莠憺央繧､繧ｪ繝ｳ(1萓｡)","莠憺央繧､繧ｪ繝ｳ(3萓｡)","莠憺央繧｢繝九が繝ｳ"] },
-  "Feﾂｲ竅ｺ":  { normal:["驩・III)繧､繧ｪ繝ｳ","驫・う繧ｪ繝ｳ","繝槭Φ繧ｬ繝ｳ(II)繧､繧ｪ繝ｳ"],               hard:["驩・III)繧､繧ｪ繝ｳ","驩・I)繧､繧ｪ繝ｳ","驩・い繝九が繝ｳ"] },
-  "Feﾂｳ竅ｺ":  { normal:["驩・II)繧､繧ｪ繝ｳ","繧｢繝ｫ繝溘ル繧ｦ繝繧､繧ｪ繝ｳ","繧ｯ繝ｭ繝(III)繧､繧ｪ繝ｳ"],        hard:["驩・II)繧､繧ｪ繝ｳ","驩・IV)繧､繧ｪ繝ｳ","驩・い繝九が繝ｳ"] },
-  "Alﾂｳ竅ｺ":  { normal:["驩・III)繧､繧ｪ繝ｳ","繧ｯ繝ｭ繝(III)繧､繧ｪ繝ｳ","繧｢繝ｫ繝溘ル繧ｦ繝繧､繧ｪ繝ｳ(2萓｡)"],  hard:["繧｢繝ｫ繝溘ル繧ｦ繝繧､繧ｪ繝ｳ(2萓｡)","繧｢繝ｫ繝溘ル繧ｦ繝繧､繧ｪ繝ｳ(4萓｡)","繧｢繝ｫ繝溘ル繧ｦ繝繧｢繝九が繝ｳ"] },
-  "NH竄・⊆":  { normal:["繝翫ヨ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ","繧ｫ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ","豌ｴ邏繧､繧ｪ繝ｳ"],               hard:["繧｢繝ｳ繝｢繝九え繝繧､繧ｪ繝ｳ(2萓｡)","繧｢繝ｳ繝｢繝九い繧､繧ｪ繝ｳ","繧｢繝ｳ繝｢繝九え繝繧｢繝九が繝ｳ"] },
-  "Ag竅ｺ":   { normal:["繝翫ヨ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ","繧ｫ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ","驫・う繧ｪ繝ｳ"],                 hard:["驫繧､繧ｪ繝ｳ(2萓｡)","驫繧｢繝九が繝ｳ","驫繧､繧ｪ繝ｳ(0萓｡)"] },
-  "Li竅ｺ":   { normal:["繝翫ヨ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ","繧ｫ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ","豌ｴ邏繧､繧ｪ繝ｳ"],               hard:["繝ｪ繝√え繝繧､繧ｪ繝ｳ(2萓｡)","繝ｪ繝√え繝繧｢繝九が繝ｳ","Liﾂｲ竅ｺ"] },
-  "Mnﾂｲ竅ｺ":  { normal:["驩・II)繧､繧ｪ繝ｳ","驫・う繧ｪ繝ｳ","莠憺央繧､繧ｪ繝ｳ"],                        hard:["繝槭Φ繧ｬ繝ｳ(III)繧､繧ｪ繝ｳ","繝槭Φ繧ｬ繝ｳ(I)繧､繧ｪ繝ｳ","繝槭Φ繧ｬ繝ｳ繧｢繝九が繝ｳ"] },
-  "Pbﾂｲ竅ｺ":  { normal:["驫・う繧ｪ繝ｳ","莠憺央繧､繧ｪ繝ｳ","驩・II)繧､繧ｪ繝ｳ"],                        hard:["驩帙う繧ｪ繝ｳ(1萓｡)","驩帙う繧ｪ繝ｳ(4萓｡)","驩帙い繝九が繝ｳ"] },
-  "Niﾂｲ竅ｺ":  { normal:["驫・う繧ｪ繝ｳ","莠憺央繧､繧ｪ繝ｳ","繧ｳ繝舌Ν繝医う繧ｪ繝ｳ"],                       hard:["繝九ャ繧ｱ繝ｫ繧､繧ｪ繝ｳ(3萓｡)","繝九ャ繧ｱ繝ｫ繧､繧ｪ繝ｳ(1萓｡)","繝九ャ繧ｱ繝ｫ繧｢繝九が繝ｳ"] },
-  "Crﾂｳ竅ｺ":  { normal:["驩・III)繧､繧ｪ繝ｳ","繧｢繝ｫ繝溘ル繧ｦ繝繧､繧ｪ繝ｳ","繝槭Φ繧ｬ繝ｳ(III)繧､繧ｪ繝ｳ"],     hard:["繧ｯ繝ｭ繝(II)繧､繧ｪ繝ｳ","繧ｯ繝ｭ繝(IV)繧､繧ｪ繝ｳ","繧ｯ繝ｭ繝繧｢繝九が繝ｳ"] },
-  "H竄グ竅ｺ":  { normal:["繧｢繝ｳ繝｢繝九え繝繧､繧ｪ繝ｳ","豌ｴ邏繧､繧ｪ繝ｳ","繝翫ヨ繝ｪ繧ｦ繝繧､繧ｪ繝ｳ"],            hard:["繧ｪ繧ｭ繧ｽ繝九え繝繧､繧ｪ繝ｳ(2萓｡)","豌ｴ蛻・ｭ舌う繧ｪ繝ｳ","H竄０竅ｺ"] },
-  // 髯ｰ繧､繧ｪ繝ｳ
-  "Cl竅ｻ":   { normal:["閾ｭ蛹也黄繧､繧ｪ繝ｳ","繝ｨ繧ｦ蛹也黄繧､繧ｪ繝ｳ","繝輔ャ蛹也黄繧､繧ｪ繝ｳ"],               hard:["蝪ｩ蛹也黄繧､繧ｪ繝ｳ(2萓｡)","蝪ｩ蛹也黄繧｢繝九が繝ｳ(2萓｡)","Clﾂｲ竅ｻ"] },
-  "OH竅ｻ":   { normal:["繝輔ャ蛹也黄繧､繧ｪ繝ｳ","蝪ｩ蛹也黄繧､繧ｪ繝ｳ","驟ｸ蛹也黄繧､繧ｪ繝ｳ"],                 hard:["豌ｴ驟ｸ蛹也黄繧､繧ｪ繝ｳ(2萓｡)","驟ｸ邏繧､繧ｪ繝ｳ","Oﾂｲ竅ｻ"] },
-  "SO竄・ｲ竅ｻ": { normal:["莠懃｡ｫ驟ｸ繧､繧ｪ繝ｳ","轤ｭ驟ｸ繧､繧ｪ繝ｳ","繝ｪ繝ｳ驟ｸ繧､繧ｪ繝ｳ"],                    hard:["莠懃｡ｫ驟ｸ繧､繧ｪ繝ｳ","遑ｫ驟ｸ豌ｴ邏繧､繧ｪ繝ｳ","遑ｫ驟ｸ繧､繧ｪ繝ｳ(1萓｡)"] },
-  "NO竄・⊇":  { normal:["莠懃｡晞・繧､繧ｪ繝ｳ","遑ｫ驟ｸ繧､繧ｪ繝ｳ","蝪ｩ蛹也黄繧､繧ｪ繝ｳ"],                    hard:["莠懃｡晞・繧､繧ｪ繝ｳ","遑晞・繧､繧ｪ繝ｳ(2萓｡)","NO竄・⊇"] },
-  "CO竄δｲ竅ｻ": { normal:["轤ｭ驟ｸ豌ｴ邏繧､繧ｪ繝ｳ","遑ｫ驟ｸ繧､繧ｪ繝ｳ","莠懃｡ｫ驟ｸ繧､繧ｪ繝ｳ"],                  hard:["轤ｭ驟ｸ豌ｴ邏繧､繧ｪ繝ｳ","轤ｭ驟ｸ繧､繧ｪ繝ｳ(1萓｡)","轤ｭ驟ｸ繧､繧ｪ繝ｳ(3萓｡)"] },
-  "HCO竄・⊇": { normal:["轤ｭ驟ｸ繧､繧ｪ繝ｳ","遑ｫ驟ｸ豌ｴ邏繧､繧ｪ繝ｳ","豌ｴ驟ｸ蛹也黄繧､繧ｪ繝ｳ"],                hard:["轤ｭ驟ｸ繧､繧ｪ繝ｳ","轤ｭ驟ｸ豌ｴ邏繧､繧ｪ繝ｳ(2萓｡)","HCO竄・⊇"] },
-  "SO竄δｲ竅ｻ": { normal:["遑ｫ驟ｸ繧､繧ｪ繝ｳ","轤ｭ驟ｸ繧､繧ｪ繝ｳ","莠懃｡晞・繧､繧ｪ繝ｳ"],                      hard:["遑ｫ驟ｸ繧､繧ｪ繝ｳ","莠懃｡ｫ驟ｸ繧､繧ｪ繝ｳ(1萓｡)","莠懃｡ｫ驟ｸ繧､繧ｪ繝ｳ(3萓｡)"] },
-  "NO竄や⊇":  { normal:["遑晞・繧､繧ｪ繝ｳ","莠懃｡ｫ驟ｸ繧､繧ｪ繝ｳ","蝪ｩ蛹也黄繧､繧ｪ繝ｳ"],                    hard:["遑晞・繧､繧ｪ繝ｳ","莠懃｡晞・繧､繧ｪ繝ｳ(2萓｡)","N竄０竅ｻ"] },
-  "PO竄・ｳ竅ｻ": { normal:["遑ｫ驟ｸ繧､繧ｪ繝ｳ","轤ｭ驟ｸ繧､繧ｪ繝ｳ","遑晞・繧､繧ｪ繝ｳ"],                        hard:["繝ｪ繝ｳ驟ｸ繧､繧ｪ繝ｳ(2萓｡)","繝ｪ繝ｳ驟ｸ繧､繧ｪ繝ｳ(4萓｡)","HPO竄・ｲ竅ｻ"] },
-  "HSO竄・⊇": { normal:["遑ｫ驟ｸ繧､繧ｪ繝ｳ","轤ｭ驟ｸ豌ｴ邏繧､繧ｪ繝ｳ","豌ｴ驟ｸ蛹也黄繧､繧ｪ繝ｳ"],                hard:["遑ｫ驟ｸ繧､繧ｪ繝ｳ","莠懃｡ｫ驟ｸ豌ｴ邏繧､繧ｪ繝ｳ","H竄４O竄・] },
-  "MnO竄・⊇": { normal:["莠後け繝ｭ繝驟ｸ繧､繧ｪ繝ｳ","遑ｫ驟ｸ繧､繧ｪ繝ｳ","遑晞・繧､繧ｪ繝ｳ"],                  hard:["驕弱・繝ｳ繧ｬ繝ｳ驟ｸ繧､繧ｪ繝ｳ(2萓｡)","繝槭Φ繧ｬ繝ｳ驟ｸ繧､繧ｪ繝ｳ","MnO竄・⊇"] },
-  "Cr竄０竄・ｲ竅ｻ":{ normal:["驕弱・繝ｳ繧ｬ繝ｳ驟ｸ繧､繧ｪ繝ｳ","遑ｫ驟ｸ繧､繧ｪ繝ｳ","轤ｭ驟ｸ繧､繧ｪ繝ｳ"],              hard:["繧ｯ繝ｭ繝驟ｸ繧､繧ｪ繝ｳ","莠後け繝ｭ繝驟ｸ繧､繧ｪ繝ｳ(3萓｡)","Cr竄０竄・ｲ竅ｻ"] },
-  "CH竄イOO竅ｻ":{ normal:["繧ｮ驟ｸ繧､繧ｪ繝ｳ","豌ｴ驟ｸ蛹也黄繧､繧ｪ繝ｳ","轤ｭ驟ｸ豌ｴ邏繧､繧ｪ繝ｳ"],              hard:["驟｢驟ｸ繧､繧ｪ繝ｳ(2萓｡)","繝励Ο繝斐が繝ｳ驟ｸ繧､繧ｪ繝ｳ","CH竄・OO竅ｻ"] },
-  "F竅ｻ":    { normal:["蝪ｩ蛹也黄繧､繧ｪ繝ｳ","閾ｭ蛹也黄繧､繧ｪ繝ｳ","豌ｴ驟ｸ蛹也黄繧､繧ｪ繝ｳ"],                hard:["繝輔ャ蛹也黄繧､繧ｪ繝ｳ(2萓｡)","Fﾂｲ竅ｻ","繝輔ャ蛹也黄繧｢繝九が繝ｳ(2萓｡)"] },
-  "Br竅ｻ":   { normal:["蝪ｩ蛹也黄繧､繧ｪ繝ｳ","繝ｨ繧ｦ蛹也黄繧､繧ｪ繝ｳ","繝輔ャ蛹也黄繧､繧ｪ繝ｳ"],              hard:["閾ｭ蛹也黄繧､繧ｪ繝ｳ(2萓｡)","Brﾂｲ竅ｻ","閾ｭ蛹也黄繧｢繝九が繝ｳ(2萓｡)"] },
-  "I竅ｻ":    { normal:["閾ｭ蛹也黄繧､繧ｪ繝ｳ","蝪ｩ蛹也黄繧､繧ｪ繝ｳ","繝輔ャ蛹也黄繧､繧ｪ繝ｳ"],               hard:["繝ｨ繧ｦ蛹也黄繧､繧ｪ繝ｳ(2萓｡)","I竄・⊇","繝ｨ繧ｦ蛹也黄繧｢繝九が繝ｳ(2萓｡)"] },
-  "Sﾂｲ竅ｻ":   { normal:["驟ｸ蛹也黄繧､繧ｪ繝ｳ","蝪ｩ蛹也黄繧､繧ｪ繝ｳ","遑ｫ驟ｸ繧､繧ｪ繝ｳ"],                   hard:["遑ｫ蛹也黄繧､繧ｪ繝ｳ(1萓｡)","遑ｫ蛹也黄繧､繧ｪ繝ｳ(3萓｡)","Sﾂｲ竅ｺ"] },
-  "Oﾂｲ竅ｻ":   { normal:["遑ｫ蛹也黄繧､繧ｪ繝ｳ","豌ｴ驟ｸ蛹也黄繧､繧ｪ繝ｳ","繝輔ャ蛹也黄繧､繧ｪ繝ｳ"],              hard:["驟ｸ蛹也黄繧､繧ｪ繝ｳ(1萓｡)","驟ｸ蛹也黄繧､繧ｪ繝ｳ(3萓｡)","Oﾂｲ竅ｺ"] },
-  "CN竅ｻ":   { normal:["蝪ｩ蛹也黄繧､繧ｪ繝ｳ","豌ｴ驟ｸ蛹也黄繧､繧ｪ繝ｳ","莠懃｡晞・繧､繧ｪ繝ｳ"],               hard:["繧ｷ繧｢繝ｳ蛹也黄繧､繧ｪ繝ｳ(2萓｡)","C竄・竅ｻ","繝√が繧ｷ繧｢繝ｳ驟ｸ繧､繧ｪ繝ｳ"] },
-  "SCN竅ｻ":  { normal:["繧ｷ繧｢繝ｳ蛹也黄繧､繧ｪ繝ｳ","蝪ｩ蛹也黄繧､繧ｪ繝ｳ","遑晞・繧､繧ｪ繝ｳ"],               hard:["繝√が繧ｷ繧｢繝ｳ驟ｸ繧､繧ｪ繝ｳ(2萓｡)","SC竄・竅ｻ","繧ｷ繧｢繝ｳ蛹也黄繧､繧ｪ繝ｳ"] },
+  // 陽イオン
+  "H⁺":    { normal:["ナトリウムイオン","カリウムイオン","リチウムイオン"],           hard:["水酸化物イオン","フッ化物イオン","アンモニウムイオン"] },
+  "Na⁺":   { normal:["カリウムイオン","リチウムイオン","マグネシウムイオン"],          hard:["ナトリウムイオン(2価)","Na²⁺","ナトリウムアニオン"] },
+  "K⁺":    { normal:["ナトリウムイオン","リチウムイオン","ルビジウムイオン"],           hard:["カリウムイオン(2価)","K²⁺","カリウムアニオン"] },
+  "Ca²⁺":  { normal:["マグネシウムイオン","バリウムイオン","銅イオン"],               hard:["カルシウムイオン(1価)","カルシウムイオン(3価)","カルシウムアニオン"] },
+  "Mg²⁺":  { normal:["カルシウムイオン","亜鉛イオン","バリウムイオン"],               hard:["マグネシウムイオン(1価)","マグネシウムイオン(3価)","マグネシウムアニオン"] },
+  "Ba²⁺":  { normal:["カルシウムイオン","マグネシウムイオン","ストロンチウムイオン"],   hard:["バリウムイオン(1価)","バリウムイオン(3価)","バリウムアニオン"] },
+  "Cu²⁺":  { normal:["亜鉛イオン","鉄(II)イオン","ニッケルイオン"],                  hard:["銅イオン(1価)","銅イオン(3価)","銅アニオン"] },
+  "Zn²⁺":  { normal:["銅イオン","ニッケルイオン","鉄(II)イオン"],                    hard:["亜鉛イオン(1価)","亜鉛イオン(3価)","亜鉛アニオン"] },
+  "Fe²⁺":  { normal:["鉄(III)イオン","銅イオン","マンガン(II)イオン"],               hard:["鉄(III)イオン","鉄(I)イオン","鉄アニオン"] },
+  "Fe³⁺":  { normal:["鉄(II)イオン","アルミニウムイオン","クロム(III)イオン"],        hard:["鉄(II)イオン","鉄(IV)イオン","鉄アニオン"] },
+  "Al³⁺":  { normal:["鉄(III)イオン","クロム(III)イオン","アルミニウムイオン(2価)"],  hard:["アルミニウムイオン(2価)","アルミニウムイオン(4価)","アルミニウムアニオン"] },
+  "NH₄⁺":  { normal:["ナトリウムイオン","カリウムイオン","水素イオン"],               hard:["アンモニウムイオン(2価)","アンモニアイオン","アンモニウムアニオン"] },
+  "Ag⁺":   { normal:["ナトリウムイオン","カリウムイオン","銅イオン"],                 hard:["銀イオン(2価)","銀アニオン","銀イオン(0価)"] },
+  "Li⁺":   { normal:["ナトリウムイオン","カリウムイオン","水素イオン"],               hard:["リチウムイオン(2価)","リチウムアニオン","Li²⁺"] },
+  "Mn²⁺":  { normal:["鉄(II)イオン","銅イオン","亜鉛イオン"],                        hard:["マンガン(III)イオン","マンガン(I)イオン","マンガンアニオン"] },
+  "Pb²⁺":  { normal:["銅イオン","亜鉛イオン","鉄(II)イオン"],                        hard:["鉛イオン(1価)","鉛イオン(4価)","鉛アニオン"] },
+  "Ni²⁺":  { normal:["銅イオン","亜鉛イオン","コバルトイオン"],                       hard:["ニッケルイオン(3価)","ニッケルイオン(1価)","ニッケルアニオン"] },
+  "Cr³⁺":  { normal:["鉄(III)イオン","アルミニウムイオン","マンガン(III)イオン"],     hard:["クロム(II)イオン","クロム(IV)イオン","クロムアニオン"] },
+  "H₃O⁺":  { normal:["アンモニウムイオン","水素イオン","ナトリウムイオン"],            hard:["オキソニウムイオン(2価)","水分子イオン","H₂O⁺"] },
+  // 陰イオン
+  "Cl⁻":   { normal:["臭化物イオン","ヨウ化物イオン","フッ化物イオン"],               hard:["塩化物イオン(2価)","塩化物アニオン(2価)","Cl²⁻"] },
+  "OH⁻":   { normal:["フッ化物イオン","塩化物イオン","酸化物イオン"],                 hard:["水酸化物イオン(2価)","酸素イオン","O²⁻"] },
+  "SO₄²⁻": { normal:["亜硫酸イオン","炭酸イオン","リン酸イオン"],                    hard:["亜硫酸イオン","硫酸水素イオン","硫酸イオン(1価)"] },
+  "NO₃⁻":  { normal:["亜硝酸イオン","硫酸イオン","塩化物イオン"],                    hard:["亜硝酸イオン","硝酸イオン(2価)","NO₄⁻"] },
+  "CO₃²⁻": { normal:["炭酸水素イオン","硫酸イオン","亜硫酸イオン"],                  hard:["炭酸水素イオン","炭酸イオン(1価)","炭酸イオン(3価)"] },
+  "HCO₃⁻": { normal:["炭酸イオン","硫酸水素イオン","水酸化物イオン"],                hard:["炭酸イオン","炭酸水素イオン(2価)","HCO₄⁻"] },
+  "SO₃²⁻": { normal:["硫酸イオン","炭酸イオン","亜硝酸イオン"],                      hard:["硫酸イオン","亜硫酸イオン(1価)","亜硫酸イオン(3価)"] },
+  "NO₂⁻":  { normal:["硝酸イオン","亜硫酸イオン","塩化物イオン"],                    hard:["硝酸イオン","亜硝酸イオン(2価)","N₂O⁻"] },
+  "PO₄³⁻": { normal:["硫酸イオン","炭酸イオン","硝酸イオン"],                        hard:["リン酸イオン(2価)","リン酸イオン(4価)","HPO₄²⁻"] },
+  "HSO₄⁻": { normal:["硫酸イオン","炭酸水素イオン","水酸化物イオン"],                hard:["硫酸イオン","亜硫酸水素イオン","H₂SO₄"] },
+  "MnO₄⁻": { normal:["二クロム酸イオン","硫酸イオン","硝酸イオン"],                  hard:["過マンガン酸イオン(2価)","マンガン酸イオン","MnO₃⁻"] },
+  "Cr₂O₇²⁻":{ normal:["過マンガン酸イオン","硫酸イオン","炭酸イオン"],              hard:["クロム酸イオン","二クロム酸イオン(3価)","Cr₂O₆²⁻"] },
+  "CH₃COO⁻":{ normal:["ギ酸イオン","水酸化物イオン","炭酸水素イオン"],              hard:["酢酸イオン(2価)","プロピオン酸イオン","CH₂COO⁻"] },
+  "F⁻":    { normal:["塩化物イオン","臭化物イオン","水酸化物イオン"],                hard:["フッ化物イオン(2価)","F²⁻","フッ化物アニオン(2価)"] },
+  "Br⁻":   { normal:["塩化物イオン","ヨウ化物イオン","フッ化物イオン"],              hard:["臭化物イオン(2価)","Br²⁻","臭化物アニオン(2価)"] },
+  "I⁻":    { normal:["臭化物イオン","塩化物イオン","フッ化物イオン"],               hard:["ヨウ化物イオン(2価)","I₃⁻","ヨウ化物アニオン(2価)"] },
+  "S²⁻":   { normal:["酸化物イオン","塩化物イオン","硫酸イオン"],                   hard:["硫化物イオン(1価)","硫化物イオン(3価)","S²⁺"] },
+  "O²⁻":   { normal:["硫化物イオン","水酸化物イオン","フッ化物イオン"],              hard:["酸化物イオン(1価)","酸化物イオン(3価)","O²⁺"] },
+  "CN⁻":   { normal:["塩化物イオン","水酸化物イオン","亜硝酸イオン"],               hard:["シアン化物イオン(2価)","C₂N⁻","チオシアン酸イオン"] },
+  "SCN⁻":  { normal:["シアン化物イオン","塩化物イオン","硝酸イオン"],               hard:["チオシアン酸イオン(2価)","SC₂N⁻","シアン化物イオン"] },
 };
 
 
-// 笏笏 繧､繧ｪ繝ｳ逕ｨ繝繝溘・ 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
-// 蜷・う繧ｪ繝ｳ縺ｫ縲御ｼｼ縺ｦ縺・ｋ繧､繧ｪ繝ｳ縲阪ｒ莠句燕螳夂ｾｩ
+// ── イオン用ダミー ──────────────────────────────────────────
+// 各イオンに「似ているイオン」を事前定義
 const FORMULA_SIMILAR = {
-  "H竄０":    { normal:["CO竄・,"H竄・,"HCl"],           hard:["H竄０竄・,"HO","H竄グ"] },
-  "CO竄・:    { normal:["CO","SO竄・,"H竄０"],            hard:["CO","CO竄・,"C竄０竄・] },
-  "CO":     { normal:["CO竄・,"NO","SO竄・],            hard:["CO竄・,"C竄０","CO竄・] },
-  "HCl":    { normal:["NaCl","H竄・,"Cl竄・],           hard:["HCl竄・,"H竄・l","HClO"] },
-  "NaCl":   { normal:["KCl","MgCl竄・,"NaOH"],        hard:["NaCl竄・,"Na竄・l","NaCl竄・] },
-  "NaOH":   { normal:["KOH","NaCl","Na竄０"],         hard:["Na竄０H","NaO","NaOH竄・] },
-  "H竄４O竄・:  { normal:["H竄４O竄・,"HNO竄・,"H竄ケO竄・],     hard:["H竄４O竄・,"HSO竄・,"H竄ゴO竄・] },
-  "HNO竄・:   { normal:["HNO竄・,"H竄４O竄・,"HCl"],        hard:["HNO竄・,"H竄・O竄・,"HN竄０竄・] },
-  "NH竄・:    { normal:["N竄・,"H竄・,"N竄・竄・],            hard:["NH竄・,"NH竄・,"N竄・竄・] },
-  "H竄０竄・:   { normal:["H竄０","HO","H竄・],             hard:["HO竄・,"H竄０","HO竄や⊇"] },
-  "CaCO竄・:  { normal:["Na竄・O竄・,"CaO","Ca(OH)竄・],    hard:["CaCO","Ca竄・O竄・,"CaCO竄・] },
-  "Ca(OH)竄・:{ normal:["CaCO竄・,"CaO","Mg(OH)竄・],     hard:["Ca(OH)","CaOH","Ca竄・OH)竄・] },
-  "CuO":    { normal:["Cu竄０","FeO","ZnO"],           hard:["Cu竄０","CuO竄・,"Cu竄グ"] },
-  "Fe竄０竄・:  { normal:["FeO","Fe竄グ竄・,"Al竄０竄・],       hard:["FeO","Fe竄グ竄・,"Fe竄０竄・] },
-  "MgO":    { normal:["CaO","ZnO","Al竄０竄・],         hard:["Mg竄０","MgO竄・,"Mg竄グ"] },
-  "Al竄０竄・:  { normal:["Fe竄０竄・,"SiO竄・,"MgO"],        hard:["AlO","Al竄グ竄・,"Al竄０"] },
-  "Na竄０":   { normal:["K竄０","NaOH","Na竄・O竄・],       hard:["Na竄０竄・,"NaO","Na竄グ"] },
-  "H竄・:     { normal:["O竄・,"N竄・,"Cl竄・],             hard:["H","H竄・,"H竄や⊆"] },
-  "O竄・:     { normal:["O竄・,"N竄・,"H竄・],              hard:["O竄・,"O","O竄や⊇"] },
-  "N竄・:     { normal:["O竄・,"NO","NH竄・],             hard:["NO","N","N竄・] },
-  "Cl竄・:    { normal:["HCl","Br竄・,"F竄・],            hard:["Cl","Cl竄・,"ClO"] },
-  "CH竄・:    { normal:["C竄・竄・,"C竄・竄・,"NH竄・],        hard:["CH竄・,"C竄・竄・,"CH竄О"] },
-  "C竄・竄・H": { normal:["CH竄グH","C竄・竄・,"CH竄・],       hard:["C竄・竄ОH","C竄・竄・","C竄・竄・"] },
-  "SO竄・:    { normal:["SO竄・,"NO竄・,"CO竄・],           hard:["SO竄・,"S竄０","SO"] },
-  "SO竄・:    { normal:["SO竄・,"NO竄・,"CO竄・],           hard:["SO竄・,"S竄０竄・,"SO竄・] },
-  "NO":     { normal:["NO竄・,"N竄０","CO"],            hard:["NO竄・,"N竄０","NO竄・] },
-  "NO竄・:    { normal:["NO","N竄０竄・,"SO竄・],           hard:["NO","N竄０竄・,"NO竄・] },
-  "KOH":    { normal:["NaOH","K竄０","KCl"],          hard:["K竄０H","KOH竄・,"KOOH"] },
-  "Ba(OH)竄・:{ normal:["Ca(OH)竄・,"BaO","BaCl竄・],     hard:["Ba(OH)","BaO+H竄０","Ba竄・OH)竄・] },
-  "NH竄Гl":  { normal:["NaCl","NH竄・,"HCl"],          hard:["NH竄Гl竄・,"(NH竄・竄・l","NH竄イl"] },
-  "CuSO竄・:  { normal:["ZnSO竄・,"CuCl竄・,"CaCO竄・],    hard:["Cu竄４O竄・,"CuSO竄・,"Cu(SO竄・竄・] },
-  "FeCl竄・:  { normal:["FeCl竄・,"NaCl","MgCl竄・],      hard:["FeCl竄・,"Fe竄・l","FeCl"] },
-  "FeCl竄・:  { normal:["FeCl竄・,"AlCl竄・,"NaCl"],      hard:["FeCl竄・,"FeCl竄・,"Fe竄・l竄・] },
-  "NaHCO竄・: { normal:["Na竄・O竄・,"NaOH","CaCO竄・],     hard:["Na竄・O竄・,"NaCO竄・,"NaHCO竄・] },
-  "Na竄・O竄・: { normal:["NaHCO竄・,"Na竄０","NaOH"],      hard:["NaHCO竄・,"Na竄イO竄・,"Na竄・O竄・] },
-  "SiO竄・:   { normal:["CO竄・,"SO竄・,"Al竄０竄・],         hard:["SiO","Si竄０竄・,"SiO竄・] },
-  "O竄・:     { normal:["O竄・,"SO竄・,"NO竄・],            hard:["O竄・,"O竄・,"O竄や⊇"] },
-  "H竄４":    { normal:["HCl","SO竄・,"H竄０"],           hard:["HS","H竄４竄・,"H竄ゴ"] },
-  "H竄ケO竄・:  { normal:["H竄４O竄・,"HNO竄・,"H竄１O竄・],     hard:["H竄１O竄・⊇","H竄ケO竄・,"HPO竄・ｲ竅ｻ"] },
+  "H₂O":    { normal:["CO₂","H₂","HCl"],           hard:["H₂O₂","HO","H₃O"] },
+  "CO₂":    { normal:["CO","SO₂","H₂O"],            hard:["CO","CO₃","C₂O₄"] },
+  "CO":     { normal:["CO₂","NO","SO₂"],            hard:["CO₂","C₂O","CO₃"] },
+  "HCl":    { normal:["NaCl","H₂","Cl₂"],           hard:["HCl₂","H₂Cl","HClO"] },
+  "NaCl":   { normal:["KCl","MgCl₂","NaOH"],        hard:["NaCl₂","Na₂Cl","NaCl₃"] },
+  "NaOH":   { normal:["KOH","NaCl","Na₂O"],         hard:["Na₂OH","NaO","NaOH₂"] },
+  "H₂SO₄":  { normal:["H₂SO₃","HNO₃","H₃PO₄"],     hard:["H₂SO₃","HSO₄","H₃SO₄"] },
+  "HNO₃":   { normal:["HNO₂","H₂SO₄","HCl"],        hard:["HNO₂","H₂NO₃","HN₂O₃"] },
+  "NH₃":    { normal:["N₂","H₂","N₂H₄"],            hard:["NH₂","NH₄","N₂H₃"] },
+  "H₂O₂":   { normal:["H₂O","HO","H₂"],             hard:["HO₂","H₂O","HO₂⁻"] },
+  "CaCO₃":  { normal:["Na₂CO₃","CaO","Ca(OH)₂"],    hard:["CaCO","Ca₂CO₃","CaCO₄"] },
+  "Ca(OH)₂":{ normal:["CaCO₃","CaO","Mg(OH)₂"],     hard:["Ca(OH)","CaOH","Ca₂(OH)₂"] },
+  "CuO":    { normal:["Cu₂O","FeO","ZnO"],           hard:["Cu₂O","CuO₂","Cu₃O"] },
+  "Fe₂O₃":  { normal:["FeO","Fe₃O₄","Al₂O₃"],       hard:["FeO","Fe₃O₄","Fe₂O₄"] },
+  "MgO":    { normal:["CaO","ZnO","Al₂O₃"],         hard:["Mg₂O","MgO₂","Mg₃O"] },
+  "Al₂O₃":  { normal:["Fe₂O₃","SiO₂","MgO"],        hard:["AlO","Al₃O₄","Al₂O"] },
+  "Na₂O":   { normal:["K₂O","NaOH","Na₂CO₃"],       hard:["Na₂O₂","NaO","Na₃O"] },
+  "H₂":     { normal:["O₂","N₂","Cl₂"],             hard:["H","H₃","H₂⁺"] },
+  "O₂":     { normal:["O₃","N₂","H₂"],              hard:["O₃","O","O₂⁻"] },
+  "N₂":     { normal:["O₂","NO","NH₃"],             hard:["NO","N","N₃"] },
+  "Cl₂":    { normal:["HCl","Br₂","F₂"],            hard:["Cl","Cl₃","ClO"] },
+  "CH₄":    { normal:["C₂H₆","C₂H₄","NH₃"],        hard:["CH₃","C₂H₄","CH₄O"] },
+  "C₂H₅OH": { normal:["CH₃OH","C₂H₄","CH₄"],       hard:["C₂H₄OH","C₂H₆O","C₂H₅O"] },
+  "SO₂":    { normal:["SO₃","NO₂","CO₂"],           hard:["SO₃","S₂O","SO"] },
+  "SO₃":    { normal:["SO₂","NO₂","CO₂"],           hard:["SO₂","S₂O₃","SO₄"] },
+  "NO":     { normal:["NO₂","N₂O","CO"],            hard:["NO₂","N₂O","NO₃"] },
+  "NO₂":    { normal:["NO","N₂O₄","SO₂"],           hard:["NO","N₂O₄","NO₃"] },
+  "KOH":    { normal:["NaOH","K₂O","KCl"],          hard:["K₂OH","KOH₂","KOOH"] },
+  "Ba(OH)₂":{ normal:["Ca(OH)₂","BaO","BaCl₂"],     hard:["Ba(OH)","BaO+H₂O","Ba₂(OH)₂"] },
+  "NH₄Cl":  { normal:["NaCl","NH₃","HCl"],          hard:["NH₄Cl₂","(NH₄)₂Cl","NH₃Cl"] },
+  "CuSO₄":  { normal:["ZnSO₄","CuCl₂","CaCO₃"],    hard:["Cu₂SO₄","CuSO₃","Cu(SO₄)₂"] },
+  "FeCl₂":  { normal:["FeCl₃","NaCl","MgCl₂"],      hard:["FeCl₃","Fe₂Cl","FeCl"] },
+  "FeCl₃":  { normal:["FeCl₂","AlCl₃","NaCl"],      hard:["FeCl₂","FeCl₄","Fe₂Cl₃"] },
+  "NaHCO₃": { normal:["Na₂CO₃","NaOH","CaCO₃"],     hard:["Na₂CO₃","NaCO₃","NaHCO₂"] },
+  "Na₂CO₃": { normal:["NaHCO₃","Na₂O","NaOH"],      hard:["NaHCO₃","Na₃CO₃","Na₂CO₂"] },
+  "SiO₂":   { normal:["CO₂","SO₂","Al₂O₃"],         hard:["SiO","Si₂O₃","SiO₃"] },
+  "O₃":     { normal:["O₂","SO₃","NO₃"],            hard:["O₂","O₄","O₂⁻"] },
+  "H₂S":    { normal:["HCl","SO₂","H₂O"],           hard:["HS","H₂S₂","H₃S"] },
+  "H₃PO₄":  { normal:["H₂SO₄","HNO₃","H₂PO₄"],     hard:["H₂PO₄⁻","H₃PO₃","HPO₄²⁻"] },
 };
 
-// 髮｣譏灘ｺｦ縺ｫ蠢懊§縺溘ム繝溘・驕ｸ謚櫁い繧堤函謌・// ION_SIMILAR / FORMULA_SIMILAR 縺ｮ蛟､縺ｯ縲悟錐蜑阪・譁・ｭ怜・繝ｪ繧ｹ繝医・// 竊・蠑鞘・蜷榊燕 縺ｧ繧・蜷榊燕竊貞ｼ・縺ｧ繧よｭ｣縺励￥菴ｿ縺医ｋ
+// 難易度に応じたダミー選択肢を生成
+// ION_SIMILAR / FORMULA_SIMILAR の値は「名前の文字列リスト」
+// → 式→名前 でも 名前→式 でも正しく使える
 function getDifficultyCandidates(item, allItems, difficulty, mode) {
   const similarMap = mode==="ion" ? ION_SIMILAR : mode==="formula" ? FORMULA_SIMILAR : null;
   const key = mode==="ion" ? item.formula : mode==="formula" ? item.formula : item.symbol;
@@ -408,14 +417,17 @@ function getDifficultyCandidates(item, allItems, difficulty, mode) {
     ? (similar.hard || similar.normal || [])
     : (similar.normal || []);
 
-  // nameList縺ｯ縲悟錐蜑阪・譁・ｭ怜・縲坂・ allItems縺九ｉ蜷榊燕縺ｧ讀懃ｴ｢縲√↑縺代ｌ縺ｰ繝繝溘・繧ｪ繝悶ず繧ｧ繧ｯ繝育函謌・  const results = nameList.slice(0, 3).map(dummyName => {
+  // nameListは「名前の文字列」→ allItemsから名前で検索、なければダミーオブジェクト生成
+  const results = nameList.slice(0, 3).map(dummyName => {
     const found = allItems.find(x => x.name === dummyName);
     if (found) return found;
-    // 螳溷惠縺励↑縺・錐蜑阪・繝繝溘・
-    // formula・亥ｼ上→縺励※菴ｿ縺・､・峨・遨ｺ譁・ｭ励↓縺励※縲∬｡ｨ遉ｺ蛛ｴ縺ｧname・亥錐蜑搾ｼ峨ｒ菴ｿ縺・    return { formula: "???", name: dummyName, _dummy: true };
+    // 実在しない名前のダミー
+    // formula（式として使う値）は空文字にして、表示側でname（名前）を使う
+    return { formula: "???", name: dummyName, _dummy: true };
   });
 
-  // 3蛟区悴貅縺ｪ繧芽｣懷ｮ・  if (results.length < 3) {
+  // 3個未満なら補完
+  if (results.length < 3) {
     const usedKeys = results.map(r => r._dummy ? r.name : (mode==="ion"?r.formula:r.formula));
     const extras = shuffle(allItems.filter(x => {
       const k = mode==="ion"?x.formula:x.formula;
@@ -426,13 +438,14 @@ function getDifficultyCandidates(item, allItems, difficulty, mode) {
   return results;
 }
 
-// 蜈・ｴ逕ｨ繝繝溘・・磯屮譏灘ｺｦ蛻･・・// easy: 蜈ｨ縺城＆縺・・邏 / normal: 蜷悟捉譛溘ｄ莨ｼ縺溯ｨ伜捷 / hard: 險伜捷縺御ｼｼ縺ｦ縺・ｋ
+// 元素用ダミー（難易度別）
+// easy: 全く違う元素 / normal: 同周期や似た記号 / hard: 記号が似ている
 function getElementDummies(el, elements, difficulty) {
   if (difficulty === "easy") {
     return shuffle(elements.filter(e=>e.symbol!==el.symbol)).slice(0,3);
   }
   if (difficulty === "normal") {
-    // 蜷悟捉譛・or 髫｣謗･蜴溷ｭ千分蜿ｷ
+    // 同周期 or 隣接原子番号
     const sameRow = elements.filter(e =>
       e.symbol!==el.symbol &&
       Math.abs(e.number - el.number) <= 8
@@ -441,9 +454,11 @@ function getElementDummies(el, elements, difficulty) {
     return shuffle(pool).slice(0,3);
   }
   if (difficulty === "hard") {
-    // 險伜捷縺御ｼｼ縺ｦ縺・ｋ・磯ｭ譁・ｭ嶺ｸ閾ｴ or 1譁・ｭ鈴＆縺・ｼ・    const similar = elements.filter(e => {
+    // 記号が似ている（頭文字一致 or 1文字違い）
+    const similar = elements.filter(e => {
       if (e.symbol === el.symbol) return false;
-      if (e.symbol[0] === el.symbol[0]) return true; // 鬆ｭ譁・ｭ怜酔縺・      if (Math.abs(e.number - el.number) <= 2) return true; // 髫｣縺ｮ蜈・ｴ
+      if (e.symbol[0] === el.symbol[0]) return true; // 頭文字同じ
+      if (Math.abs(e.number - el.number) <= 2) return true; // 隣の元素
       return false;
     });
     const pool = similar.length >= 3 ? similar : elements.filter(e=>e.symbol!==el.symbol);
@@ -457,13 +472,13 @@ function generateElementQ(elements, rng, directionMode="random", difficulty="nor
   const el = elements[Math.floor(rand()*elements.length)];
   const isS2N = directionMode==="s2n" ? true : directionMode==="n2s" ? false : rand() > 0.5;
   const wrongItems = getElementDummies(el, elements, difficulty);
-  // 蜷榊燕竊定ｨ伜捷 縺ｮ蝣ｴ蜷・ choices縺ｯ險伜捷, 豁｣隗｣縺ｯel.symbol
-  // 險伜捷竊貞錐蜑・縺ｮ蝣ｴ蜷・ choices縺ｯ蜷榊燕, 豁｣隗｣縺ｯel.name
+  // 名前→記号 の場合: choicesは記号, 正解はel.symbol
+  // 記号→名前 の場合: choicesは名前, 正解はel.name
   const choiceItems = shuffle([el, ...wrongItems]);
   return {
     id: el.symbol+isS2N,
     display: isS2N ? el.symbol : el.name,
-    label: isS2N ? "縺薙・險伜捷縺ｮ蜈・ｴ蜷阪・・・ : "縺薙・蜈・ｴ縺ｮ險伜捷縺ｯ・・,
+    label: isS2N ? "この記号の元素名は？" : "この元素の記号は？",
     choices: choiceItems.map(c=>isS2N?c.name:c.symbol),
     answer: isS2N ? el.name : el.symbol,
     isSymbol: isS2N,
@@ -477,19 +492,21 @@ function generateIonQ(ions, rng, directionMode="random", difficulty="normal") {
   const isF2N = directionMode==="f2n" ? true : directionMode==="n2f" ? false : rand() > 0.5;
   const wrongCandidates = getDifficultyCandidates(ion, ions, difficulty, "ion");
   const choiceItems = shuffle([ion, ...wrongCandidates]);
-  // 蠑鞘・蜷榊燕: 驕ｸ謚櫁い縺ｯ蜷榊燕縲ょ錐蜑阪′縺ｪ縺・_dummy)蝣ｴ蜷医・蠑上ｒ縺昴・縺ｾ縺ｾ陦ｨ遉ｺ
-  // 蜷榊燕竊貞ｼ・ 驕ｸ謚櫁い縺ｯ蠑・  const finalChoices = choiceItems.map(c => {
+  // 式→名前: 選択肢は名前。名前がない(_dummy)場合は式をそのまま表示
+  // 名前→式: 選択肢は式
+  const finalChoices = choiceItems.map(c => {
     if (isF2N) {
-      // 蠑鞘・蜷榊燕: 驕ｸ謚櫁い縺ｯ蜷榊燕
+      // 式→名前: 選択肢は名前
       return c.name;
     } else {
-      // 蜷榊燕竊貞ｼ・ 驕ｸ謚櫁い縺ｯ蠑上・dummy縺ｮ蝣ｴ蜷・ame繧偵◎縺ｮ縺ｾ縺ｾ驕ｸ謚櫁い縺ｫ・医ム繝溘・蠑上→縺励※・・      return c._dummy ? c.name : c.formula;
+      // 名前→式: 選択肢は式。_dummyの場合nameをそのまま選択肢に（ダミー式として）
+      return c._dummy ? c.name : c.formula;
     }
   });
   return {
     id: ion.formula+isF2N,
     display: isF2N ? ion.formula : ion.name,
-    label: isF2N ? "縺薙・繧､繧ｪ繝ｳ蠑上・蜷榊燕縺ｯ・・ : "縺薙・繧､繧ｪ繝ｳ縺ｮ蠑上・・・,
+    label: isF2N ? "このイオン式の名前は？" : "このイオンの式は？",
     choices: finalChoices,
     answer: isF2N ? ion.name : ion.formula,
     isSymbol: isF2N,
@@ -497,7 +514,7 @@ function generateIonQ(ions, rng, directionMode="random", difficulty="normal") {
   };
 }
 
-// 蛹門ｭｦ蠑上け繧､繧ｺ逕ｨ蝠城｡檎函謌・directionMode: "f2n"=蠑鞘・蜷榊燕, "n2f"=蜷榊燕竊貞ｼ・ "random"
+// 化学式クイズ用問題生成 directionMode: "f2n"=式→名前, "n2f"=名前→式, "random"
 function generateFormulaQ(formulas, rng, directionMode="random", difficulty="normal") {
   const rand = rng || Math.random.bind(Math);
   const item = formulas[Math.floor(rand()*formulas.length)];
@@ -506,16 +523,17 @@ function generateFormulaQ(formulas, rng, directionMode="random", difficulty="nor
   const choiceItems = shuffle([item, ...wrongCandidates]);
   const finalChoices = choiceItems.map(c => {
     if (isF2N) {
-      // 蠑鞘・蜷榊燕: 驕ｸ謚櫁い縺ｯ蜷榊燕
+      // 式→名前: 選択肢は名前
       return c.name;
     } else {
-      // 蜷榊燕竊貞ｼ・ 驕ｸ謚櫁い縺ｯ蠑上・dummy縺ｮ蝣ｴ蜷・ame繧偵◎縺ｮ縺ｾ縺ｾ・医ム繝溘・蠑上→縺励※・・      return c._dummy ? c.name : c.formula;
+      // 名前→式: 選択肢は式。_dummyの場合nameをそのまま（ダミー式として）
+      return c._dummy ? c.name : c.formula;
     }
   });
   return {
     id: item.formula+isF2N,
     display: isF2N ? item.formula : item.name,
-    label: isF2N ? "縺薙・蛹門ｭｦ蠑上・迚ｩ雉ｪ蜷阪・・・ : "縺薙・迚ｩ雉ｪ縺ｮ蛹門ｭｦ蠑上・・・,
+    label: isF2N ? "この化学式の物質名は？" : "この物質の化学式は？",
     choices: finalChoices,
     answer: isF2N ? item.name : item.formula,
     isSymbol: !isF2N,
@@ -525,7 +543,7 @@ function generateFormulaQ(formulas, rng, directionMode="random", difficulty="nor
 
 
 // ============================================================
-// BGM ENGINE  笏 繝帙・繝逕ｨ(關ｽ縺｡逹縺・◆) 縺ｨ 繝励Ξ繧､逕ｨ(繧｢繝・・繝・Φ繝・ 繧貞・髮｢
+// BGM ENGINE  ─ ホーム用(落ち着いた) と プレイ用(アップテンポ) を分離
 // ============================================================
 class BgmEngine {
   constructor() { this.ctx=null; this.playing=false; this.nodes=[]; this.loopTO=null; this.mode="home"; }
@@ -546,21 +564,23 @@ class BgmEngine {
     const f=ctx.createBiquadFilter(); f.type="bandpass"; f.frequency.setValueAtTime(freq,t);
     src.connect(f); f.connect(g); g.connect(ctx.destination); src.start(t);
   }
-  // 繝帙・繝逕ｨ: 繧・▲縺溘ｊ縺励◆繧｢繝ｳ繝薙お繝ｳ繝磯｢ｨ繝｡繝ｭ繝・ぅ
+  // ホーム用: ゆったりしたアンビエント風メロディ
   _loopHome() {
     if(!this.playing||this.mode!=="home") return;
     const ctx=this._ctx(), now=ctx.currentTime, bpm=90, beat=60/bpm;
-    // 繧・▲縺溘ｊ繝｡繝ｭ繝・ぅ (C繝｡繧ｸ繝｣繝ｼ繝壹Φ繧ｿ)
+    // ゆったりメロディ (Cメジャーペンタ)
     const mel=[523,659,784,659,523,440,523,659, 784,880,784,659,523,440,392,440];
     mel.forEach((f,i)=>this._note(f,now+i*beat*0.75,beat*0.65,"sine",0.055));
-    // 菴朱浹繝代ャ繝・    [130,130,146,146,130,130,174,174].forEach((f,i)=>this._note(f,now+i*beat,beat*0.85,"sine",0.04));
-    // 繧・ｏ繧峨°縺・さ繝ｼ繝・    [[523,659],[523,659],[440,554],[440,554],[392,494],[392,494],[349,440],[349,440]].forEach(([f1,f2],b)=>{
+    // 低音パッド
+    [130,130,146,146,130,130,174,174].forEach((f,i)=>this._note(f,now+i*beat,beat*0.85,"sine",0.04));
+    // やわらかいコード
+    [[523,659],[523,659],[440,554],[440,554],[392,494],[392,494],[349,440],[349,440]].forEach(([f1,f2],b)=>{
       this._note(f1,now+b*beat,beat*0.9,"sine",0.025);
       this._note(f2,now+b*beat,beat*0.9,"sine",0.025);
     });
     this.loopTO=setTimeout(()=>this._loopHome(), beat*12*1000-80);
   }
-  // 繝励Ξ繧､逕ｨ: 繧｢繝・・繝・Φ繝・bit繧ｲ繝ｼ繝鬚ｨ
+  // プレイ用: アップテンポ8bitゲーム風
   _loopPlay() {
     if(!this.playing||this.mode!=="play") return;
     const ctx=this._ctx(), now=ctx.currentTime, bpm=145, beat=60/bpm;
@@ -602,9 +622,10 @@ const bgm = new BgmEngine();
 // ============================================================
 // Storage
 // ============================================================
-// 笏笏 Firebase Storage・・indow.storage縺ｮ莉｣譖ｿ・俄楳笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── Firebase Storage（window.storageの代替）─────────────────
 function _fbKey(key) {
-  // Firestore縺ｮ繝峨く繝･繝｡繝ｳ繝医く繝ｼ縺ｫ菴ｿ縺医↑縺・枚蟄励ｒ鄂ｮ謠・  return key.replace(/[:/\.#$[\]]/g, "_");
+  // Firestoreのドキュメントキーに使えない文字を置換
+  return key.replace(/[:/\.#$[\]]/g, "_");
 }
 async function sGet(key, shared=false) {
   try {
@@ -947,7 +968,7 @@ input[type=range]{width:100%;accent-color:var(--primary);}
 .howto-text{flex:1;color:var(--text);line-height:1.5;}
 .howto-text b{color:var(--primary);}
 .mode-desc{font-size:.75rem;color:var(--muted);background:var(--bg);border-radius:6px;padding:3px 8px;margin-top:2px;display:inline-block;}
-/* 繝ｫ繝ｼ繝ｫ遏ｭ譁・*/
+/* ルール短文 */
 .rule-tag{font-size:.72rem;color:var(--muted);background:var(--bg);border-radius:5px;padding:2px 7px;margin-top:3px;display:block;line-height:1.5;}
 /* ranking card */
 .rcard{background:#fff;border-radius:10px;padding:12px;box-shadow:var(--shadow);margin-bottom:8px;border-left:4px solid var(--primary);}
@@ -960,7 +981,7 @@ input[type=range]{width:100%;accent-color:var(--primary);}
 .rcard-stat{background:var(--bg);padding:2px 7px;border-radius:10px;}
 `;
 
-// 笏笏 Countdown 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── Countdown ──────────────────────────────────────────────────
 function Countdown({ onDone }) {
   const [n, setN] = useState(3);
   const [go, setGo] = useState(false);
@@ -972,10 +993,10 @@ function Countdown({ onDone }) {
     const t4=setTimeout(()=>onDone(),3500);
     return ()=>[t1,t2,t3,t4].forEach(clearTimeout);
   },[]);
-  return <div className="cdown">{go?<div className="cdgo">GO! 噫</div>:<div className="cdn">{n}</div>}</div>;
+  return <div className="cdown">{go?<div className="cdgo">GO! 🚀</div>:<div className="cdn">{n}</div>}</div>;
 }
 
-// 笏笏 繝ｩ繝ｳ繧ｭ繝ｳ繧ｰ逋ｻ骭ｲ繝｢繝ｼ繝繝ｫ 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── ランキング登録モーダル ─────────────────────────────────────
 function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLevel="junior", difficulty="normal", onDone }) {
   const [saving, setSaving] = useState(false);
   const acc = total > 0 ? Math.round(correct/total*100) : 0;
@@ -989,7 +1010,7 @@ function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLe
     const res = await sGet(key, true);
     let all = [];
     try { if(res) all=JSON.parse(res.value); } catch{}
-    // 蜷後§繝九ャ繧ｯ繝阪・繝・区擅莉ｶ縺ｮ蜿､縺・ｨ倬鹸繧貞炎髯､
+    // 同じニックネーム＋条件の古い記録を削除
     const filtered = all.filter(r => {
       if(r.name!==nickname) return true;
       if(quizMode==="ion"||quizMode==="formula") return r.subLevel!==subLevel;
@@ -1007,33 +1028,33 @@ function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLe
   return (
     <div className="modal-bg">
       <div className="modal">
-        <h3>醇 繧ｹ繧ｳ繧｢繧堤匳骭ｲ縺励∪縺吶°・・/h3>
+        <h3>🏆 スコアを登録しますか？</h3>
         <div style={{textAlign:"center",marginBottom:12}}>
-          <div style={{fontSize:"2rem",fontWeight:900,color:"var(--primary)"}}>{score}轤ｹ</div>
+          <div style={{fontSize:"2rem",fontWeight:900,color:"var(--primary)"}}>{score}点</div>
           <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:6,fontSize:".85rem"}}>
-            <span style={{background:"var(--bg)",padding:"3px 10px",borderRadius:10}}>豁｣隗｣ <b>{correct}/{total}</b></span>
-            <span style={{background:"var(--bg)",padding:"3px 10px",borderRadius:10}}>豁｣遲皮紫 <b>{acc}%</b></span>
+            <span style={{background:"var(--bg)",padding:"3px 10px",borderRadius:10}}>正解 <b>{correct}/{total}</b></span>
+            <span style={{background:"var(--bg)",padding:"3px 10px",borderRadius:10}}>正答率 <b>{acc}%</b></span>
           </div>
         </div>
-        <p>{nickname} 縺輔ｓ縺ｮ繧ｹ繧ｳ繧｢繧偵Λ繝ｳ繧ｭ繝ｳ繧ｰ縺ｫ霈峨○縺ｾ縺・/p>
+        <p>{nickname} さんのスコアをランキングに載せます</p>
         <div style={{display:"flex",gap:10,flexDirection:"column"}}>
           <button className="btn btn-g btn-blk" onClick={doSave} disabled={saving}>
-            {saving?"菫晏ｭ倅ｸｭ...":"笨・繝ｩ繝ｳ繧ｭ繝ｳ繧ｰ縺ｫ逋ｻ骭ｲ縺吶ｋ"}
+            {saving?"保存中...":"✅ ランキングに登録する"}
           </button>
-          <button className="btn btn-s btn-blk" onClick={()=>onDone(false)}>逋ｻ骭ｲ縺励↑縺・/button>
+          <button className="btn btn-s btn-blk" onClick={()=>onDone(false)}>登録しない</button>
         </div>
       </div>
     </div>
   );
 }
 
-// 笏笏 RangeSelector 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── RangeSelector ──────────────────────────────────────────────
 function RangeSelector({ maxNum, onChange }) {
   return (
     <div className="rwrap">
       <div className="fb2 mb8">
-        <span style={{fontWeight:700,fontSize:".88rem"}}>蜃ｺ鬘檎ｯ・峇: 1縲悳maxNum}逡ｪ</span>
-        <span className="muted">{getElements(maxNum).length}蜈・ｴ</span>
+        <span style={{fontWeight:700,fontSize:".88rem"}}>出題範囲: 1〜{maxNum}番</span>
+        <span className="muted">{getElements(maxNum).length}元素</span>
       </div>
       <input type="range" min={4} max={103} value={maxNum} onChange={e=>onChange(Number(e.target.value))}/>
       <div className="rlbls"><span>4</span><span>20</span><span>36</span><span>56</span><span>82</span><span>103</span></div>
@@ -1047,68 +1068,68 @@ function RangeSelector({ maxNum, onChange }) {
 }
 
 
-// 笏笏 驕翫・譁ｹ繝｢繝ｼ繝繝ｫ 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── 遊び方モーダル ──────────────────────────────────────────
 function HowToModal({ onClose }) {
   return (
     <div className="modal-bg" onClick={onClose}>
       <div className="howto-modal" onClick={e=>e.stopPropagation()}>
         <div className="howto-header">
-          <button className="howto-close" onClick={onClose}>笨・/button>
-          <h2>当 驕翫・譁ｹ繝ｻ轤ｹ謨ｰ繝ｫ繝ｼ繝ｫ</h2>
-          <p>CHEM BATTLE 縺ｮ蜈ｨ繝｢繝ｼ繝峨ｒ隗｣隱ｬ</p>
+          <button className="howto-close" onClick={onClose}>✕</button>
+          <h2>📖 遊び方・点数ルール</h2>
+          <p>CHEM BATTLE の全モードを解説</p>
         </div>
         <div className="howto-body">
 
-          {/* 蜈ｱ騾・*/}
+          {/* 共通 */}
           <div className="howto-section">
-            <h3>蜈ｱ騾壹Ν繝ｼ繝ｫ</h3>
-            <p>繝ｻ繝九ャ繧ｯ繝阪・繝繧堤匳骭ｲ縺励※繝励Ξ繧､縲ゅせ繧ｳ繧｢縺ｯ繝ｩ繝ｳ繧ｭ繝ｳ繧ｰ縺ｫ逋ｻ骭ｲ縺ｧ縺阪ｋ縲・/p>
-            <p>繝ｻ4謚槭°繧画ｭ｣縺励＞遲斐∴繧偵ち繝・・縺ｧ驕ｸ縺ｶ縲・/p>
-            <p>繝ｻ髮｣譏灘ｺｦ・壽・・域・繧峨°縺ｫ驕輔≧驕ｸ謚櫁い・俄・ 譎ｮ騾・竊・髮｣・磯撼蟶ｸ縺ｫ莨ｼ縺溘ム繝溘・・・/p>
+            <h3>共通ルール</h3>
+            <p>・ニックネームを登録してプレイ。スコアはランキングに登録できる。</p>
+            <p>・4択から正しい答えをタップで選ぶ。</p>
+            <p>・難易度：易（明らかに違う選択肢）→ 普通 → 難（非常に似たダミー）</p>
           </div>
 
-          {/* 證苓ｨ倥け繧､繧ｺ */}
+          {/* 暗記クイズ */}
           <div className="howto-section">
-            <h3 style={{color:"var(--primary)"}}>笞幢ｸ鞘圍ｧｬ 證苓ｨ倥け繧､繧ｺ・・0遘抵ｼ・/h3>
-            <p>繝ｻ60遘帝俣縺ｲ縺溘☆繧牙・鬘後ゆｽ募撫豁｣隗｣縺ｧ縺阪ｋ縺区倦謌ｦ・・/p>
-            <p>繝ｻ蜃ｺ鬘梧婿蜷代ｒ驕ｸ縺ｹ繧具ｼ夊ｨ伜捷竊貞錐蜑・/ 蜷榊燕竊定ｨ伜捷 / 繝ｩ繝ｳ繝繝</p>
-            <p>繝ｻ蟇ｾ謌ｦ・壹Ν繝ｼ繝繧ｳ繝ｼ繝峨ｒ蜈ｱ譛峨＠縺ｦ蜷梧凾繧ｹ繧ｿ繝ｼ繝医√せ繧ｳ繧｢繧呈ｯ碑ｼ・/p>
+            <h3 style={{color:"var(--primary)"}}>⚛️⚡🧬 暗記クイズ（60秒）</h3>
+            <p>・60秒間ひたすら出題。何問正解できるか挑戦！</p>
+            <p>・出題方向を選べる：記号→名前 / 名前→記号 / ランダム</p>
+            <p>・対戦：ルームコードを共有して同時スタート、スコアを比較</p>
             <p style={{marginTop:6,padding:"8px 10px",background:"var(--bg)",borderRadius:7,fontSize:".78rem"}}>
-              <b>繧ｹ繧ｳ繧｢</b> ・・豁｣隗｣譎ゅ・谿九ｊ遘呈焚縺ｮ蜷郁ｨ・・・豁｣遲皮紫ﾂｲﾃ・00轤ｹ
+              <b>スコア</b> ＝ 正解時の残り秒数の合計 ＋ 正答率²×200点
             </p>
           </div>
 
-          {/* mol險育ｮ・*/}
+          {/* mol計算 */}
           <div className="howto-section">
-            <h3 style={{color:"#6366f1"}}>ｧｮ mol險育ｮ励ラ繝ｪ繝ｫ・・蛻・ｼ・/h3>
-            <p>繝ｻ閾ｪ蛻・〒險育ｮ励＠縺ｦ4謚槭°繧蛾∈縺ｶ縲・0蝠上・5蛻・宛髯舌・/p>
-            <p>繝ｻ繝偵Φ繝茨ｼ壽怙螟ｧ3谿ｵ髫趣ｼ遺蔵螟画鋤縺ｮ譁ｹ蜷・竭｡菴ｿ縺・､ 竭｢險育ｮ玲焔鬆・ｼ峨らｭ斐∴縺ｯ陦ｨ遉ｺ縺励↑縺・・/p>
-            <p>繝ｻ繧ｹ繧ｭ繝・・・・5遘偵・繝翫Ν繝・ぅ縲√Α繧ｹ縺ｨ縺励※繧ｫ繧ｦ繝ｳ繝医・/p>
-            <p>繝ｻ繝｢繝ｼ繝会ｼ壼・髢・・竊芭ol・・ 蝓ｺ遉趣ｼ・竊芭ol繝ｻ蛟区焚・・ 蠢懃畑・・谿ｵ螟画鋤・・/p>
-            <p>繝ｻ蟇ｾ謌ｦ繝｢繝ｼ繝峨≠繧翫ょ酔縺伜撫鬘後ｒ隗｣縺・※豁｣隗｣謨ｰ繧呈ｯ碑ｼ・・/p>
+            <h3 style={{color:"#6366f1"}}>🧮 mol計算ドリル（5分）</h3>
+            <p>・自分で計算して4択から選ぶ。10問・5分制限。</p>
+            <p>・ヒント：最大3段階（①変換の方向 ②使う値 ③計算手順）。答えは表示しない。</p>
+            <p>・スキップ：+5秒ペナルティ、ミスとしてカウント。</p>
+            <p>・モード：入門（g↔mol）/ 基礎（L↔mol・個数）/ 応用（2段変換）</p>
+            <p>・対戦モードあり。同じ問題を解いて正解数を比較。</p>
             <p style={{marginTop:6,padding:"8px 10px",background:"var(--bg)",borderRadius:7,fontSize:".78rem"}}>
-              <b>繧ｹ繧ｳ繧｢</b> ・・豁｣隗｣謨ｰﾃ・00 ・・豁｣遲皮紫ﾂｲﾃ・00 ・・谿九ｊ譎る俣ﾃ・.5
+              <b>スコア</b> ＝ 正解数×100 ＋ 正答率²×100 ＋ 残り時間×0.5
             </p>
           </div>
 
-          {/* 蜴溷ｭ宣㍼ */}
+          {/* 原子量 */}
           <div className="howto-section">
-            <h3>蜴溷ｭ宣㍼・・ol險育ｮ礼畑・・/h3>
+            <h3>原子量（mol計算用）</h3>
             <div style={{background:"#1e293b",color:"#94a3b8",borderRadius:7,padding:"9px 12px",fontFamily:"monospace",fontSize:".75rem",lineHeight:1.9}}>
-              H=1.0縲C=12縲O=16縲N=14<br/>
-              Na=23縲Cl=35.5縲Cu=64縲S=32<br/>
-              繧｢繝懊ぎ繝峨Ο謨ｰ: 6.0ﾃ・0ﾂｲﾂｳ /mol
+              H=1.0　C=12　O=16　N=14<br/>
+              Na=23　Cl=35.5　Cu=64　S=32<br/>
+              アボガドロ数: 6.0×10²³ /mol
             </div>
           </div>
 
-          <button className="btn btn-p btn-blk" onClick={onClose} style={{marginTop:4}}>髢峨§繧・/button>
+          <button className="btn btn-p btn-blk" onClick={onClose} style={{marginTop:4}}>閉じる</button>
         </div>
       </div>
     </div>
   );
 }
 
-// 笏笏 HomeScreen 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── HomeScreen ─────────────────────────────────────────────────
 function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm }) {
   const [edit,setEdit]=useState(false);
   const [ni,setNi]=useState(nickname||"");
@@ -1117,142 +1138,143 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
   return (
     <div>
       {showHowTo&&<HowToModal onClose={()=>setShowHowTo(false)}/>}
-      {/* 笏笏 Hero 笏笏 */}
+      {/* ── Hero ── */}
       <div className="hero">
         <div className="hero-glow1"/><div className="hero-glow2"/><div className="hero-glow3"/>
         <div className="hero-ring"/><div className="hero-ring2"/>
         <div className="hero-dots"/>
-        <div className="hero-icons-deco"><span>笞幢ｸ・/span><span>溌</span><span>笞｡</span></div>
-        <div className="hero-icons-deco2"><span>ｧｪ</span><span>ｧｬ</span><span>庁</span></div>
+        <div className="hero-icons-deco"><span>⚛️</span><span>🔬</span><span>⚡</span></div>
+        <div className="hero-icons-deco2"><span>🧪</span><span>🧬</span><span>💡</span></div>
         <div className="hero-content">
           <div className="hero-badge">SCIENCE QUIZ</div>
-          <span className="hero-main-icon">笞暦ｸ・/span>
+          <span className="hero-main-icon">⚗️</span>
           <div className="hero-app-title">CHEM BATTLE</div>
-          <div className="hero-sub-title">蛹門ｭｦ繧偵√ヰ繝医Ν縺ｫ縺励ｈ縺・/div>
+          <div className="hero-sub-title">化学を、バトルにしよう</div>
           {!nickname||edit?(
             <div className="hero-input-wrap">
               <input className="hero-input" value={ni} onChange={e=>setNi(e.target.value)}
-                placeholder="繝九ャ繧ｯ繝阪・繝繧貞・蜉帙＠縺ｦ縺ｭ" maxLength={12}
+                placeholder="ニックネームを入力してね" maxLength={12}
                 onKeyDown={e=>e.key==="Enter"&&save()} autoFocus={edit}/>
               <div style={{display:"flex",gap:8,marginTop:10}}>
-                <button className="hero-save-btn" style={{flex:1}} onClick={save}>笨・菫晏ｭ倥＠縺ｦ繧ｹ繧ｿ繝ｼ繝・/button>
-                {edit&&<button className="hero-save-btn" style={{flex:"0 0 auto",background:"rgba(255,255,255,.12)",color:"rgba(255,255,255,.7)"}} onClick={()=>setEdit(false)}>笨・/button>}
+                <button className="hero-save-btn" style={{flex:1}} onClick={save}>✓ 保存してスタート</button>
+                {edit&&<button className="hero-save-btn" style={{flex:"0 0 auto",background:"rgba(255,255,255,.12)",color:"rgba(255,255,255,.7)"}} onClick={()=>setEdit(false)}>✕</button>}
               </div>
             </div>
           ):(
             <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-              <div className="hero-nick">側 {nickname}</div>
-              <button className="hero-nick-btn" onClick={()=>setEdit(true)}>螟画峩</button>
+              <div className="hero-nick">👤 {nickname}</div>
+              <button className="hero-nick-btn" onClick={()=>setEdit(true)}>変更</button>
             </div>
           )}
         </div>
       </div>
 
       <div style={{marginBottom:10}}>
-        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--primary)",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>笞幢ｸ・蜈・ｴ繧ｯ繧､繧ｺ</div>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--primary)",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>⚛️ 元素クイズ</div>
         <div className="g2">
           <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onSolo("element")}>
-            <div className="ic">式</div><div className="nm">縺ｲ縺ｨ繧翫〒謖第姶</div>
-            <span className="rule-tag">60遘偵〒縺溘￥縺輔ｓ隗｣縺托ｼ・/span>
+            <div className="ic">🎮</div><div className="nm">ひとりで挑戦</div>
+            <span className="rule-tag">60秒でたくさん解け！</span>
           </div>
           <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onBattle("element")}>
-            <div className="ic">笞費ｸ・/div><div className="nm">蟇ｾ謌ｦ縺吶ｋ</div>
-            <span className="rule-tag">蜷梧凾縺ｫ隗｣縺・※繧ｹ繧ｳ繧｢豈碑ｼ・/span>
+            <div className="ic">⚔️</div><div className="nm">対戦する</div>
+            <span className="rule-tag">同時に解いてスコア比較</span>
           </div>
         </div>
       </div>
 
       <div style={{marginBottom:10}}>
-        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--ion)",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>笞｡ 繧､繧ｪ繝ｳ繧ｯ繧､繧ｺ</div>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--ion)",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>⚡ イオンクイズ</div>
         <div className="g2">
           <div className="sc ion-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onSolo("ion")}>
-            <div className="ic">式</div><div className="nm">縺ｲ縺ｨ繧翫〒謖第姶</div>
-            <span className="rule-tag">60遘偵〒縺溘￥縺輔ｓ隗｣縺托ｼ・/span>
+            <div className="ic">🎮</div><div className="nm">ひとりで挑戦</div>
+            <span className="rule-tag">60秒でたくさん解け！</span>
           </div>
           <div className="sc ion-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onBattle("ion")}>
-            <div className="ic">笞費ｸ・/div><div className="nm">蟇ｾ謌ｦ縺吶ｋ</div>
-            <span className="rule-tag">蜷梧凾縺ｫ隗｣縺・※繧ｹ繧ｳ繧｢豈碑ｼ・/span>
+            <div className="ic">⚔️</div><div className="nm">対戦する</div>
+            <span className="rule-tag">同時に解いてスコア比較</span>
           </div>
         </div>
       </div>
 
       <div style={{marginBottom:10}}>
-        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--form)",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>ｧｬ 蛹門ｭｦ蠑上け繧､繧ｺ</div>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"var(--form)",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧬 化学式クイズ</div>
         <div className="g2">
           <div className="sc form-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onSolo("formula")}>
-            <div className="ic">式</div><div className="nm">縺ｲ縺ｨ繧翫〒謖第姶</div>
-            <span className="rule-tag">60遘偵〒縺溘￥縺輔ｓ隗｣縺托ｼ・/span>
+            <div className="ic">🎮</div><div className="nm">ひとりで挑戦</div>
+            <span className="rule-tag">60秒でたくさん解け！</span>
           </div>
           <div className="sc form-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onBattle("formula")}>
-            <div className="ic">笞費ｸ・/div><div className="nm">蟇ｾ謌ｦ縺吶ｋ</div>
-            <span className="rule-tag">蜷梧凾縺ｫ隗｣縺・※繧ｹ繧ｳ繧｢豈碑ｼ・/span>
+            <div className="ic">⚔️</div><div className="nm">対戦する</div>
+            <span className="rule-tag">同時に解いてスコア比較</span>
           </div>
         </div>
       </div>
 
       <div style={{marginBottom:10}}>
-        <div style={{fontWeight:800,fontSize:".78rem",color:"#6366f1",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>ｧｮ mol險育ｮ励ラ繝ｪ繝ｫ</div>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"#6366f1",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧮 mol計算ドリル</div>
         <div className="g2">
           <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#6366f1"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol("solo")}>
-            <div className="ic">式</div>
-            <div className="nm">縺ｲ縺ｨ繧翫〒謖第姶</div>
-            <span className="rule-tag">險育ｮ励＠縺ｦ豁｣縺励＞遲斐∴繧帝∈縺ｹ・・/span>
+            <div className="ic">🎮</div>
+            <div className="nm">ひとりで挑戦</div>
+            <span className="rule-tag">計算して正しい答えを選べ！</span>
           </div>
           <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#6366f1"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol("battle")}>
-            <div className="ic">笞費ｸ・/div>
-            <div className="nm">蟇ｾ謌ｦ縺吶ｋ</div>
-            <span className="rule-tag">蜷梧凾縺ｫ隗｣縺・※豁｣隗｣謨ｰ豈碑ｼ・/span>
+            <div className="ic">⚔️</div>
+            <div className="nm">対戦する</div>
+            <span className="rule-tag">同時に解いて正解数比較</span>
           </div>
         </div>
       </div>
 
       {!nickname&&(
         <div className="tc" style={{marginBottom:10}}>
-          <span className="hero-nologin">笨・繝九ャ繧ｯ繝阪・繝繧堤匳骭ｲ縺励※繧ｹ繧ｿ繝ｼ繝茨ｼ・/span>
+          <span className="hero-nologin">✋ ニックネームを登録してスタート！</span>
         </div>
       )}
 
       <div style={{display:"flex",gap:8,marginBottom:8}}>
-        <button className="btn btn-s" style={{flex:1}} onClick={()=>setShowHowTo(true)}>搭 驕翫・譁ｹ</button>
-        <button className="btn btn-s" style={{flex:1}} onClick={onMemo}>当 證苓ｨ倥Μ繧ｹ繝・/button>
-        <button className="btn btn-s" style={{flex:1}} onClick={onRanking}>醇 繝ｩ繝ｳ繧ｭ繝ｳ繧ｰ</button>
-        <button className="btn btn-s" style={{flex:"0 0 auto",padding:"10px 12px"}} onClick={onToggleBgm}>{bgmOn?"矧":"這"}</button>
+        <button className="btn btn-s" style={{flex:1}} onClick={()=>setShowHowTo(true)}>📋 遊び方</button>
+        <button className="btn btn-s" style={{flex:1}} onClick={onMemo}>📖 暗記リスト</button>
+        <button className="btn btn-s" style={{flex:1}} onClick={onRanking}>🏆 ランキング</button>
+        <button className="btn btn-s" style={{flex:"0 0 auto",padding:"10px 12px"}} onClick={onToggleBgm}>{bgmOn?"🔊":"🔇"}</button>
       </div>
       <div className="footer-copy">
-        ﾂｩ 2026 Narukawa All Rights Reserved.<br/>
-        譛ｬ繧｢繝励Μ縺ｮ辟｡譁ｭ霆｢霈峨・蜀埼・蟶・ｒ遖∵ｭ｢縺励∪縺吶・      </div>
+        © 2026 Narukawa All Rights Reserved.<br/>
+        本アプリの無断転載・再配布を禁止します。
+      </div>
     </div>
   );
 }
 
-// 笏笏 SetupScreen 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── SetupScreen ────────────────────────────────────────────────
 const DIRECTION_OPTIONS = {
   element: [
-    { value:"s2n", desc:"險伜捷 竊・蜷榊燕", detail:"蜈・ｴ險伜捷繧定ｦ九※蜷榊燕繧堤ｭ斐∴繧・ },
-    { value:"n2s", desc:"蜷榊燕 竊・險伜捷", detail:"蜈・ｴ蜷阪ｒ隕九※險伜捷繧堤ｭ斐∴繧・ },
-    { value:"random", desc:"繝ｩ繝ｳ繝繝", detail:"縺ｩ縺｡繧峨ｂ繝ｩ繝ｳ繝繝縺ｫ蜃ｺ鬘・ },
+    { value:"s2n", desc:"記号 → 名前", detail:"元素記号を見て名前を答える" },
+    { value:"n2s", desc:"名前 → 記号", detail:"元素名を見て記号を答える" },
+    { value:"random", desc:"ランダム", detail:"どちらもランダムに出題" },
   ],
   ion: [
-    { value:"f2n", desc:"蠑・竊・蜷榊燕", detail:"繧､繧ｪ繝ｳ蠑上ｒ隕九※蜷榊燕繧堤ｭ斐∴繧・ },
-    { value:"n2f", desc:"蜷榊燕 竊・蠑・, detail:"繧､繧ｪ繝ｳ蜷阪ｒ隕九※繧､繧ｪ繝ｳ蠑上ｒ遲斐∴繧・ },
-    { value:"random", desc:"繝ｩ繝ｳ繝繝", detail:"縺ｩ縺｡繧峨ｂ繝ｩ繝ｳ繝繝縺ｫ蜃ｺ鬘・ },
+    { value:"f2n", desc:"式 → 名前", detail:"イオン式を見て名前を答える" },
+    { value:"n2f", desc:"名前 → 式", detail:"イオン名を見てイオン式を答える" },
+    { value:"random", desc:"ランダム", detail:"どちらもランダムに出題" },
   ],
   formula: [
-    { value:"f2n", desc:"蛹門ｭｦ蠑・竊・蜷榊燕", detail:"蛹門ｭｦ蠑上ｒ隕九※迚ｩ雉ｪ蜷阪ｒ遲斐∴繧・ },
-    { value:"n2f", desc:"蜷榊燕 竊・蛹門ｭｦ蠑・, detail:"迚ｩ雉ｪ蜷阪ｒ隕九※蛹門ｭｦ蠑上ｒ遲斐∴繧・ },
-    { value:"random", desc:"繝ｩ繝ｳ繝繝", detail:"縺ｩ縺｡繧峨ｂ繝ｩ繝ｳ繝繝縺ｫ蜃ｺ鬘・ },
+    { value:"f2n", desc:"化学式 → 名前", detail:"化学式を見て物質名を答える" },
+    { value:"n2f", desc:"名前 → 化学式", detail:"物質名を見て化学式を答える" },
+    { value:"random", desc:"ランダム", detail:"どちらもランダムに出題" },
   ],
 };
 
 const LEVEL_LABELS = {
-  ion:     { junior:"荳ｭ蟄ｦ繝ｬ繝吶Ν・・7遞ｮ・・, senior:"鬮俶｡繝ｬ繝吶Ν・・9遞ｮ・・ },
-  formula: { junior:"荳ｭ蟄ｦ繝ｬ繝吶Ν・・7遞ｮ・・, senior:"鬮俶｡繝ｬ繝吶Ν・・8遞ｮ・・ },
+  ion:     { junior:"中学レベル（17種）", senior:"高校レベル（39種）" },
+  formula: { junior:"中学レベル（27種）", senior:"高校レベル（58種）" },
 };
 
 const DIFFICULTY_OPTIONS = [
-  { value:"easy",   label:"・ 譏・,   desc:"譏弱ｉ縺九↓驕輔≧驕ｸ謚櫁い",     color:"#22c55e", light:"#dcfce7" },
-  { value:"normal", label:"・ 譎ｮ騾・, desc:"荳驛ｨ莨ｼ縺ｦ縺・ｋ驕ｸ謚櫁い",     color:"#f59e0b", light:"#fef3c7" },
-  { value:"hard",   label:"・ 髮｣",   desc:"髱槫ｸｸ縺ｫ莨ｼ縺溘ム繝溘・縺ｮ縺ｿ",   color:"#ef4444", light:"#fee2e2" },
+  { value:"easy",   label:"😊 易",   desc:"明らかに違う選択肢",     color:"#22c55e", light:"#dcfce7" },
+  { value:"normal", label:"😐 普通", desc:"一部似ている選択肢",     color:"#f59e0b", light:"#fef3c7" },
+  { value:"hard",   label:"😈 難",   desc:"非常に似たダミーのみ",   color:"#ef4444", light:"#fee2e2" },
 ];
 
 function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
@@ -1271,14 +1293,14 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
   return (
     <div className="card">
       <div className="fb2 mb13">
-        <button className="btn btn-s btn-sm" onClick={onBack}>竊・謌ｻ繧・/button>
+        <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
         <span style={{fontWeight:700}}>{title}</span><span/>
       </div>
 
-      {/* ion/formula: 繝ｬ繝吶Ν驕ｸ謚・*/}
+      {/* ion/formula: レベル選択 */}
       {(isIon||isFormula)&&(
         <div style={{marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>繝ｬ繝吶Ν繧帝∈謚・/div>
+          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>レベルを選択</div>
           <div className="g2" style={{margin:"0 0 4px"}}>
             {["junior","senior"].map(lv=>(
               <div key={lv}
@@ -1288,9 +1310,9 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
                   borderRadius:10,padding:"12px 10px",cursor:"pointer",textAlign:"center",
                   background:subLevel===lv?lightColor:"#fff",transition:"all .13s"
                 }}>
-                <div style={{fontSize:"1.5rem",marginBottom:3}}>{lv==="junior"?"痘":"燈"}</div>
+                <div style={{fontSize:"1.5rem",marginBottom:3}}>{lv==="junior"?"📗":"📕"}</div>
                 <div style={{fontWeight:700,fontSize:".9rem",color:subLevel===lv?accentColor:"var(--text)"}}>
-                  {lv==="junior"?"荳ｭ蟄ｦ繝ｬ繝吶Ν":"鬮俶｡繝ｬ繝吶Ν"}
+                  {lv==="junior"?"中学レベル":"高校レベル"}
                 </div>
                 <div style={{fontSize:".72rem",color:"var(--muted)",marginTop:2}}>
                   {LEVEL_LABELS[quizMode][lv]}
@@ -1301,17 +1323,17 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
         </div>
       )}
 
-      {/* element: 遽・峇繧ｹ繝ｩ繧､繝繝ｼ */}
+      {/* element: 範囲スライダー */}
       {isElement&&(
         <div style={{marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>蜃ｺ鬘檎ｯ・峇・亥次蟄千分蜿ｷ・・/div>
+          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>出題範囲（原子番号）</div>
           <RangeSelector maxNum={maxNum} onChange={setMaxNum}/>
         </div>
       )}
 
-      {/* 蜃ｺ鬘梧婿蜷鷹∈謚・*/}
+      {/* 出題方向選択 */}
       <div style={{marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>蜃ｺ鬘梧婿蜷・/div>
+        <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>出題方向</div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
           {opts.map(opt=>{
             const active = directionMode===opt.value;
@@ -1327,16 +1349,16 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
                   <span style={{fontWeight:700,fontSize:"1rem",color:active?accentColor:"var(--text)"}}>{opt.desc}</span>
                   <span style={{fontSize:".75rem",color:"var(--muted)",marginLeft:8}}>{opt.detail}</span>
                 </div>
-                {active&&<span style={{color:accentColor,fontWeight:700,fontSize:"1rem"}}>笨・/span>}
+                {active&&<span style={{color:accentColor,fontWeight:700,fontSize:"1rem"}}>✓</span>}
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* 髮｣譏灘ｺｦ驕ｸ謚・*/}
+      {/* 難易度選択 */}
       <div style={{marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>髮｣譏灘ｺｦ</div>
+        <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>難易度</div>
         <div style={{display:"flex",gap:6}}>
           {DIFFICULTY_OPTIONS.map(opt=>{
             const active = difficulty===opt.value;
@@ -1361,13 +1383,13 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
         className={`btn ${btnClass} btn-blk`}
         onClick={()=>onStart(isElement?maxNum:null, directionMode, subLevel, difficulty)}
         disabled={isElement&&getElements(maxNum).length<4}>
-        {isBattle?"噫 縺薙・險ｭ螳壹〒繝ｫ繝ｼ繝菴懈・":"噫 繧ｹ繧ｿ繝ｼ繝茨ｼ・}
+        {isBattle?"🚀 この設定でルーム作成":"🚀 スタート！"}
       </button>
     </div>
   );
 }
 
-// 笏笏 QuizScreen 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── QuizScreen ─────────────────────────────────────────────────
 function QuizScreen({ maxNum, quizMode, directionMode="random", subLevel="junior", difficulty="normal", onFinish, seed=null }) {
   const isIon = quizMode==="ion";
   const isFormula = quizMode==="formula";
@@ -1423,15 +1445,15 @@ function QuizScreen({ maxNum, quizMode, directionMode="random", subLevel="junior
     <div>
       <div className="card">
         <div className="qhd">
-          <div className={`tmr ${timeLeft<=10?"urg":""}`}>竢ｱ {timeLeft}</div>
+          <div className={`tmr ${timeLeft<=10?"urg":""}`}>⏱ {timeLeft}</div>
           <div className="gap8" style={{alignItems:"center"}}>
             <span className="muted" style={{fontSize:".8rem"}}>#{answered+1}</span>
-            {isIon&&<span style={{fontSize:".75rem",background:"var(--ion-l)",color:"var(--ion)",padding:"2px 7px",borderRadius:20,fontWeight:700}}>笞｡繧､繧ｪ繝ｳ</span>}
-            {isFormula&&<span style={{fontSize:".75rem",background:"var(--form-l)",color:"var(--form)",padding:"2px 7px",borderRadius:20,fontWeight:700}}>ｧｬ蛹門ｭｦ蠑・/span>}
+            {isIon&&<span style={{fontSize:".75rem",background:"var(--ion-l)",color:"var(--ion)",padding:"2px 7px",borderRadius:20,fontWeight:700}}>⚡イオン</span>}
+            {isFormula&&<span style={{fontSize:".75rem",background:"var(--form-l)",color:"var(--form)",padding:"2px 7px",borderRadius:20,fontWeight:700}}>🧬化学式</span>}
             {(()=>{const d=DIFFICULTY_OPTIONS.find(o=>o.value===difficulty);return d?<span style={{fontSize:".75rem",background:d.light,color:d.color,padding:"2px 7px",borderRadius:20,fontWeight:700}}>{d.label}</span>:null;})()}
-            <button onClick={toggleBgm} style={{background:"none",border:"none",cursor:"pointer",fontSize:"1.05rem"}}>{bgmOn?"矧":"這"}</button>
+            <button onClick={toggleBgm} style={{background:"none",border:"none",cursor:"pointer",fontSize:"1.05rem"}}>{bgmOn?"🔊":"🔇"}</button>
           </div>
-          <div className="scd">脹 {score}</div>
+          <div className="scd">💯 {score}</div>
         </div>
         <div className={`fb fb-${feedback}`}/>
         <div className="qc">
@@ -1450,19 +1472,19 @@ function QuizScreen({ maxNum, quizMode, directionMode="random", subLevel="junior
   );
 }
 
-// 笏笏 ResultScreen 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── ResultScreen ───────────────────────────────────────────────
 function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", onHome, onRetry, battleResult=null }) {
   const [showMiss,setShowMiss]=useState(false);
   const [showRankModal,setShowRankModal]=useState(true);
   const [rankSaved,setRankSaved]=useState(false);
   const acc=result.total>0?Math.round(result.correct/result.total*100):0;
-  const grade=result.score>=800?"･・邏譎ｴ繧峨＠縺・ｼ・:result.score>=500?"･・繧医￥縺ｧ縺阪∪縺励◆・・:result.score>=200?"･・繧ゅ≧蟆代＠・・:"答 邱ｴ鄙偵＠繧医≧・・;
+  const grade=result.score>=800?"🥇 素晴らしい！":result.score>=500?"🥈 よくできました！":result.score>=200?"🥉 もう少し！":"📚 練習しよう！";
   const isIon=quizMode==="ion";
   const isFormula=quizMode==="formula";
 
   return (
     <div>
-      {/* 繝ｩ繝ｳ繧ｭ繝ｳ繧ｰ逋ｻ骭ｲ繝｢繝ｼ繝繝ｫ・亥ｯｾ謌ｦ繝｢繝ｼ繝我ｻ･螟厄ｼ・*/}
+      {/* ランキング登録モーダル（対戦モード以外） */}
       {showRankModal && !battleResult && (
         <RankingModal score={result.score} correct={result.correct||0} total={result.total||0} nickname={nickname} quizMode={quizMode} maxNum={maxNum} subLevel={result.subLevel||"junior"} difficulty={result.difficulty||"normal"}
           onDone={(saved)=>{setRankSaved(saved);setShowRankModal(false);}}/>
@@ -1472,32 +1494,32 @@ function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", o
         <div className="tc" style={{padding:"14px 0"}}>
           <div style={{fontSize:"1.7rem",marginBottom:4}}>{grade}</div>
           <div className="rbig" style={isIon?{color:"var(--ion)"}:isFormula?{color:"var(--form)"}:{}}>{result.score}</div>
-          <div className="muted" style={{marginTop:2}}>轤ｹ</div>
-          {rankSaved&&<div style={{marginTop:8,fontSize:".85rem",color:"var(--success)",fontWeight:700}}>笨・繝ｩ繝ｳ繧ｭ繝ｳ繧ｰ縺ｫ逋ｻ骭ｲ縺励∪縺励◆・・/div>}
+          <div className="muted" style={{marginTop:2}}>点</div>
+          {rankSaved&&<div style={{marginTop:8,fontSize:".85rem",color:"var(--success)",fontWeight:700}}>✅ ランキングに登録しました！</div>}
         </div>
         <div className="s3">
-          <div className="sb"><div className="sv" style={{color:"var(--success)"}}>{result.correct}</div><div className="sk">豁｣隗｣</div></div>
-          <div className="sb"><div className="sv">{result.total}</div><div className="sk">隗｣遲疲焚</div></div>
-          <div className="sb"><div className="sv">{acc}%</div><div className="sk">豁｣遲皮紫</div></div>
+          <div className="sb"><div className="sv" style={{color:"var(--success)"}}>{result.correct}</div><div className="sk">正解</div></div>
+          <div className="sb"><div className="sv">{result.total}</div><div className="sk">解答数</div></div>
+          <div className="sb"><div className="sv">{acc}%</div><div className="sk">正答率</div></div>
         </div>
         <div style={{fontSize:".75rem",color:"var(--muted)",textAlign:"center"}}>
-          {isIon?"笞｡繧､繧ｪ繝ｳ繧ｯ繧､繧ｺ":isFormula?"ｧｬ蛹門ｭｦ蠑上け繧､繧ｺ":`蜃ｺ鬘檎ｯ・峇: 1縲・{maxNum}逡ｪ`}
+          {isIon?"⚡イオンクイズ":isFormula?"🧬化学式クイズ":`出題範囲: 1〜${maxNum}番`}
         </div>
       </div>
 
       {result.mistakes&&result.mistakes.length>0&&(
         <div className="card">
           <div className="fb2 mb8">
-            <span style={{fontWeight:700}}>笶・髢馴＆縺医◆蝠城｡・({result.mistakes.length}蝠・</span>
-            <button className="btn btn-s btn-sm" onClick={()=>setShowMiss(v=>!v)}>{showMiss?"髢峨§繧・:"隕九ｋ"}</button>
+            <span style={{fontWeight:700}}>❌ 間違えた問題 ({result.mistakes.length}問)</span>
+            <button className="btn btn-s btn-sm" onClick={()=>setShowMiss(v=>!v)}>{showMiss?"閉じる":"見る"}</button>
           </div>
           {showMiss&&result.mistakes.map((m,i)=>(
             <div key={i} className="mi">
               <span className="msym" style={isIon?{color:"var(--ion)",fontSize:".85rem",width:50}:{}}>{m.symbol}</span>
               <div>
                 <div style={{fontWeight:700}}>{m.name}</div>
-                <div className="mans">笨・{m.answer}</div>
-                <div className="myrs">笨・縺ゅ↑縺・ {m.yours}</div>
+                <div className="mans">✓ {m.answer}</div>
+                <div className="myrs">✗ あなた: {m.yours}</div>
               </div>
             </div>
           ))}
@@ -1505,31 +1527,31 @@ function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", o
       )}
 
       {result.mistakes&&result.mistakes.length===0&&(
-        <div className="card tc"><span style={{fontSize:"1.5rem"}}>脂</span><p style={{fontWeight:700,marginTop:3}}>繝溘せ縺ｪ縺暦ｼ√ヱ繝ｼ繝輔ぉ繧ｯ繝茨ｼ・/p></div>
+        <div className="card tc"><span style={{fontSize:"1.5rem"}}>🎉</span><p style={{fontWeight:700,marginTop:3}}>ミスなし！パーフェクト！</p></div>
       )}
 
       {battleResult&&(
         <div className="card">
-          <h3 style={{fontWeight:700,marginBottom:10}}>笞費ｸ・蟇ｾ謌ｦ邨先棡</h3>
+          <h3 style={{fontWeight:700,marginBottom:10}}>⚔️ 対戦結果</h3>
           {battleResult.map((p,i)=>(
             <div key={i} className="btr" style={p.isMe?{background:"var(--pl)"}:{}}>
-              <span style={{fontSize:"1.25rem"}}>{i===0?"･・:i===1?"･・:i===2?"･・:`${i+1}菴港}</span>
-              <span style={{flex:1,fontWeight:700}}>{p.name}{p.isMe&&<span className="bdg by" style={{marginLeft:5}}>縺ゅ↑縺・/span>}</span>
-              <span style={{fontFamily:"Space Mono",fontWeight:700,color:"var(--primary)"}}>{p.score}轤ｹ</span>
+              <span style={{fontSize:"1.25rem"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":`${i+1}位`}</span>
+              <span style={{flex:1,fontWeight:700}}>{p.name}{p.isMe&&<span className="bdg by" style={{marginLeft:5}}>あなた</span>}</span>
+              <span style={{fontFamily:"Space Mono",fontWeight:700,color:"var(--primary)"}}>{p.score}点</span>
             </div>
           ))}
         </div>
       )}
 
       <div className="gap8">
-        <button className="btn btn-p" style={{flex:1}} onClick={onRetry}>煤 繧ゅ≧荳蠎ｦ</button>
-        <button className="btn btn-s" style={{flex:1}} onClick={onHome}>匠 繝帙・繝</button>
+        <button className="btn btn-p" style={{flex:1}} onClick={onRetry}>🔁 もう一度</button>
+        <button className="btn btn-s" style={{flex:1}} onClick={onHome}>🏠 ホーム</button>
       </div>
     </div>
   );
 }
 
-// 笏笏 RankingScreen 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── RankingScreen ──────────────────────────────────────────────
 function RankingScreen({ onBack, myNickname }) {
   const [tab,setTab]=useState("element_all");
   const [diffFilter,setDiffFilter]=useState("all"); // "all"|"easy"|"normal"|"hard"
@@ -1555,48 +1577,50 @@ function RankingScreen({ onBack, myNickname }) {
     setLoading(false);
   };
 
-  // 髮｣譏灘ｺｦ繝輔ぅ繝ｫ繧ｿ繝ｼ驕ｩ逕ｨ蠕後↓鬆・ｽ阪ｒ蜀崎ｨ育ｮ・  const ranks = diffFilter==="all"
+  // 難易度フィルター適用後に順位を再計算
+  const ranks = diffFilter==="all"
     ? allRanks
     : allRanks.filter(r=>(r.difficulty||"normal")===diffFilter);
 
   const tabs=[
-    ["element_all","笞幢ｸ丞・邏"],["ion","笞｡繧､繧ｪ繝ｳ"],["formula","ｧｬ蛹門ｭｦ蠑・],
-    ["mol","ｧｮmol"],
+    ["element_all","⚛️元素"],["ion","⚡イオン"],["formula","🧬化学式"],
+    ["mol","🧮mol"],
   ];
 
-  // 髮｣譏灘ｺｦ繝輔ぅ繝ｫ繧ｿ繝ｼ繝懊ち繝ｳ・亥・邏繝ｻ繧､繧ｪ繝ｳ繝ｻ蛹門ｭｦ蠑上・縺ｿ陦ｨ遉ｺ・・  const showDiffFilter = ["element_all","ion","formula"].includes(tab);
+  // 難易度フィルターボタン（元素・イオン・化学式のみ表示）
+  const showDiffFilter = ["element_all","ion","formula"].includes(tab);
 
   const modeLabel = (r) => {
-    if(r.quizMode==="ion") return {text:`${r.subLevel==="junior"?"荳ｭ":"鬮・}`, bg:"var(--ion-l)", color:"var(--ion)"};
-    if(r.quizMode==="formula") return {text:`${r.subLevel==="junior"?"荳ｭ":"鬮・}`, bg:"var(--form-l)", color:"var(--form)"};
-    if(r.quizMode==="mol") return {text:({intro:"蜈･髢",basic:"蝓ｺ遉・,adv:"蠢懃畑",random:"荵ｱ"})[r.subLevel]||r.subLevel, bg:"#ede9fe", color:"#6366f1"};
-    if(r.maxNum) return {text:`縲・{r.maxNum}`, bg:"var(--pl)", color:"var(--primary)"};
+    if(r.quizMode==="ion") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--ion-l)", color:"var(--ion)"};
+    if(r.quizMode==="formula") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--form-l)", color:"var(--form)"};
+    if(r.quizMode==="mol") return {text:({intro:"入門",basic:"基礎",adv:"応用",random:"乱"})[r.subLevel]||r.subLevel, bg:"#ede9fe", color:"#6366f1"};
+    if(r.maxNum) return {text:`〜${r.maxNum}`, bg:"var(--pl)", color:"var(--primary)"};
     return null;
   };
 
-  const medal = (i) => i===0?"･・:i===1?"･・:i===2?"･・:null;
+  const medal = (i) => i===0?"🥇":i===1?"🥈":i===2?"🥉":null;
 
   return (
     <div>
       <div className="card">
         <div className="fb2 mb13">
-          <button className="btn btn-s btn-sm" onClick={onBack}>竊・謌ｻ繧・/button>
-          <span style={{fontWeight:700}}>醇 繝ｩ繝ｳ繧ｭ繝ｳ繧ｰ</span><span/>
+          <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
+          <span style={{fontWeight:700}}>🏆 ランキング</span><span/>
         </div>
-        {/* 繧ｯ繧､繧ｺ遞ｮ蛻･繧ｿ繝・*/}
+        {/* クイズ種別タブ */}
         <div className="tabs" style={{marginBottom:showDiffFilter?8:13}}>
           {tabs.map(([v,l])=>(
             <button key={v} className={`tab ${tab===v?"on":""}`} onClick={()=>setTab(v)}>{l}</button>
           ))}
         </div>
-        {/* 髮｣譏灘ｺｦ繝輔ぅ繝ｫ繧ｿ繝ｼ */}
+        {/* 難易度フィルター */}
         {showDiffFilter&&(
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:13}}>
             {[
-              {v:"all",  l:"蜈ｨ縺ｦ",   bg:"var(--bg)", color:"var(--muted)",  activeBg:"var(--border)", activeColor:"var(--text)"},
-              {v:"easy",  l:"・ 譏・,  bg:"#dcfce7",   color:"#166534"},
-              {v:"normal",l:"・ 譎ｮ騾・, bg:"#fef3c7",   color:"#92400e"},
-              {v:"hard",  l:"・ 髮｣",  bg:"#fee2e2",   color:"#991b1b"},
+              {v:"all",  l:"全て",   bg:"var(--bg)", color:"var(--muted)",  activeBg:"var(--border)", activeColor:"var(--text)"},
+              {v:"easy",  l:"😊 易",  bg:"#dcfce7",   color:"#166534"},
+              {v:"normal",l:"😐 普通", bg:"#fef3c7",   color:"#92400e"},
+              {v:"hard",  l:"😈 難",  bg:"#fee2e2",   color:"#991b1b"},
             ].map(d=>{
               const active = diffFilter===d.v;
               return (
@@ -1620,8 +1644,8 @@ function RankingScreen({ onBack, myNickname }) {
           </div>
         )}
       </div>
-      {loading?<p className="tc muted" style={{padding:16}}>隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</p>
-        :ranks.length===0?<p className="tc muted" style={{padding:16}}>縺ｾ縺險倬鹸縺後≠繧翫∪縺帙ｓ</p>
+      {loading?<p className="tc muted" style={{padding:16}}>読み込み中...</p>
+        :ranks.length===0?<p className="tc muted" style={{padding:16}}>まだ記録がありません</p>
         :(
           <div>
             {ranks.slice(0,5).map((r,i)=>{
@@ -1634,25 +1658,25 @@ function RankingScreen({ onBack, myNickname }) {
                     <span className="rcard-rank">{medal(i)||<span style={{fontSize:".85rem",color:"var(--muted)"}}>{i+1}</span>}</span>
                     <span className="rcard-name">
                       {r.name}
-                      {isMe&&<span className="bdg by" style={{marginLeft:5}}>縺ゅ↑縺・/span>}
+                      {isMe&&<span className="bdg by" style={{marginLeft:5}}>あなた</span>}
                     </span>
                     {ml&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:ml.bg,color:ml.color,fontWeight:700}}>{ml.text}</span>}
                     {diff&&diffFilter==="all"&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:diff.light,color:diff.color,fontWeight:700}}>{diff.label.split(" ")[0]}</span>}
-                    <span className="rcard-score">{r.score}轤ｹ</span>
+                    <span className="rcard-score">{r.score}点</span>
                   </div>
                   <div className="rcard-meta">
                     {r.correct!=null&&r.total!=null&&(
-                      <span className="rcard-stat">豁｣隗｣ <b style={{color:"var(--success)"}}>{r.correct}/{r.total}</b></span>
+                      <span className="rcard-stat">正解 <b style={{color:"var(--success)"}}>{r.correct}/{r.total}</b></span>
                     )}
                     {r.acc!=null&&(
-                      <span className="rcard-stat">豁｣遲皮紫 <b style={{color:"var(--primary)"}}>{r.acc}%</b></span>
+                      <span className="rcard-stat">正答率 <b style={{color:"var(--primary)"}}>{r.acc}%</b></span>
                     )}
                     {r.date&&<span className="rcard-stat">{fmtDate(r.date)}</span>}
                   </div>
                 </div>
               );
             })}
-            <p className="muted tc" style={{marginTop:7,fontSize:".71rem",paddingBottom:8}}>窶ｻ繝ｩ繝ｳ繧ｭ繝ｳ繧ｰ縺ｯ蜈ｨ繝ｦ繝ｼ繧ｶ繝ｼ縺ｫ蜈ｬ髢九＆繧後∪縺・/p>
+            <p className="muted tc" style={{marginTop:7,fontSize:".71rem",paddingBottom:8}}>※ランキングは全ユーザーに公開されます</p>
           </div>
         )
       }
@@ -1660,7 +1684,7 @@ function RankingScreen({ onBack, myNickname }) {
   );
 }
 
-// 笏笏 MemoScreen・域囓險倅ｸ隕ｧ逕ｻ髱｢・俄楳笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── MemoScreen（暗記一覧画面）──────────────────────────────────
 function MemoScreen({ onBack }) {
   const [tab, setTab] = useState("element");
   const [elMax, setElMax] = useState(20);
@@ -1668,9 +1692,9 @@ function MemoScreen({ onBack }) {
   const [frmLv, setFrmLv] = useState("junior");
 
   const tabs = [
-    { id:"element", label:"笞幢ｸ・蜈・ｴ", cls:"" },
-    { id:"ion",     label:"笞｡ 繧､繧ｪ繝ｳ", cls:"ion-t" },
-    { id:"formula", label:"ｧｬ 蛹門ｭｦ蠑・, cls:"form-t" },
+    { id:"element", label:"⚛️ 元素", cls:"" },
+    { id:"ion",     label:"⚡ イオン", cls:"ion-t" },
+    { id:"formula", label:"🧬 化学式", cls:"form-t" },
   ];
 
   const elItems = getElements(elMax);
@@ -1681,8 +1705,8 @@ function MemoScreen({ onBack }) {
     <div>
       <div className="card" style={{marginBottom:10}}>
         <div className="fb2 mb13">
-          <button className="btn btn-s btn-sm" onClick={onBack}>竊・謌ｻ繧・/button>
-          <span style={{fontWeight:700}}>当 證苓ｨ倥Μ繧ｹ繝・/span>
+          <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
+          <span style={{fontWeight:700}}>📖 暗記リスト</span>
           <span/>
         </div>
         <div className="memo-tabs">
@@ -1691,11 +1715,11 @@ function MemoScreen({ onBack }) {
           ))}
         </div>
 
-        {/* 蜈・ｴ繧ｿ繝・*/}
+        {/* 元素タブ */}
         {tab==="element"&&(
           <>
             <div style={{marginBottom:10}}>
-              <div style={{fontWeight:700,fontSize:".82rem",marginBottom:6}}>蜃ｺ鬘檎ｯ・峇: 1縲悳elMax}逡ｪ・・elItems.length}蜈・ｴ・・/div>
+              <div style={{fontWeight:700,fontSize:".82rem",marginBottom:6}}>出題範囲: 1〜{elMax}番（{elItems.length}元素）</div>
               <input type="range" min={4} max={103} value={elMax} onChange={e=>setElMax(Number(e.target.value))}/>
               <div className="pbtns">
                 {PRESETS.map(p=>(
@@ -1708,21 +1732,21 @@ function MemoScreen({ onBack }) {
                 <div key={el.symbol} className="memo-card">
                   <div className="memo-sym">{el.symbol}</div>
                   <div className="memo-name">{el.name}</div>
-                  <div className="memo-num">蜴溷ｭ千分蜿ｷ {el.number}</div>
+                  <div className="memo-num">原子番号 {el.number}</div>
                 </div>
               ))}
             </div>
           </>
         )}
 
-        {/* 繧､繧ｪ繝ｳ繧ｿ繝・*/}
+        {/* イオンタブ */}
         {tab==="ion"&&(
           <>
             <div style={{display:"flex",gap:7,marginBottom:12}}>
-              {[["junior","荳ｭ蟄ｦ繝ｬ繝吶Ν・・7遞ｮ・・],["senior","鬮俶｡繝ｬ繝吶Ν・・9遞ｮ・・]].map(([lv,lb])=>(
+              {[["junior","中学レベル（17種）"],["senior","高校レベル（39種）"]].map(([lv,lb])=>(
                 <div key={lv} onClick={()=>setIonLv(lv)}
                   style={{flex:1,border:`2px solid ${ionLv===lv?"var(--ion)":"var(--border)"}`,borderRadius:9,padding:"9px 6px",cursor:"pointer",textAlign:"center",background:ionLv===lv?"var(--ion-l)":"#fff",transition:"all .12s"}}>
-                  <div style={{fontWeight:700,fontSize:".82rem",color:ionLv===lv?"var(--ion)":"var(--muted)"}}>{lv==="junior"?"痘 荳ｭ蟄ｦ":"燈 鬮俶｡"}</div>
+                  <div style={{fontWeight:700,fontSize:".82rem",color:ionLv===lv?"var(--ion)":"var(--muted)"}}>{lv==="junior"?"📗 中学":"📕 高校"}</div>
                   <div style={{fontSize:".7rem",color:"var(--muted)",marginTop:2}}>{lb}</div>
                 </div>
               ))}
@@ -1738,14 +1762,14 @@ function MemoScreen({ onBack }) {
           </>
         )}
 
-        {/* 蛹門ｭｦ蠑上ち繝・*/}
+        {/* 化学式タブ */}
         {tab==="formula"&&(
           <>
             <div style={{display:"flex",gap:7,marginBottom:12}}>
-              {[["junior","荳ｭ蟄ｦ繝ｬ繝吶Ν・・7遞ｮ・・],["senior","鬮俶｡繝ｬ繝吶Ν・・8遞ｮ・・]].map(([lv,lb])=>(
+              {[["junior","中学レベル（27種）"],["senior","高校レベル（58種）"]].map(([lv,lb])=>(
                 <div key={lv} onClick={()=>setFrmLv(lv)}
                   style={{flex:1,border:`2px solid ${frmLv===lv?"var(--form)":"var(--border)"}`,borderRadius:9,padding:"9px 6px",cursor:"pointer",textAlign:"center",background:frmLv===lv?"var(--form-l)":"#fff",transition:"all .12s"}}>
-                  <div style={{fontWeight:700,fontSize:".82rem",color:frmLv===lv?"var(--form)":"var(--muted)"}}>{lv==="junior"?"痘 荳ｭ蟄ｦ":"燈 鬮俶｡"}</div>
+                  <div style={{fontWeight:700,fontSize:".82rem",color:frmLv===lv?"var(--form)":"var(--muted)"}}>{lv==="junior"?"📗 中学":"📕 高校"}</div>
                   <div style={{fontSize:".7rem",color:"var(--muted)",marginTop:2}}>{lb}</div>
                 </div>
               ))}
@@ -1767,21 +1791,21 @@ function MemoScreen({ onBack }) {
 
 
 // ============================================================
-// mol險育ｮ励ラ繝ｪ繝ｫ
+// mol計算ドリル
 // ============================================================
 const AVOGADRO = 6.0e23;
-const MOL_CONST_TEXT = "H=1.0  C=12  O=16  N=14  Na=23  Cl=35.5  Cu=64  S=32縲縲繧｢繝懊ぎ繝峨Ο謨ｰ: 6.0ﾃ・0ﾂｲﾂｳ/mol";
+const MOL_CONST_TEXT = "H=1.0  C=12  O=16  N=14  Na=23  Cl=35.5  Cu=64  S=32　　アボガドロ数: 6.0×10²³/mol";
 
-// 遲斐∴繧定ｦ九ｄ縺吶＞譁・ｭ怜・縺ｫ
+// 答えを見やすい文字列に
 function fmtAns(v) {
   if (typeof v === "string") return v;
-  if (v >= 1e23) return `${(v/1e23).toFixed(1).replace(/\.0$/,"")}ﾃ・0ﾂｲﾂｳ`;
-  if (v >= 1e22) return `${(v/1e22).toFixed(1).replace(/\.0$/,"")}ﾃ・0ﾂｲﾂｲ`;
+  if (v >= 1e23) return `${(v/1e23).toFixed(1).replace(/\.0$/,"")}×10²³`;
+  if (v >= 1e22) return `${(v/1e22).toFixed(1).replace(/\.0$/,"")}×10²²`;
   if (Number.isInteger(v) || (v*10)%1===0) return String(v);
   return String(v);
 }
 
-// 蜈ｸ蝙九Α繧ｹ縺九ｉ繝繝溘・逕滓・
+// 典型ミスからダミー生成
 function genMolDummies(correct, qtype) {
   const c = correct;
   let dummies = [];
@@ -1790,7 +1814,7 @@ function genMolDummies(correct, qtype) {
   } else if (qtype === "mol_to_L" || qtype === "L_to_mol") {
     dummies = [c*2, c/2, c+22.4, c-22.4, c*3, c/3].filter(x=>x>0&&x!==c);
   } else if (qtype === "mol_to_N" || qtype === "N_to_mol") {
-    // 繧｢繝懊ぎ繝峨Ο謨ｰ邨｡縺ｿ
+    // アボガドロ数絡み
     dummies = [c*2, c/2, c*3, c/3, c*0.5].filter(x=>x>0&&x!==c);
   } else if (qtype === "g_to_L" || qtype === "L_to_g") {
     dummies = [c*2, c/2, c+11.2, c*3, c/3].filter(x=>x>0&&x!==c);
@@ -1804,8 +1828,10 @@ function genMolDummies(correct, qtype) {
   return shuffle([...new Set(dummies)]).slice(0,3);
 }
 
-// 繝偵Φ繝育函謌・
-// mol蝠城｡後・險育ｮ怜ｼ上ｒ逕滓・・磯俣驕輔＞荳隕ｧ逕ｨ・・function getMolFormula(q) {
+// ヒント生成
+
+// mol問題の計算式を生成（間違い一覧用）
+function getMolFormula(q) {
   if (!q) return "";
   const t = q.qtype;
   const mm = q.molarMass;
@@ -1814,193 +1840,194 @@ function genMolDummies(correct, qtype) {
   const r = (v) => Math.round(v*10000)/10000;
 
   if (t==="g_to_mol")
-    return `${gv}g ﾃｷ ${mm}g/mol = ${q.ans}mol`;
+    return `${gv}g ÷ ${mm}g/mol = ${q.ans}mol`;
   if (t==="mol_to_g")
-    return `${gv}mol ﾃ・${mm}g/mol = ${q.ans}g`;
+    return `${gv}mol × ${mm}g/mol = ${q.ans}g`;
   if (t==="mol_to_L")
-    return `${gv}mol ﾃ・22.4L/mol = ${q.ans}L`;
+    return `${gv}mol × 22.4L/mol = ${q.ans}L`;
   if (t==="L_to_mol")
-    return `${gv}L ﾃｷ 22.4L/mol = ${q.ans}mol`;
+    return `${gv}L ÷ 22.4L/mol = ${q.ans}mol`;
   if (t==="mol_to_N")
-    return `${gv}mol ﾃ・6.0ﾃ・0ﾂｲﾂｳ蛟・mol = ${q.ans}蛟義;
+    return `${gv}mol × 6.0×10²³個/mol = ${q.ans}個`;
   if (t==="N_to_mol")
-    return `${nm}ﾃ・0ﾂｲﾂｳ蛟・ﾃｷ 6.0ﾃ・0ﾂｲﾂｳ蛟・mol = ${q.ans}mol`;
+    return `${nm}×10²³個 ÷ 6.0×10²³個/mol = ${q.ans}mol`;
   if (t==="g_to_L") {
     const mol = r(gv/mm);
-    return `竭 ${gv}g ﾃｷ ${mm}g/mol = ${mol}mol\n竭｡ ${mol}mol ﾃ・22.4L/mol = ${q.ans}L\n\n蠑丞・菴難ｼ・{gv}g ﾃｷ ${mm}g/mol ﾃ・22.4L/mol = ${q.ans}L`;
+    return `① ${gv}g ÷ ${mm}g/mol = ${mol}mol\n② ${mol}mol × 22.4L/mol = ${q.ans}L\n\n式全体：${gv}g ÷ ${mm}g/mol × 22.4L/mol = ${q.ans}L`;
   }
   if (t==="L_to_g") {
     const mol = r(gv/22.4);
-    return `竭 ${gv}L ﾃｷ 22.4L/mol = ${mol}mol\n竭｡ ${mol}mol ﾃ・${mm}g/mol = ${q.ans}g\n\n蠑丞・菴難ｼ・{gv}L ﾃｷ 22.4L/mol ﾃ・${mm}g/mol = ${q.ans}g`;
+    return `① ${gv}L ÷ 22.4L/mol = ${mol}mol\n② ${mol}mol × ${mm}g/mol = ${q.ans}g\n\n式全体：${gv}L ÷ 22.4L/mol × ${mm}g/mol = ${q.ans}g`;
   }
   if (t==="g_to_N") {
     const mol = r(gv/mm);
-    return `竭 ${gv}g ﾃｷ ${mm}g/mol = ${mol}mol\n竭｡ ${mol}mol ﾃ・6.0ﾃ・0ﾂｲﾂｳ蛟・mol = ${q.ans}蛟欺n\n蠑丞・菴難ｼ・{gv}g ﾃｷ ${mm}g/mol ﾃ・6.0ﾃ・0ﾂｲﾂｳ蛟・mol = ${q.ans}蛟義;
+    return `① ${gv}g ÷ ${mm}g/mol = ${mol}mol\n② ${mol}mol × 6.0×10²³個/mol = ${q.ans}個\n\n式全体：${gv}g ÷ ${mm}g/mol × 6.0×10²³個/mol = ${q.ans}個`;
   }
   if (t==="N_to_g") {
     const mol = r(nm/6);
-    return `竭 ${nm}ﾃ・0ﾂｲﾂｳ蛟・ﾃｷ 6.0ﾃ・0ﾂｲﾂｳ蛟・mol = ${mol}mol\n竭｡ ${mol}mol ﾃ・${mm}g/mol = ${q.ans}g\n\n蠑丞・菴難ｼ・{nm}ﾃ・0ﾂｲﾂｳ蛟・ﾃｷ 6.0ﾃ・0ﾂｲﾂｳ蛟・mol ﾃ・${mm}g/mol = ${q.ans}g`;
+    return `① ${nm}×10²³個 ÷ 6.0×10²³個/mol = ${mol}mol\n② ${mol}mol × ${mm}g/mol = ${q.ans}g\n\n式全体：${nm}×10²³個 ÷ 6.0×10²³個/mol × ${mm}g/mol = ${q.ans}g`;
   }
   if (t==="L_to_N") {
     const mol = r(gv/22.4);
-    return `竭 ${gv}L ﾃｷ 22.4L/mol = ${mol}mol\n竭｡ ${mol}mol ﾃ・6.0ﾃ・0ﾂｲﾂｳ蛟・mol = ${q.ans}蛟欺n\n蠑丞・菴難ｼ・{gv}L ﾃｷ 22.4L/mol ﾃ・6.0ﾃ・0ﾂｲﾂｳ蛟・mol = ${q.ans}蛟義;
+    return `① ${gv}L ÷ 22.4L/mol = ${mol}mol\n② ${mol}mol × 6.0×10²³個/mol = ${q.ans}個\n\n式全体：${gv}L ÷ 22.4L/mol × 6.0×10²³個/mol = ${q.ans}個`;
   }
   if (t==="N_to_L") {
     const mol = r(nm/6);
-    return `竭 ${nm}ﾃ・0ﾂｲﾂｳ蛟・ﾃｷ 6.0ﾃ・0ﾂｲﾂｳ蛟・mol = ${mol}mol\n竭｡ ${mol}mol ﾃ・22.4L/mol = ${q.ans}L\n\n蠑丞・菴難ｼ・{nm}ﾃ・0ﾂｲﾂｳ蛟・ﾃｷ 6.0ﾃ・0ﾂｲﾂｳ蛟・mol ﾃ・22.4L/mol = ${q.ans}L`;
+    return `① ${nm}×10²³個 ÷ 6.0×10²³個/mol = ${mol}mol\n② ${mol}mol × 22.4L/mol = ${q.ans}L\n\n式全体：${nm}×10²³個 ÷ 6.0×10²³個/mol × 22.4L/mol = ${q.ans}L`;
   }
   return "";
 }
 
 function getMolHints(q) {
   const hints = [];
-  if (q.qtype==="g_to_mol")  { hints.push("g 竊・mol 縺ｮ螟画鋤・嗄ol = g ﾃｷ 繝｢繝ｫ雉ｪ驥・); hints.push(`${q.substance}縺ｮ繝｢繝ｫ雉ｪ驥・= ${q.molarMass} g/mol`); hints.push(`mol = ${q.given} ﾃｷ ${q.molarMass}`); }
-  else if (q.qtype==="mol_to_g") { hints.push("mol 竊・g 縺ｮ螟画鋤・喩 = mol ﾃ・繝｢繝ｫ雉ｪ驥・); hints.push(`${q.substance}縺ｮ繝｢繝ｫ雉ｪ驥・= ${q.molarMass} g/mol`); hints.push(`g = ${q.given} ﾃ・${q.molarMass}`); }
-  else if (q.qtype==="mol_to_L") { hints.push("mol 竊・L 縺ｮ螟画鋤・域ｨ呎ｺ也憾諷具ｼ会ｼ哭 = mol ﾃ・22.4"); hints.push(`22.4 L/mol 繧剃ｽｿ縺・); hints.push(`L = ${q.given} ﾃ・22.4`); }
-  else if (q.qtype==="L_to_mol") { hints.push("L 竊・mol 縺ｮ螟画鋤・域ｨ呎ｺ也憾諷具ｼ会ｼ嗄ol = L ﾃｷ 22.4"); hints.push(`22.4 L/mol 繧剃ｽｿ縺・); hints.push(`mol = ${q.given} ﾃｷ 22.4`); }
-  else if (q.qtype==="mol_to_N") { hints.push("mol 竊・蛟区焚縺ｮ螟画鋤・壼・= mol ﾃ・6.0ﾃ・0ﾂｲﾂｳ"); hints.push(`繧｢繝懊ぎ繝峨Ο謨ｰ 6.0ﾃ・0ﾂｲﾂｳ 繧剃ｽｿ縺・); hints.push(`蛟・= ${q.given} ﾃ・6.0ﾃ・0ﾂｲﾂｳ`); }
-  else if (q.qtype==="N_to_mol") { hints.push("蛟区焚 竊・mol 縺ｮ螟画鋤・嗄ol = 蛟区焚 ﾃｷ 6.0ﾃ・0ﾂｲﾂｳ"); hints.push(`繧｢繝懊ぎ繝峨Ο謨ｰ 6.0ﾃ・0ﾂｲﾂｳ 縺ｧ蜑ｲ繧義); hints.push(`mol = ${q.numer}ﾃ・0ﾂｲﾂｳ ﾃｷ 6.0ﾃ・0ﾂｲﾂｳ`); }
-  else if (q.qtype==="g_to_L")   { hints.push("g 竊・mol 竊・L 縺ｮ2谿ｵ螟画鋤"); hints.push(`繝｢繝ｫ雉ｪ驥・${q.molarMass} g/mol 竊・mol縲∵ｬ｡縺ｫ ﾃ・22.4`); hints.push(`mol = ${q.given} ﾃｷ ${q.molarMass}縲´ = mol ﾃ・22.4`); }
-  else if (q.qtype==="L_to_g")   { hints.push("L 竊・mol 竊・g 縺ｮ2谿ｵ螟画鋤"); hints.push(`22.4縺ｧ蜑ｲ縺｣縺ｦ mol縲∵ｬ｡縺ｫ ﾃ・繝｢繝ｫ雉ｪ驥・${q.molarMass}`); hints.push(`mol = ${q.given} ﾃｷ 22.4縲“ = mol ﾃ・${q.molarMass}`); }
-  else if (q.qtype==="g_to_N")   { hints.push("g 竊・mol 竊・蛟区焚 縺ｮ2谿ｵ螟画鋤"); hints.push(`繝｢繝ｫ雉ｪ驥・${q.molarMass} g/mol 縺ｧ蜑ｲ縺｣縺ｦ mol縲∵ｬ｡縺ｫ ﾃ・6.0ﾃ・0ﾂｲﾂｳ`); hints.push(`mol = ${q.given} ﾃｷ ${q.molarMass}縲∝・= mol ﾃ・6.0ﾃ・0ﾂｲﾂｳ`); }
-  else if (q.qtype==="N_to_g")   { hints.push("蛟区焚 竊・mol 竊・g 縺ｮ2谿ｵ螟画鋤"); hints.push(`6.0ﾃ・0ﾂｲﾂｳ 縺ｧ蜑ｲ縺｣縺ｦ mol縲∵ｬ｡縺ｫ ﾃ・繝｢繝ｫ雉ｪ驥・${q.molarMass}`); hints.push(`mol = ${q.numer}ﾃ・0ﾂｲﾂｳ ﾃｷ 6.0ﾃ・0ﾂｲﾂｳ縲“ = mol ﾃ・${q.molarMass}`); }
-  else if (q.qtype==="L_to_N")   { hints.push("L 竊・mol 竊・蛟区焚 縺ｮ2谿ｵ螟画鋤"); hints.push(`22.4縺ｧ蜑ｲ縺｣縺ｦ mol縲∵ｬ｡縺ｫ ﾃ・6.0ﾃ・0ﾂｲﾂｳ`); hints.push(`mol = ${q.given} ﾃｷ 22.4縲∝・= mol ﾃ・6.0ﾃ・0ﾂｲﾂｳ`); }
-  else if (q.qtype==="N_to_L")   { hints.push("蛟区焚 竊・mol 竊・L 縺ｮ2谿ｵ螟画鋤"); hints.push(`6.0ﾃ・0ﾂｲﾂｳ 縺ｧ蜑ｲ縺｣縺ｦ mol縲∵ｬ｡縺ｫ ﾃ・22.4`); hints.push(`mol = ${q.numer}ﾃ・0ﾂｲﾂｳ ﾃｷ 6.0ﾃ・0ﾂｲﾂｳ縲´ = mol ﾃ・22.4`); }
+  if (q.qtype==="g_to_mol")  { hints.push("g → mol の変換：mol = g ÷ モル質量"); hints.push(`${q.substance}のモル質量 = ${q.molarMass} g/mol`); hints.push(`mol = ${q.given} ÷ ${q.molarMass}`); }
+  else if (q.qtype==="mol_to_g") { hints.push("mol → g の変換：g = mol × モル質量"); hints.push(`${q.substance}のモル質量 = ${q.molarMass} g/mol`); hints.push(`g = ${q.given} × ${q.molarMass}`); }
+  else if (q.qtype==="mol_to_L") { hints.push("mol → L の変換（標準状態）：L = mol × 22.4"); hints.push(`22.4 L/mol を使う`); hints.push(`L = ${q.given} × 22.4`); }
+  else if (q.qtype==="L_to_mol") { hints.push("L → mol の変換（標準状態）：mol = L ÷ 22.4"); hints.push(`22.4 L/mol を使う`); hints.push(`mol = ${q.given} ÷ 22.4`); }
+  else if (q.qtype==="mol_to_N") { hints.push("mol → 個数の変換：個 = mol × 6.0×10²³"); hints.push(`アボガドロ数 6.0×10²³ を使う`); hints.push(`個 = ${q.given} × 6.0×10²³`); }
+  else if (q.qtype==="N_to_mol") { hints.push("個数 → mol の変換：mol = 個数 ÷ 6.0×10²³"); hints.push(`アボガドロ数 6.0×10²³ で割る`); hints.push(`mol = ${q.numer}×10²³ ÷ 6.0×10²³`); }
+  else if (q.qtype==="g_to_L")   { hints.push("g → mol → L の2段変換"); hints.push(`モル質量 ${q.molarMass} g/mol → mol、次に × 22.4`); hints.push(`mol = ${q.given} ÷ ${q.molarMass}、L = mol × 22.4`); }
+  else if (q.qtype==="L_to_g")   { hints.push("L → mol → g の2段変換"); hints.push(`22.4で割って mol、次に × モル質量 ${q.molarMass}`); hints.push(`mol = ${q.given} ÷ 22.4、g = mol × ${q.molarMass}`); }
+  else if (q.qtype==="g_to_N")   { hints.push("g → mol → 個数 の2段変換"); hints.push(`モル質量 ${q.molarMass} g/mol で割って mol、次に × 6.0×10²³`); hints.push(`mol = ${q.given} ÷ ${q.molarMass}、個 = mol × 6.0×10²³`); }
+  else if (q.qtype==="N_to_g")   { hints.push("個数 → mol → g の2段変換"); hints.push(`6.0×10²³ で割って mol、次に × モル質量 ${q.molarMass}`); hints.push(`mol = ${q.numer}×10²³ ÷ 6.0×10²³、g = mol × ${q.molarMass}`); }
+  else if (q.qtype==="L_to_N")   { hints.push("L → mol → 個数 の2段変換"); hints.push(`22.4で割って mol、次に × 6.0×10²³`); hints.push(`mol = ${q.given} ÷ 22.4、個 = mol × 6.0×10²³`); }
+  else if (q.qtype==="N_to_L")   { hints.push("個数 → mol → L の2段変換"); hints.push(`6.0×10²³ で割って mol、次に × 22.4`); hints.push(`mol = ${q.numer}×10²³ ÷ 6.0×10²³、L = mol × 22.4`); }
   return hints;
 }
 
 const MOL_QUESTIONS_RAW = [
-  // 1-10: g竊知ol
-  {id:1,  q:"CO竄・44g縺ｯ菴瀕ol縺具ｼ・,    ans:1,     qtype:"g_to_mol",  substance:"CO竄・, molarMass:44, given:44},
-  {id:2,  q:"CO 28g縺ｯ菴瀕ol縺具ｼ・,     ans:1,     qtype:"g_to_mol",  substance:"CO",  molarMass:28, given:28},
-  {id:3,  q:"NH竄・34g縺ｯ菴瀕ol縺具ｼ・,    ans:2,     qtype:"g_to_mol",  substance:"NH竄・, molarMass:17, given:34},
-  {id:4,  q:"HCl 73g縺ｯ菴瀕ol縺具ｼ・,    ans:2,     qtype:"g_to_mol",  substance:"HCl", molarMass:36.5, given:73},
-  {id:5,  q:"CH竄・8g縺ｯ菴瀕ol縺具ｼ・,     ans:0.5,   qtype:"g_to_mol",  substance:"CH竄・, molarMass:16, given:8},
-  {id:6,  q:"H竄４O竄・49g縺ｯ菴瀕ol縺具ｼ・,  ans:0.5,   qtype:"g_to_mol",  substance:"H竄４O竄・, molarMass:98, given:49},
-  {id:7,  q:"HNO竄・126g縺ｯ菴瀕ol縺具ｼ・,  ans:2,     qtype:"g_to_mol",  substance:"HNO竄・, molarMass:63, given:126},
-  {id:8,  q:"Cu 64g縺ｯ菴瀕ol縺具ｼ・,     ans:1,     qtype:"g_to_mol",  substance:"Cu",  molarMass:64, given:64},
-  {id:9,  q:"NaOH 40g縺ｯ菴瀕ol縺具ｼ・,   ans:1,     qtype:"g_to_mol",  substance:"NaOH",molarMass:40, given:40},
-  {id:10, q:"H竄０ 54g縺ｯ菴瀕ol縺具ｼ・,    ans:3,     qtype:"g_to_mol",  substance:"H竄０", molarMass:18, given:54},
-  // 11-20: mol竊暖
-  {id:11, q:"CO竄・2mol縺ｯ菴蛭縺具ｼ・,     ans:88,    qtype:"mol_to_g",  substance:"CO竄・, molarMass:44, given:2},
-  {id:12, q:"CO 1mol縺ｯ菴蛭縺具ｼ・,      ans:28,    qtype:"mol_to_g",  substance:"CO",  molarMass:28, given:1},
-  {id:13, q:"NH竄・3mol縺ｯ菴蛭縺具ｼ・,     ans:51,    qtype:"mol_to_g",  substance:"NH竄・, molarMass:17, given:3},
-  {id:14, q:"HCl 1mol縺ｯ菴蛭縺具ｼ・,     ans:36.5,  qtype:"mol_to_g",  substance:"HCl", molarMass:36.5, given:1},
-  {id:15, q:"CH竄・0.5mol縺ｯ菴蛭縺具ｼ・,   ans:8,     qtype:"mol_to_g",  substance:"CH竄・, molarMass:16, given:0.5},
-  {id:16, q:"H竄４O竄・0.5mol縺ｯ菴蛭縺具ｼ・, ans:49,    qtype:"mol_to_g",  substance:"H竄４O竄・, molarMass:98, given:0.5},
-  {id:17, q:"HNO竄・3mol縺ｯ菴蛭縺具ｼ・,    ans:189,   qtype:"mol_to_g",  substance:"HNO竄・, molarMass:63, given:3},
-  {id:18, q:"Cu 2mol縺ｯ菴蛭縺具ｼ・,      ans:128,   qtype:"mol_to_g",  substance:"Cu",  molarMass:64, given:2},
-  {id:19, q:"NaOH 4mol縺ｯ菴蛭縺具ｼ・,    ans:160,   qtype:"mol_to_g",  substance:"NaOH",molarMass:40, given:4},
-  {id:20, q:"H竄０ 5mol縺ｯ菴蛭縺具ｼ・,     ans:90,    qtype:"mol_to_g",  substance:"H竄０", molarMass:18, given:5},
-  // 21-30: mol竊鱈
-  {id:21, q:"CO竄・1mol縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,      ans:22.4,  qtype:"mol_to_L", substance:"CO竄・, given:1},
-  {id:22, q:"CO 2mol縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,       ans:44.8,  qtype:"mol_to_L", substance:"CO",  given:2},
-  {id:23, q:"NH竄・0.875mol縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,  ans:19.6,  qtype:"mol_to_L", substance:"NH竄・, given:0.875},
-  {id:24, q:"HCl 0.25mol縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,   ans:5.6,   qtype:"mol_to_L", substance:"HCl", given:0.25},
-  {id:25, q:"CH竄・0.75mol縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,   ans:16.8,  qtype:"mol_to_L", substance:"CH竄・, given:0.75},
-  {id:26, q:"H竄４O竄・0.5mol縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,  ans:11.2,  qtype:"mol_to_L", substance:"H竄４O竄・, given:0.5},
-  {id:27, q:"HNO竄・0.125mol縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・, ans:2.8,   qtype:"mol_to_L", substance:"HNO竄・, given:0.125},
-  {id:28, q:"C竄・竄・0.375mol縺ｯ菴畢縺具ｼ・,               ans:8.4,   qtype:"mol_to_L", substance:"C竄・竄・, given:0.375},
-  {id:29, q:"Ar 0.25mol縺ｯ菴畢縺具ｼ・,                   ans:5.6,   qtype:"mol_to_L", substance:"Ar",  given:0.25},
-  {id:30, q:"H竄０ 0.625mol縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,  ans:14,    qtype:"mol_to_L", substance:"H竄０", given:0.625},
-  // 31-40: L竊知ol
-  {id:31, q:"CO竄・讓呎ｺ也憾諷九〒22.4L縺ｮ豌嶺ｽ薙・菴瀕ol縺具ｼ・,  ans:1,     qtype:"L_to_mol", substance:"CO竄・, given:22.4},
-  {id:32, q:"CO 讓呎ｺ也憾諷九〒44.8L縺ｮ豌嶺ｽ薙・菴瀕ol縺具ｼ・,   ans:2,     qtype:"L_to_mol", substance:"CO",  given:44.8},
-  {id:33, q:"NH竄・讓呎ｺ也憾諷九〒19.6L縺ｮ豌嶺ｽ薙・菴瀕ol縺具ｼ・,  ans:0.875, qtype:"L_to_mol", substance:"NH竄・, given:19.6},
-  {id:34, q:"HCl 讓呎ｺ也憾諷九〒5.6L縺ｮ豌嶺ｽ薙・菴瀕ol縺具ｼ・,   ans:0.25,  qtype:"L_to_mol", substance:"HCl", given:5.6},
-  {id:35, q:"CH竄・讓呎ｺ也憾諷九〒16.8L縺ｮ豌嶺ｽ薙・菴瀕ol縺具ｼ・,  ans:0.75,  qtype:"L_to_mol", substance:"CH竄・, given:16.8},
-  {id:36, q:"H竄４O竄・讓呎ｺ也憾諷九〒11.2L縺ｮ豌嶺ｽ薙・菴瀕ol縺具ｼ・,ans:0.5,   qtype:"L_to_mol", substance:"H竄４O竄・, given:11.2},
-  {id:37, q:"HNO竄・讓呎ｺ也憾諷九〒2.8L縺ｮ豌嶺ｽ薙・菴瀕ol縺具ｼ・,  ans:0.125, qtype:"L_to_mol", substance:"HNO竄・, given:2.8},
-  {id:38, q:"C竄・竄・讓呎ｺ也憾諷九〒8.4L縺ｮ豌嶺ｽ薙・菴瀕ol縺具ｼ・,  ans:0.375, qtype:"L_to_mol", substance:"C竄・竄・, given:8.4},
-  {id:39, q:"Ar 讓呎ｺ也憾諷九〒5.6L縺ｮ豌嶺ｽ薙・菴瀕ol縺具ｼ・,     ans:0.25,  qtype:"L_to_mol", substance:"Ar",  given:5.6},
-  {id:40, q:"H竄０ 14L縺ｯ菴瀕ol縺具ｼ・,                   ans:0.625, qtype:"L_to_mol", substance:"H竄０", given:14},
-  // 41-50: mol竊貞区焚
-  {id:41, q:"CO竄・1mol縺ｮ蛻・ｭ先焚縺ｯ菴募九°・・,             ans:"6.0ﾃ・0ﾂｲﾂｳ", qtype:"mol_to_N", substance:"CO竄・, given:1, numer:6.0},
-  {id:42, q:"CO 2mol縺ｮ蛻・ｭ先焚縺ｯ菴募九°・・,              ans:"1.2ﾃ・0ﾂｲ竅ｴ", qtype:"mol_to_N", substance:"CO",  given:2, numer:12.0},
-  {id:43, q:"NH竄・⊆ 3mol縺ｮ繧､繧ｪ繝ｳ謨ｰ縺ｯ菴募九°・・,          ans:"1.8ﾃ・0ﾂｲ竅ｴ", qtype:"mol_to_N", substance:"NH竄・⊆", given:3, numer:18.0},
-  {id:44, q:"NaOH 0.25mol縺ｮNa竅ｺ縺ｮ繧､繧ｪ繝ｳ謨ｰ縺ｯ菴募九°・・,  ans:"1.5ﾃ・0ﾂｲﾂｳ", qtype:"mol_to_N", substance:"NaOH", given:0.25, numer:1.5},
-  {id:45, q:"CH竄・0.5mol縺ｮ蛻・ｭ先焚縺ｯ菴募九°・・,           ans:"3.0ﾃ・0ﾂｲﾂｳ", qtype:"mol_to_N", substance:"CH竄・, given:0.5, numer:3.0},
-  {id:46, q:"H竄４O竄・0.5mol縺ｮH竅ｺ縺ｮ繧､繧ｪ繝ｳ謨ｰ縺ｯ菴募九°・・,  ans:"6.0ﾃ・0ﾂｲﾂｳ", qtype:"mol_to_N", substance:"H竄４O竄・, given:0.5, numer:6.0},
-  {id:47, q:"HNO竄・3mol縺ｮ繧､繧ｪ繝ｳ縺ｮ邱乗焚縺ｯ菴募九°・・,      ans:"3.6ﾃ・0ﾂｲ竅ｴ", qtype:"mol_to_N", substance:"HNO竄・, given:3, numer:36.0},
-  {id:48, q:"Cu(OH)竄・2mol縺ｮOH竅ｻ縺ｮ繧､繧ｪ繝ｳ謨ｰ縺ｯ菴募九°・・, ans:"2.4ﾃ・0ﾂｲ竅ｴ", qtype:"mol_to_N", substance:"Cu(OH)竄・, given:2, numer:24.0},
-  {id:49, q:"NaOH 0.25mol縺ｮ繧､繧ｪ繝ｳ縺ｮ邱乗焚縺ｯ菴募九°・・,   ans:"3.0ﾃ・0ﾂｲﾂｳ", qtype:"mol_to_N", substance:"NaOH", given:0.25, numer:3.0},
-  {id:50, q:"H竄０ 3mol縺ｮ蛻・ｭ先焚縺ｯ菴募九°・・,             ans:"1.8ﾃ・0ﾂｲ竅ｴ", qtype:"mol_to_N", substance:"H竄０", given:3, numer:18.0},
-  // 51-60: 蛟区焚竊知ol
-  {id:51, q:"CO竄ゅ・蛻・ｭ先焚縺・.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴瀕ol縺具ｼ・, ans:1,    qtype:"N_to_mol", substance:"CO竄・, numer:6.0},
-  {id:52, q:"CO縺ｮ蛻・ｭ先焚縺・2.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴瀕ol縺具ｼ・, ans:2,    qtype:"N_to_mol", substance:"CO",  numer:12.0},
-  {id:53, q:"NH竄・・蛻・ｭ先焚縺・8.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴瀕ol縺具ｼ・,ans:3,    qtype:"N_to_mol", substance:"NH竄・, numer:18.0},
-  {id:54, q:"HCl縺ｮ蛻・ｭ先焚縺・.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴瀕ol縺具ｼ・, ans:0.5,  qtype:"N_to_mol", substance:"HCl", numer:3.0},
-  {id:55, q:"CH竄・蛻・ｭ先焚縺・2.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴瀕ol縺具ｼ・,ans:2,    qtype:"N_to_mol", substance:"CH竄・, numer:12.0},
-  {id:56, q:"H竄４O竄・・蛻・ｭ先焚縺・4.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴瀕ol縺具ｼ・,ans:4, qtype:"N_to_mol", substance:"H竄４O竄・, numer:24.0},
-  {id:57, q:"HNO竄・・蛻・ｭ先焚縺・.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴瀕ol縺具ｼ・,ans:0.5, qtype:"N_to_mol", substance:"HNO竄・, numer:3.0},
-  {id:58, q:"Cu縺ｮ蛻・ｭ先焚縺・8.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴瀕ol縺具ｼ・, ans:3,    qtype:"N_to_mol", substance:"Cu",  numer:18.0},
-  {id:59, q:"NaOH縺ｮ蛻・ｭ先焚縺・2.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴瀕ol縺具ｼ・,ans:2,  qtype:"N_to_mol", substance:"NaOH", numer:12.0},
-  {id:60, q:"H竄０ 蛻・ｭ先焚縺・4.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴瀕ol縺具ｼ・,ans:4,    qtype:"N_to_mol", substance:"H竄０", numer:24.0},
-  // 61-70: g竊鱈・・谿ｵ螟画鋤・・  {id:61, q:"CO竄・44g縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,    ans:22.4,  qtype:"g_to_L", substance:"CO竄・, molarMass:44, given:44},
-  {id:62, q:"CO 28g縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,     ans:22.4,  qtype:"g_to_L", substance:"CO",  molarMass:28, given:28},
-  {id:63, q:"NH竄・34g縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,    ans:44.8,  qtype:"g_to_L", substance:"NH竄・, molarMass:17, given:34},
-  {id:64, q:"HCl 73g縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,    ans:44.8,  qtype:"g_to_L", substance:"HCl", molarMass:36.5, given:73},
-  {id:65, q:"CH竄・8g縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,     ans:11.2,  qtype:"g_to_L", substance:"CH竄・, molarMass:16, given:8},
-  {id:66, q:"H竄４O竄・49g縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,  ans:11.2,  qtype:"g_to_L", substance:"H竄４O竄・, molarMass:98, given:49},
-  {id:67, q:"HNO竄・126g縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,  ans:44.8,  qtype:"g_to_L", substance:"HNO竄・, molarMass:63, given:126},
-  {id:68, q:"C竄・竄・60g縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,   ans:44.8,  qtype:"g_to_L", substance:"C竄・竄・, molarMass:30, given:60},
-  {id:69, q:"SO竄・64g縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,    ans:22.4,  qtype:"g_to_L", substance:"SO竄・, molarMass:64, given:64},
-  {id:70, q:"H竄０ 54g縺ｯ讓呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,    ans:67.2,  qtype:"g_to_L", substance:"H竄０", molarMass:18, given:54},
-  // 71-80: g竊貞区焚
-  {id:71, q:"CO竄・44g縺ｮ蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,   ans:"6.0ﾃ・0ﾂｲﾂｳ", qtype:"g_to_N", substance:"CO竄・, molarMass:44, given:44, numer:6.0},
-  {id:72, q:"CO 28g縺ｮ蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,    ans:"6.0ﾃ・0ﾂｲﾂｳ", qtype:"g_to_N", substance:"CO",  molarMass:28, given:28, numer:6.0},
-  {id:73, q:"NH竄・34g縺ｮ蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,   ans:"1.2ﾃ・0ﾂｲ竅ｴ", qtype:"g_to_N", substance:"NH竄・, molarMass:17, given:34, numer:12.0},
-  {id:74, q:"HCl 73g縺ｮ蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,   ans:"1.2ﾃ・0ﾂｲ竅ｴ", qtype:"g_to_N", substance:"HCl", molarMass:36.5, given:73, numer:12.0},
-  {id:75, q:"CH竄・8g縺ｮ蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,    ans:"3.0ﾃ・0ﾂｲﾂｳ", qtype:"g_to_N", substance:"CH竄・, molarMass:16, given:8, numer:3.0},
-  {id:76, q:"H竄４O竄・49g縺ｮ蛻・ｭ先焚縺ｯ縺・￥繧峨°・・, ans:"3.0ﾃ・0ﾂｲﾂｳ", qtype:"g_to_N", substance:"H竄４O竄・, molarMass:98, given:49, numer:3.0},
-  {id:77, q:"HNO竄・126g縺ｮ蛻・ｭ先焚縺ｯ縺・￥繧峨°・・, ans:"1.2ﾃ・0ﾂｲ竅ｴ", qtype:"g_to_N", substance:"HNO竄・, molarMass:63, given:126, numer:12.0},
-  {id:78, q:"Cu 64g縺ｮ蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,    ans:"6.0ﾃ・0ﾂｲﾂｳ", qtype:"g_to_N", substance:"Cu",  molarMass:64, given:64, numer:6.0},
-  {id:79, q:"NaOH 40g縺ｮ蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,  ans:"6.0ﾃ・0ﾂｲﾂｳ", qtype:"g_to_N", substance:"NaOH",molarMass:40, given:40, numer:6.0},
-  {id:80, q:"H竄０ 54g縺ｮ蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,   ans:"1.8ﾃ・0ﾂｲ竅ｴ", qtype:"g_to_N", substance:"H竄０", molarMass:18, given:54, numer:18.0},
-  // 81-90: 蛟区焚竊鱈
-  {id:81, q:"CO竄ゅ・蛻・ｭ先焚縺・.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾縲∵ｨ呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,   ans:22.4, qtype:"N_to_L", substance:"CO竄・, numer:6.0},
-  {id:82, q:"CO縺ｮ蛻・ｭ先焚縺・2.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾縲∵ｨ呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,   ans:44.8, qtype:"N_to_L", substance:"CO",  numer:12.0},
-  {id:83, q:"NH竄・・蛻・ｭ先焚縺・8.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾縲∵ｨ呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,  ans:67.2, qtype:"N_to_L", substance:"NH竄・, numer:18.0},
-  {id:84, q:"HCl縺ｮ蛻・ｭ先焚縺・.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾縲∵ｨ呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,   ans:11.2, qtype:"N_to_L", substance:"HCl", numer:3.0},
-  {id:85, q:"CH竄・蛻・ｭ先焚縺・2.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾縲∵ｨ呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,   ans:44.8, qtype:"N_to_L", substance:"CH竄・, numer:12.0},
-  {id:86, q:"H竄４O竄・・蛻・ｭ先焚縺・4.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾縲∵ｨ呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,ans:89.6, qtype:"N_to_L", substance:"H竄４O竄・, numer:24.0},
-  {id:87, q:"HNO竄・・蛻・ｭ先焚縺・.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾縲∵ｨ呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,  ans:11.2, qtype:"N_to_L", substance:"HNO竄・, numer:3.0},
-  {id:88, q:"SO竄ゅ・蛻・ｭ先焚縺・8.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾縲∵ｨ呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,  ans:67.2, qtype:"N_to_L", substance:"SO竄・, numer:18.0},
-  {id:89, q:"He縺ｮ蛻・ｭ先焚縺・2.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾縲∵ｨ呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,   ans:44.8, qtype:"N_to_L", substance:"He",  numer:12.0},
-  {id:90, q:"H竄０ 蛻・ｭ先焚縺・4.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾縲∵ｨ呎ｺ也憾諷九・豌嶺ｽ薙〒菴畢縺具ｼ・,   ans:89.6, qtype:"N_to_L", substance:"H竄０", numer:24.0},
-  // 91-100: L竊暖
-  {id:91,  q:"CO竄・22.4L縺ｮ讓呎ｺ也憾諷九・豌嶺ｽ薙・菴蛭縺具ｼ・,   ans:44,   qtype:"L_to_g", substance:"CO竄・, molarMass:44, given:22.4},
-  {id:92,  q:"CO 67.2L縺ｮ讓呎ｺ也憾諷九・豌嶺ｽ薙・菴蛭縺具ｼ・,    ans:84,   qtype:"L_to_g", substance:"CO",  molarMass:28, given:67.2},
-  {id:93,  q:"NH竄・44.8L縺ｮ讓呎ｺ也憾諷九・豌嶺ｽ薙・菴蛭縺具ｼ・,   ans:34,   qtype:"L_to_g", substance:"NH竄・, molarMass:17, given:44.8},
-  {id:94,  q:"HCl 22.4L縺ｮ讓呎ｺ也憾諷九・豌嶺ｽ薙・菴蛭縺具ｼ・,   ans:36.5, qtype:"L_to_g", substance:"HCl", molarMass:36.5, given:22.4},
-  {id:95,  q:"CH竄・5.6L縺ｮ讓呎ｺ也憾諷九・豌嶺ｽ薙・菴蛭縺具ｼ・,    ans:4,    qtype:"L_to_g", substance:"CH竄・, molarMass:16, given:5.6},
-  {id:96,  q:"H竄４O竄・44.8L縺ｮ讓呎ｺ也憾諷九・豌嶺ｽ薙・菴蛭縺具ｼ・, ans:196,  qtype:"L_to_g", substance:"H竄４O竄・, molarMass:98, given:44.8},
-  {id:97,  q:"HNO竄・67.2L縺ｮ讓呎ｺ也憾諷九・豌嶺ｽ薙・菴蛭縺具ｼ・,  ans:189,  qtype:"L_to_g", substance:"HNO竄・, molarMass:63, given:67.2},
-  {id:98,  q:"C竄・竄・5.6L縺ｮ讓呎ｺ也憾諷九・豌嶺ｽ薙・菴蛭縺具ｼ・,   ans:7.5,  qtype:"L_to_g", substance:"C竄・竄・, molarMass:30, given:5.6},
-  {id:99,  q:"SO竄・11.2L縺ｮ讓呎ｺ也憾諷九・豌嶺ｽ薙・菴蛭縺具ｼ・,   ans:32,   qtype:"L_to_g", substance:"SO竄・, molarMass:64, given:11.2},
-  {id:100, q:"H竄０ 44.8L縺ｮ讓呎ｺ也憾諷九・豌嶺ｽ薙・菴蛭縺具ｼ・,   ans:36,   qtype:"L_to_g", substance:"H竄０", molarMass:18, given:44.8},
-  // 101-110: 蛟区焚竊暖
-  {id:101, q:"CO竄ゅ・蛻・ｭ先焚縺・.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴蛭縺具ｼ・,    ans:44,  qtype:"N_to_g", substance:"CO竄・, molarMass:44, numer:6.0},
-  {id:102, q:"CO縺ｮ蛻・ｭ先焚縺・2.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴蛭縺具ｼ・,    ans:56,  qtype:"N_to_g", substance:"CO",  molarMass:28, numer:12.0},
-  {id:103, q:"NH竄・・蛻・ｭ先焚縺・8.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴蛭縺具ｼ・,   ans:51,  qtype:"N_to_g", substance:"NH竄・, molarMass:17, numer:18.0},
-  {id:104, q:"HCl縺ｮ蛻・ｭ先焚縺・2.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴蛭縺具ｼ・,   ans:73,  qtype:"N_to_g", substance:"HCl", molarMass:36.5, numer:12.0},
-  {id:105, q:"CH竄・蛻・ｭ先焚縺・2.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴蛭縺具ｼ・,    ans:32,  qtype:"N_to_g", substance:"CH竄・, molarMass:16, numer:12.0},
-  {id:106, q:"H竄４O竄・・蛻・ｭ先焚縺・4.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴蛭縺具ｼ・, ans:392, qtype:"N_to_g", substance:"H竄４O竄・, molarMass:98, numer:24.0},
-  {id:107, q:"HNO竄・・蛻・ｭ先焚縺・.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴蛭縺具ｼ・,   ans:31.5,qtype:"N_to_g", substance:"HNO竄・, molarMass:63, numer:3.0},
-  {id:108, q:"Cu縺ｮ蛻・ｭ先焚縺・8.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴蛭縺具ｼ・,    ans:192, qtype:"N_to_g", substance:"Cu",  molarMass:64, numer:18.0},
-  {id:109, q:"NaOH縺ｮ蛻・ｭ先焚縺・2.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴蛭縺具ｼ・,  ans:80,  qtype:"N_to_g", substance:"NaOH",molarMass:40, numer:12.0},
-  {id:110, q:"H竄０ 蛻・ｭ先焚縺・4.0ﾃ・0ﾂｲﾂｳ蛟九≠繧区凾菴蛭縺具ｼ・,    ans:72,  qtype:"N_to_g", substance:"H竄０", molarMass:18, numer:24.0},
-  // 111-120: L竊貞区焚
-  {id:111, q:"CO竄ゅ・讓呎ｺ也憾諷九〒22.4L縺ｮ豌嶺ｽ薙・蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,    ans:"6.0ﾃ・0ﾂｲﾂｳ", qtype:"L_to_N", substance:"CO竄・, given:22.4, numer:6.0},
-  {id:112, q:"CO縺ｮ讓呎ｺ也憾諷九〒67.2L縺ｮ豌嶺ｽ薙・蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,     ans:"1.8ﾃ・0ﾂｲ竅ｴ", qtype:"L_to_N", substance:"CO",  given:67.2, numer:18.0},
-  {id:113, q:"NH竄・・讓呎ｺ也憾諷九〒44.8L縺ｮ豌嶺ｽ薙・蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,    ans:"1.2ﾃ・0ﾂｲ竅ｴ", qtype:"L_to_N", substance:"NH竄・, given:44.8, numer:12.0},
-  {id:114, q:"HCl縺ｮ讓呎ｺ也憾諷九〒11.2L縺ｮ豌嶺ｽ薙・蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,    ans:"3.0ﾃ・0ﾂｲﾂｳ", qtype:"L_to_N", substance:"HCl", given:11.2, numer:3.0},
-  {id:115, q:"CH竄・・讓呎ｺ也憾諷九〒5.6L縺ｮ豌嶺ｽ薙・蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,     ans:"1.5ﾃ・0ﾂｲﾂｳ", qtype:"L_to_N", substance:"CH竄・, given:5.6, numer:1.5},
-  {id:116, q:"H竄４O竄・・讓呎ｺ也憾諷九〒44.8L縺ｮ豌嶺ｽ薙・蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,  ans:"1.2ﾃ・0ﾂｲ竅ｴ", qtype:"L_to_N", substance:"H竄４O竄・, given:44.8, numer:12.0},
-  {id:117, q:"HNO竄・・讓呎ｺ也憾諷九〒67.2L縺ｮ豌嶺ｽ薙・蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,   ans:"1.8ﾃ・0ﾂｲ竅ｴ", qtype:"L_to_N", substance:"HNO竄・, given:67.2, numer:18.0},
-  {id:118, q:"SO竄ゅ・讓呎ｺ也憾諷九〒5.6L縺ｮ豌嶺ｽ薙・蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,     ans:"1.5ﾃ・0ﾂｲﾂｳ", qtype:"L_to_N", substance:"SO竄・, given:5.6, numer:1.5},
-  {id:119, q:"Ar縺ｮ讓呎ｺ也憾諷九〒11.2L縺ｮ豌嶺ｽ薙・蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,     ans:"3.0ﾃ・0ﾂｲﾂｳ", qtype:"L_to_N", substance:"Ar",  given:11.2, numer:3.0},
-  {id:120, q:"H竄０縺ｮ讓呎ｺ也憾諷九〒44.8L縺ｮ豌嶺ｽ薙・蛻・ｭ先焚縺ｯ縺・￥繧峨°・・,    ans:"1.2ﾃ・0ﾂｲ竅ｴ", qtype:"L_to_N", substance:"H竄０", given:44.8, numer:12.0},
+  // 1-10: g→mol
+  {id:1,  q:"CO₂ 44gは何molか？",    ans:1,     qtype:"g_to_mol",  substance:"CO₂", molarMass:44, given:44},
+  {id:2,  q:"CO 28gは何molか？",     ans:1,     qtype:"g_to_mol",  substance:"CO",  molarMass:28, given:28},
+  {id:3,  q:"NH₃ 34gは何molか？",    ans:2,     qtype:"g_to_mol",  substance:"NH₃", molarMass:17, given:34},
+  {id:4,  q:"HCl 73gは何molか？",    ans:2,     qtype:"g_to_mol",  substance:"HCl", molarMass:36.5, given:73},
+  {id:5,  q:"CH₄ 8gは何molか？",     ans:0.5,   qtype:"g_to_mol",  substance:"CH₄", molarMass:16, given:8},
+  {id:6,  q:"H₂SO₄ 49gは何molか？",  ans:0.5,   qtype:"g_to_mol",  substance:"H₂SO₄", molarMass:98, given:49},
+  {id:7,  q:"HNO₃ 126gは何molか？",  ans:2,     qtype:"g_to_mol",  substance:"HNO₃", molarMass:63, given:126},
+  {id:8,  q:"Cu 64gは何molか？",     ans:1,     qtype:"g_to_mol",  substance:"Cu",  molarMass:64, given:64},
+  {id:9,  q:"NaOH 40gは何molか？",   ans:1,     qtype:"g_to_mol",  substance:"NaOH",molarMass:40, given:40},
+  {id:10, q:"H₂O 54gは何molか？",    ans:3,     qtype:"g_to_mol",  substance:"H₂O", molarMass:18, given:54},
+  // 11-20: mol→g
+  {id:11, q:"CO₂ 2molは何gか？",     ans:88,    qtype:"mol_to_g",  substance:"CO₂", molarMass:44, given:2},
+  {id:12, q:"CO 1molは何gか？",      ans:28,    qtype:"mol_to_g",  substance:"CO",  molarMass:28, given:1},
+  {id:13, q:"NH₃ 3molは何gか？",     ans:51,    qtype:"mol_to_g",  substance:"NH₃", molarMass:17, given:3},
+  {id:14, q:"HCl 1molは何gか？",     ans:36.5,  qtype:"mol_to_g",  substance:"HCl", molarMass:36.5, given:1},
+  {id:15, q:"CH₄ 0.5molは何gか？",   ans:8,     qtype:"mol_to_g",  substance:"CH₄", molarMass:16, given:0.5},
+  {id:16, q:"H₂SO₄ 0.5molは何gか？", ans:49,    qtype:"mol_to_g",  substance:"H₂SO₄", molarMass:98, given:0.5},
+  {id:17, q:"HNO₃ 3molは何gか？",    ans:189,   qtype:"mol_to_g",  substance:"HNO₃", molarMass:63, given:3},
+  {id:18, q:"Cu 2molは何gか？",      ans:128,   qtype:"mol_to_g",  substance:"Cu",  molarMass:64, given:2},
+  {id:19, q:"NaOH 4molは何gか？",    ans:160,   qtype:"mol_to_g",  substance:"NaOH",molarMass:40, given:4},
+  {id:20, q:"H₂O 5molは何gか？",     ans:90,    qtype:"mol_to_g",  substance:"H₂O", molarMass:18, given:5},
+  // 21-30: mol→L
+  {id:21, q:"CO₂ 1molは標準状態の気体で何Lか？",      ans:22.4,  qtype:"mol_to_L", substance:"CO₂", given:1},
+  {id:22, q:"CO 2molは標準状態の気体で何Lか？",       ans:44.8,  qtype:"mol_to_L", substance:"CO",  given:2},
+  {id:23, q:"NH₃ 0.875molは標準状態の気体で何Lか？",  ans:19.6,  qtype:"mol_to_L", substance:"NH₃", given:0.875},
+  {id:24, q:"HCl 0.25molは標準状態の気体で何Lか？",   ans:5.6,   qtype:"mol_to_L", substance:"HCl", given:0.25},
+  {id:25, q:"CH₄ 0.75molは標準状態の気体で何Lか？",   ans:16.8,  qtype:"mol_to_L", substance:"CH₄", given:0.75},
+  {id:26, q:"H₂SO₄ 0.5molは標準状態の気体で何Lか？",  ans:11.2,  qtype:"mol_to_L", substance:"H₂SO₄", given:0.5},
+  {id:27, q:"HNO₃ 0.125molは標準状態の気体で何Lか？", ans:2.8,   qtype:"mol_to_L", substance:"HNO₃", given:0.125},
+  {id:28, q:"C₂H₆ 0.375molは何Lか？",               ans:8.4,   qtype:"mol_to_L", substance:"C₂H₆", given:0.375},
+  {id:29, q:"Ar 0.25molは何Lか？",                   ans:5.6,   qtype:"mol_to_L", substance:"Ar",  given:0.25},
+  {id:30, q:"H₂O 0.625molは標準状態の気体で何Lか？",  ans:14,    qtype:"mol_to_L", substance:"H₂O", given:0.625},
+  // 31-40: L→mol
+  {id:31, q:"CO₂ 標準状態で22.4Lの気体は何molか？",  ans:1,     qtype:"L_to_mol", substance:"CO₂", given:22.4},
+  {id:32, q:"CO 標準状態で44.8Lの気体は何molか？",   ans:2,     qtype:"L_to_mol", substance:"CO",  given:44.8},
+  {id:33, q:"NH₃ 標準状態で19.6Lの気体は何molか？",  ans:0.875, qtype:"L_to_mol", substance:"NH₃", given:19.6},
+  {id:34, q:"HCl 標準状態で5.6Lの気体は何molか？",   ans:0.25,  qtype:"L_to_mol", substance:"HCl", given:5.6},
+  {id:35, q:"CH₄ 標準状態で16.8Lの気体は何molか？",  ans:0.75,  qtype:"L_to_mol", substance:"CH₄", given:16.8},
+  {id:36, q:"H₂SO₄ 標準状態で11.2Lの気体は何molか？",ans:0.5,   qtype:"L_to_mol", substance:"H₂SO₄", given:11.2},
+  {id:37, q:"HNO₃ 標準状態で2.8Lの気体は何molか？",  ans:0.125, qtype:"L_to_mol", substance:"HNO₃", given:2.8},
+  {id:38, q:"C₂H₆ 標準状態で8.4Lの気体は何molか？",  ans:0.375, qtype:"L_to_mol", substance:"C₂H₆", given:8.4},
+  {id:39, q:"Ar 標準状態で5.6Lの気体は何molか？",     ans:0.25,  qtype:"L_to_mol", substance:"Ar",  given:5.6},
+  {id:40, q:"H₂O 14Lは何molか？",                   ans:0.625, qtype:"L_to_mol", substance:"H₂O", given:14},
+  // 41-50: mol→個数
+  {id:41, q:"CO₂ 1molの分子数は何個か？",             ans:"6.0×10²³", qtype:"mol_to_N", substance:"CO₂", given:1, numer:6.0},
+  {id:42, q:"CO 2molの分子数は何個か？",              ans:"1.2×10²⁴", qtype:"mol_to_N", substance:"CO",  given:2, numer:12.0},
+  {id:43, q:"NH₄⁺ 3molのイオン数は何個か？",          ans:"1.8×10²⁴", qtype:"mol_to_N", substance:"NH₄⁺", given:3, numer:18.0},
+  {id:44, q:"NaOH 0.25molのNa⁺のイオン数は何個か？",  ans:"1.5×10²³", qtype:"mol_to_N", substance:"NaOH", given:0.25, numer:1.5},
+  {id:45, q:"CH₄ 0.5molの分子数は何個か？",           ans:"3.0×10²³", qtype:"mol_to_N", substance:"CH₄", given:0.5, numer:3.0},
+  {id:46, q:"H₂SO₄ 0.5molのH⁺のイオン数は何個か？",  ans:"6.0×10²³", qtype:"mol_to_N", substance:"H₂SO₄", given:0.5, numer:6.0},
+  {id:47, q:"HNO₃ 3molのイオンの総数は何個か？",      ans:"3.6×10²⁴", qtype:"mol_to_N", substance:"HNO₃", given:3, numer:36.0},
+  {id:48, q:"Cu(OH)₂ 2molのOH⁻のイオン数は何個か？", ans:"2.4×10²⁴", qtype:"mol_to_N", substance:"Cu(OH)₂", given:2, numer:24.0},
+  {id:49, q:"NaOH 0.25molのイオンの総数は何個か？",   ans:"3.0×10²³", qtype:"mol_to_N", substance:"NaOH", given:0.25, numer:3.0},
+  {id:50, q:"H₂O 3molの分子数は何個か？",             ans:"1.8×10²⁴", qtype:"mol_to_N", substance:"H₂O", given:3, numer:18.0},
+  // 51-60: 個数→mol
+  {id:51, q:"CO₂の分子数が6.0×10²³個ある時何molか？", ans:1,    qtype:"N_to_mol", substance:"CO₂", numer:6.0},
+  {id:52, q:"COの分子数が12.0×10²³個ある時何molか？", ans:2,    qtype:"N_to_mol", substance:"CO",  numer:12.0},
+  {id:53, q:"NH₃の分子数が18.0×10²³個ある時何molか？",ans:3,    qtype:"N_to_mol", substance:"NH₃", numer:18.0},
+  {id:54, q:"HClの分子数が3.0×10²³個ある時何molか？", ans:0.5,  qtype:"N_to_mol", substance:"HCl", numer:3.0},
+  {id:55, q:"CH₄ 分子数が12.0×10²³個ある時何molか？",ans:2,    qtype:"N_to_mol", substance:"CH₄", numer:12.0},
+  {id:56, q:"H₂SO₄の分子数が24.0×10²³個ある時何molか？",ans:4, qtype:"N_to_mol", substance:"H₂SO₄", numer:24.0},
+  {id:57, q:"HNO₃の分子数が3.0×10²³個ある時何molか？",ans:0.5, qtype:"N_to_mol", substance:"HNO₃", numer:3.0},
+  {id:58, q:"Cuの分子数が18.0×10²³個ある時何molか？", ans:3,    qtype:"N_to_mol", substance:"Cu",  numer:18.0},
+  {id:59, q:"NaOHの分子数が12.0×10²³個ある時何molか？",ans:2,  qtype:"N_to_mol", substance:"NaOH", numer:12.0},
+  {id:60, q:"H₂O 分子数が24.0×10²³個ある時何molか？",ans:4,    qtype:"N_to_mol", substance:"H₂O", numer:24.0},
+  // 61-70: g→L（2段変換）
+  {id:61, q:"CO₂ 44gは標準状態の気体で何Lか？",    ans:22.4,  qtype:"g_to_L", substance:"CO₂", molarMass:44, given:44},
+  {id:62, q:"CO 28gは標準状態の気体で何Lか？",     ans:22.4,  qtype:"g_to_L", substance:"CO",  molarMass:28, given:28},
+  {id:63, q:"NH₃ 34gは標準状態の気体で何Lか？",    ans:44.8,  qtype:"g_to_L", substance:"NH₃", molarMass:17, given:34},
+  {id:64, q:"HCl 73gは標準状態の気体で何Lか？",    ans:44.8,  qtype:"g_to_L", substance:"HCl", molarMass:36.5, given:73},
+  {id:65, q:"CH₄ 8gは標準状態の気体で何Lか？",     ans:11.2,  qtype:"g_to_L", substance:"CH₄", molarMass:16, given:8},
+  {id:66, q:"H₂SO₄ 49gは標準状態の気体で何Lか？",  ans:11.2,  qtype:"g_to_L", substance:"H₂SO₄", molarMass:98, given:49},
+  {id:67, q:"HNO₃ 126gは標準状態の気体で何Lか？",  ans:44.8,  qtype:"g_to_L", substance:"HNO₃", molarMass:63, given:126},
+  {id:68, q:"C₂H₆ 60gは標準状態の気体で何Lか？",   ans:44.8,  qtype:"g_to_L", substance:"C₂H₆", molarMass:30, given:60},
+  {id:69, q:"SO₂ 64gは標準状態の気体で何Lか？",    ans:22.4,  qtype:"g_to_L", substance:"SO₂", molarMass:64, given:64},
+  {id:70, q:"H₂O 54gは標準状態の気体で何Lか？",    ans:67.2,  qtype:"g_to_L", substance:"H₂O", molarMass:18, given:54},
+  // 71-80: g→個数
+  {id:71, q:"CO₂ 44gの分子数はいくらか？",   ans:"6.0×10²³", qtype:"g_to_N", substance:"CO₂", molarMass:44, given:44, numer:6.0},
+  {id:72, q:"CO 28gの分子数はいくらか？",    ans:"6.0×10²³", qtype:"g_to_N", substance:"CO",  molarMass:28, given:28, numer:6.0},
+  {id:73, q:"NH₃ 34gの分子数はいくらか？",   ans:"1.2×10²⁴", qtype:"g_to_N", substance:"NH₃", molarMass:17, given:34, numer:12.0},
+  {id:74, q:"HCl 73gの分子数はいくらか？",   ans:"1.2×10²⁴", qtype:"g_to_N", substance:"HCl", molarMass:36.5, given:73, numer:12.0},
+  {id:75, q:"CH₄ 8gの分子数はいくらか？",    ans:"3.0×10²³", qtype:"g_to_N", substance:"CH₄", molarMass:16, given:8, numer:3.0},
+  {id:76, q:"H₂SO₄ 49gの分子数はいくらか？", ans:"3.0×10²³", qtype:"g_to_N", substance:"H₂SO₄", molarMass:98, given:49, numer:3.0},
+  {id:77, q:"HNO₃ 126gの分子数はいくらか？", ans:"1.2×10²⁴", qtype:"g_to_N", substance:"HNO₃", molarMass:63, given:126, numer:12.0},
+  {id:78, q:"Cu 64gの分子数はいくらか？",    ans:"6.0×10²³", qtype:"g_to_N", substance:"Cu",  molarMass:64, given:64, numer:6.0},
+  {id:79, q:"NaOH 40gの分子数はいくらか？",  ans:"6.0×10²³", qtype:"g_to_N", substance:"NaOH",molarMass:40, given:40, numer:6.0},
+  {id:80, q:"H₂O 54gの分子数はいくらか？",   ans:"1.8×10²⁴", qtype:"g_to_N", substance:"H₂O", molarMass:18, given:54, numer:18.0},
+  // 81-90: 個数→L
+  {id:81, q:"CO₂の分子数が6.0×10²³個ある時、標準状態の気体で何Lか？",   ans:22.4, qtype:"N_to_L", substance:"CO₂", numer:6.0},
+  {id:82, q:"COの分子数が12.0×10²³個ある時、標準状態の気体で何Lか？",   ans:44.8, qtype:"N_to_L", substance:"CO",  numer:12.0},
+  {id:83, q:"NH₃の分子数が18.0×10²³個ある時、標準状態の気体で何Lか？",  ans:67.2, qtype:"N_to_L", substance:"NH₃", numer:18.0},
+  {id:84, q:"HClの分子数が3.0×10²³個ある時、標準状態の気体で何Lか？",   ans:11.2, qtype:"N_to_L", substance:"HCl", numer:3.0},
+  {id:85, q:"CH₄ 分子数が12.0×10²³個ある時、標準状態の気体で何Lか？",   ans:44.8, qtype:"N_to_L", substance:"CH₄", numer:12.0},
+  {id:86, q:"H₂SO₄の分子数が24.0×10²³個ある時、標準状態の気体で何Lか？",ans:89.6, qtype:"N_to_L", substance:"H₂SO₄", numer:24.0},
+  {id:87, q:"HNO₃の分子数が3.0×10²³個ある時、標準状態の気体で何Lか？",  ans:11.2, qtype:"N_to_L", substance:"HNO₃", numer:3.0},
+  {id:88, q:"SO₂の分子数が18.0×10²³個ある時、標準状態の気体で何Lか？",  ans:67.2, qtype:"N_to_L", substance:"SO₂", numer:18.0},
+  {id:89, q:"Heの分子数が12.0×10²³個ある時、標準状態の気体で何Lか？",   ans:44.8, qtype:"N_to_L", substance:"He",  numer:12.0},
+  {id:90, q:"H₂O 分子数が24.0×10²³個ある時、標準状態の気体で何Lか？",   ans:89.6, qtype:"N_to_L", substance:"H₂O", numer:24.0},
+  // 91-100: L→g
+  {id:91,  q:"CO₂ 22.4Lの標準状態の気体は何gか？",   ans:44,   qtype:"L_to_g", substance:"CO₂", molarMass:44, given:22.4},
+  {id:92,  q:"CO 67.2Lの標準状態の気体は何gか？",    ans:84,   qtype:"L_to_g", substance:"CO",  molarMass:28, given:67.2},
+  {id:93,  q:"NH₃ 44.8Lの標準状態の気体は何gか？",   ans:34,   qtype:"L_to_g", substance:"NH₃", molarMass:17, given:44.8},
+  {id:94,  q:"HCl 22.4Lの標準状態の気体は何gか？",   ans:36.5, qtype:"L_to_g", substance:"HCl", molarMass:36.5, given:22.4},
+  {id:95,  q:"CH₄ 5.6Lの標準状態の気体は何gか？",    ans:4,    qtype:"L_to_g", substance:"CH₄", molarMass:16, given:5.6},
+  {id:96,  q:"H₂SO₄ 44.8Lの標準状態の気体は何gか？", ans:196,  qtype:"L_to_g", substance:"H₂SO₄", molarMass:98, given:44.8},
+  {id:97,  q:"HNO₃ 67.2Lの標準状態の気体は何gか？",  ans:189,  qtype:"L_to_g", substance:"HNO₃", molarMass:63, given:67.2},
+  {id:98,  q:"C₂H₆ 5.6Lの標準状態の気体は何gか？",   ans:7.5,  qtype:"L_to_g", substance:"C₂H₆", molarMass:30, given:5.6},
+  {id:99,  q:"SO₂ 11.2Lの標準状態の気体は何gか？",   ans:32,   qtype:"L_to_g", substance:"SO₂", molarMass:64, given:11.2},
+  {id:100, q:"H₂O 44.8Lの標準状態の気体は何gか？",   ans:36,   qtype:"L_to_g", substance:"H₂O", molarMass:18, given:44.8},
+  // 101-110: 個数→g
+  {id:101, q:"CO₂の分子数が6.0×10²³個ある時何gか？",    ans:44,  qtype:"N_to_g", substance:"CO₂", molarMass:44, numer:6.0},
+  {id:102, q:"COの分子数が12.0×10²³個ある時何gか？",    ans:56,  qtype:"N_to_g", substance:"CO",  molarMass:28, numer:12.0},
+  {id:103, q:"NH₃の分子数が18.0×10²³個ある時何gか？",   ans:51,  qtype:"N_to_g", substance:"NH₃", molarMass:17, numer:18.0},
+  {id:104, q:"HClの分子数が12.0×10²³個ある時何gか？",   ans:73,  qtype:"N_to_g", substance:"HCl", molarMass:36.5, numer:12.0},
+  {id:105, q:"CH₄ 分子数が12.0×10²³個ある時何gか？",    ans:32,  qtype:"N_to_g", substance:"CH₄", molarMass:16, numer:12.0},
+  {id:106, q:"H₂SO₄の分子数が24.0×10²³個ある時何gか？", ans:392, qtype:"N_to_g", substance:"H₂SO₄", molarMass:98, numer:24.0},
+  {id:107, q:"HNO₃の分子数が3.0×10²³個ある時何gか？",   ans:31.5,qtype:"N_to_g", substance:"HNO₃", molarMass:63, numer:3.0},
+  {id:108, q:"Cuの分子数が18.0×10²³個ある時何gか？",    ans:192, qtype:"N_to_g", substance:"Cu",  molarMass:64, numer:18.0},
+  {id:109, q:"NaOHの分子数が12.0×10²³個ある時何gか？",  ans:80,  qtype:"N_to_g", substance:"NaOH",molarMass:40, numer:12.0},
+  {id:110, q:"H₂O 分子数が24.0×10²³個ある時何gか？",    ans:72,  qtype:"N_to_g", substance:"H₂O", molarMass:18, numer:24.0},
+  // 111-120: L→個数
+  {id:111, q:"CO₂の標準状態で22.4Lの気体の分子数はいくらか？",    ans:"6.0×10²³", qtype:"L_to_N", substance:"CO₂", given:22.4, numer:6.0},
+  {id:112, q:"COの標準状態で67.2Lの気体の分子数はいくらか？",     ans:"1.8×10²⁴", qtype:"L_to_N", substance:"CO",  given:67.2, numer:18.0},
+  {id:113, q:"NH₃の標準状態で44.8Lの気体の分子数はいくらか？",    ans:"1.2×10²⁴", qtype:"L_to_N", substance:"NH₃", given:44.8, numer:12.0},
+  {id:114, q:"HClの標準状態で11.2Lの気体の分子数はいくらか？",    ans:"3.0×10²³", qtype:"L_to_N", substance:"HCl", given:11.2, numer:3.0},
+  {id:115, q:"CH₄の標準状態で5.6Lの気体の分子数はいくらか？",     ans:"1.5×10²³", qtype:"L_to_N", substance:"CH₄", given:5.6, numer:1.5},
+  {id:116, q:"H₂SO₄の標準状態で44.8Lの気体の分子数はいくらか？",  ans:"1.2×10²⁴", qtype:"L_to_N", substance:"H₂SO₄", given:44.8, numer:12.0},
+  {id:117, q:"HNO₃の標準状態で67.2Lの気体の分子数はいくらか？",   ans:"1.8×10²⁴", qtype:"L_to_N", substance:"HNO₃", given:67.2, numer:18.0},
+  {id:118, q:"SO₂の標準状態で5.6Lの気体の分子数はいくらか？",     ans:"1.5×10²³", qtype:"L_to_N", substance:"SO₂", given:5.6, numer:1.5},
+  {id:119, q:"Arの標準状態で11.2Lの気体の分子数はいくらか？",     ans:"3.0×10²³", qtype:"L_to_N", substance:"Ar",  given:11.2, numer:3.0},
+  {id:120, q:"H₂Oの標準状態で44.8Lの気体の分子数はいくらか？",    ans:"1.2×10²⁴", qtype:"L_to_N", substance:"H₂O", given:44.8, numer:12.0},
 ];
 
 function getMolQuestions(mode) {
@@ -2013,37 +2040,38 @@ function getMolQuestions(mode) {
 }
 
 
-// 謖・焚陦ｨ險倥ｒ隕九ｄ縺吶￥陦ｨ遉ｺ縺吶ｋ繧ｳ繝ｳ繝昴・繝阪Φ繝・function MolChoice({ val }) {
-  if (typeof val !== "string" || !val.includes("ﾃ・0")) return <span>{val}</span>;
-  // "1.8ﾃ・0ﾂｲ竅ｴ" 竊・"1.8ﾃ・0" + sup("24")
-  const match = val.match(/^(.+)ﾃ・0(.+)$/);
+// 指数表記を見やすく表示するコンポーネント
+function MolChoice({ val }) {
+  if (typeof val !== "string" || !val.includes("×10")) return <span>{val}</span>;
+  // "1.8×10²⁴" → "1.8×10" + sup("24")
+  const match = val.match(/^(.+)×10(.+)$/);
   if (!match) return <span>{val}</span>;
   const [, coef, exp] = match;
-  // ﾂｲﾂｳ竊・3, ﾂｲ竅ｴ竊・4 縺ｪ縺ｩ縺ｫ螟画鋤
-  const expNum = exp.replace(/ﾂｲ/g,"2").replace(/ﾂｳ/g,"3").replace(/竅ｴ/g,"4").replace(/竅ｵ/g,"5");
-  return <span>{coef}ﾃ・0<sup style={{fontSize:".7em"}}>{expNum}</sup></span>;
+  // ²³→23, ²⁴→24 などに変換
+  const expNum = exp.replace(/²/g,"2").replace(/³/g,"3").replace(/⁴/g,"4").replace(/⁵/g,"5");
+  return <span>{coef}×10<sup style={{fontSize:".7em"}}>{expNum}</sup></span>;
 }
 
-// 笏笏 MolSetupScreen 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── MolSetupScreen ─────────────────────────────────────────
 function MolSetupScreen({ onStart, onBack }) {
   const [mode, setMode] = useState("intro");
   const modes = [
-    { value:"intro", label:"験 蜈･髢",   desc:"蝠城｡・縲・0・・竊芭ol・・,      color:"#22c55e", light:"#dcfce7" },
-    { value:"basic", label:"祷 蝓ｺ遉・,   desc:"蝠城｡・1縲・0・・竊芭ol繝ｻ蛟区焚・・, color:"#3b82f6", light:"#dbeafe" },
-    { value:"adv",   label:"櫨 蠢懃畑",   desc:"蝠城｡・1縲・20・・谿ｵ螟画鋤・・,    color:"#ef4444", light:"#fee2e2" },
-    { value:"random",label:"軸 繝ｩ繝ｳ繝繝",desc:"蜈ｨ120蝠上°繧峨Λ繝ｳ繝繝10蝠・,   color:"#8b5cf6", light:"#ede9fe" },
+    { value:"intro", label:"🌱 入門",   desc:"問題1〜20（g↔mol）",      color:"#22c55e", light:"#dcfce7" },
+    { value:"basic", label:"📘 基礎",   desc:"問題21〜60（L↔mol・個数）", color:"#3b82f6", light:"#dbeafe" },
+    { value:"adv",   label:"🔥 応用",   desc:"問題61〜120（2段変換）",    color:"#ef4444", light:"#fee2e2" },
+    { value:"random",label:"🎲 ランダム",desc:"全120問からランダム10問",   color:"#8b5cf6", light:"#ede9fe" },
   ];
   return (
     <div className="card">
       <div className="fb2 mb13">
-        <button className="btn btn-s btn-sm" onClick={onBack}>竊・謌ｻ繧・/button>
-        <span style={{fontWeight:700}}>ｧｮ mol險育ｮ励ラ繝ｪ繝ｫ</span><span/>
+        <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
+        <span style={{fontWeight:700}}>🧮 mol計算ドリル</span><span/>
       </div>
       <div style={{background:"#f8fafc",borderRadius:9,padding:"10px 12px",marginBottom:14,fontSize:".75rem",color:"#475569",lineHeight:1.7}}>
-        <div style={{fontWeight:700,marginBottom:3}}>東 蜴溷ｭ宣㍼繝ｻ螳壽焚</div>
+        <div style={{fontWeight:700,marginBottom:3}}>📌 原子量・定数</div>
         <div style={{fontFamily:"monospace",fontSize:".72rem"}}>{MOL_CONST_TEXT}</div>
       </div>
-      <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>繝｢繝ｼ繝峨ｒ驕ｸ謚・/div>
+      <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>モードを選択</div>
       <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:16}}>
         {modes.map(m=>{
           const active = mode===m.value;
@@ -2055,42 +2083,44 @@ function MolSetupScreen({ onStart, onBack }) {
                 <div style={{fontWeight:700,fontSize:".95rem",color:active?m.color:"var(--text)"}}>{m.label.split(" ").slice(1).join(" ")}</div>
                 <div style={{fontSize:".75rem",color:"var(--muted)"}}>{m.desc}</div>
               </div>
-              {active&&<span style={{marginLeft:"auto",color:m.color,fontWeight:700}}>笨・/span>}
+              {active&&<span style={{marginLeft:"auto",color:m.color,fontWeight:700}}>✓</span>}
             </div>
           );
         })}
       </div>
       <button className="btn btn-blk" style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",color:"#fff",fontWeight:700}} onClick={()=>onStart(mode,"solo")}>
-        噫 繧ｹ繧ｿ繝ｼ繝茨ｼ・      </button>
+        🚀 スタート！
+      </button>
     </div>
   );
 }
 
 
 // ============================================================
-// 繧ｿ繧､繝繧｢繧ｿ繝・け繝｢繝ｼ繝会ｼ亥・邏/繧､繧ｪ繝ｳ/蛹門ｭｦ蠑上ｒ10蝠上・譛騾溘〒・・// ============================================================
+// タイムアタックモード（元素/イオン/化学式を10問・最速で）
+// ============================================================
 function TimeAttackSetupScreen({ onStart, onBack }) {
   const [quizMode, setQMode] = useState("element");
   const [maxNum, setMaxNum] = useState(20);
   const [subLevel, setSubLevel] = useState("junior");
 
   const modes = [
-    { value:"element", label:"笞幢ｸ・蜈・ｴ險伜捷", color:"var(--primary)", light:"var(--pl)" },
-    { value:"ion",     label:"笞｡ 繧､繧ｪ繝ｳ",   color:"var(--ion)",     light:"var(--ion-l)" },
-    { value:"formula", label:"ｧｬ 蛹門ｭｦ蠑・,   color:"var(--form)",    light:"var(--form-l)" },
+    { value:"element", label:"⚛️ 元素記号", color:"var(--primary)", light:"var(--pl)" },
+    { value:"ion",     label:"⚡ イオン",   color:"var(--ion)",     light:"var(--ion-l)" },
+    { value:"formula", label:"🧬 化学式",   color:"var(--form)",    light:"var(--form-l)" },
   ];
 
   return (
     <div className="card">
       <div className="fb2 mb13">
-        <button className="btn btn-s btn-sm" onClick={onBack}>竊・謌ｻ繧・/button>
-        <span style={{fontWeight:700}}>竢ｱ 繧ｿ繧､繝繧｢繧ｿ繝・け</span><span/>
+        <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
+        <span style={{fontWeight:700}}>⏱ タイムアタック</span><span/>
       </div>
       <div style={{textAlign:"center",marginBottom:14}}>
-        <span className="ta-badge">10蝠上ｒ譛騾溘け繝ｪ繧｢・・/span>
-        <p className="muted" style={{marginTop:6,fontSize:".82rem"}}>蜈ｨ蝠乗ｭ｣隗｣縺吶ｋ縺ｾ縺ｧ邨ゅｏ繧峨↑縺・る溘＆繧堤ｫｶ縺翫≧・・/p>
+        <span className="ta-badge">10問を最速クリア！</span>
+        <p className="muted" style={{marginTop:6,fontSize:".82rem"}}>全問正解するまで終わらない。速さを競おう！</p>
       </div>
-      <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>繧ｯ繧､繧ｺ縺ｮ遞ｮ鬘・/div>
+      <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>クイズの種類</div>
       <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:14}}>
         {modes.map(m=>{
           const active=quizMode===m.value;
@@ -2099,22 +2129,22 @@ function TimeAttackSetupScreen({ onStart, onBack }) {
               style={{border:`2px solid ${active?m.color:"var(--border)"}`,borderRadius:9,padding:"10px 14px",cursor:"pointer",background:active?m.light:"#fff",display:"flex",alignItems:"center",gap:10,transition:"all .12s"}}>
               <span style={{fontSize:"1.2rem"}}>{m.label.split(" ")[0]}</span>
               <span style={{fontWeight:700,color:active?m.color:"var(--text)"}}>{m.label.split(" ").slice(1).join(" ")}</span>
-              {active&&<span style={{marginLeft:"auto",color:m.color,fontWeight:700}}>笨・/span>}
+              {active&&<span style={{marginLeft:"auto",color:m.color,fontWeight:700}}>✓</span>}
             </div>
           );
         })}
       </div>
       {quizMode==="element"&&(
         <div style={{marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:6}}>蜃ｺ鬘檎ｯ・峇</div>
+          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:6}}>出題範囲</div>
           <RangeSelector maxNum={maxNum} onChange={setMaxNum}/>
         </div>
       )}
       {(quizMode==="ion"||quizMode==="formula")&&(
         <div style={{marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:6}}>繝ｬ繝吶Ν</div>
+          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:6}}>レベル</div>
           <div className="g2" style={{margin:0}}>
-            {[["junior","痘 荳ｭ蟄ｦ"],["senior","燈 鬮俶｡"]].map(([v,l])=>(
+            {[["junior","📗 中学"],["senior","📕 高校"]].map(([v,l])=>(
               <div key={v} onClick={()=>setSubLevel(v)}
                 style={{border:`2px solid ${subLevel===v?"var(--primary)":"var(--border)"}`,borderRadius:9,padding:"9px 10px",cursor:"pointer",textAlign:"center",background:subLevel===v?"var(--pl)":"#fff",fontWeight:700,fontSize:".88rem",transition:"all .12s"}}>
                 {l}
@@ -2125,7 +2155,8 @@ function TimeAttackSetupScreen({ onStart, onBack }) {
       )}
       <button className="btn btn-blk" style={{background:"linear-gradient(135deg,#f59e0b,#ef4444)",color:"#fff",fontWeight:700}}
         onClick={()=>onStart({quizMode,maxNum,subLevel})}>
-        竢ｱ 繧ｹ繧ｿ繝ｼ繝茨ｼ・      </button>
+        ⏱ スタート！
+      </button>
     </div>
   );
 }
@@ -2181,13 +2212,13 @@ function TimeAttackQuizScreen({ settings, onFinish }) {
       <div className="card">
         <div className="qhd">
           <div style={{fontFamily:"Space Mono,monospace",fontSize:"1.3rem",fontWeight:700,color:"#f59e0b"}}>
-            竢ｱ {mins}:{String(secs).padStart(2,"0")}
+            ⏱ {mins}:{String(secs).padStart(2,"0")}
           </div>
           <div style={{display:"flex",gap:6,alignItems:"center"}}>
             <span className="ta-badge">{correct}/10</span>
             <span className="muted" style={{fontSize:".78rem"}}>#{answeredRef.current+1}</span>
           </div>
-          <div className="scd">笨怒correct}</div>
+          <div className="scd">✓{correct}</div>
         </div>
         <div style={{marginBottom:10}}>
           <div style={{height:8,background:"var(--border)",borderRadius:4,overflow:"hidden"}}>
@@ -2227,27 +2258,27 @@ function TimeAttackResultScreen({ result, nickname, settings, onHome, onRetry })
       )}
       <div className="card">
         <div style={{textAlign:"center",padding:"14px 0"}}>
-          <div style={{fontSize:"1.7rem",marginBottom:4}}>潤 繧ｯ繝ｪ繧｢・・/div>
+          <div style={{fontSize:"1.7rem",marginBottom:4}}>🏁 クリア！</div>
           <div style={{fontSize:"3rem",fontWeight:900,color:"#f59e0b",fontFamily:"Space Mono,monospace"}}>{mins}:{String(secs).padStart(2,"0")}</div>
-          <div style={{color:"var(--muted)",fontSize:".82rem"}}>繧ｯ繝ｪ繧｢繧ｿ繧､繝</div>
-          {rankSaved&&<div style={{marginTop:6,fontSize:".82rem",color:"var(--success)",fontWeight:700}}>笨・繝ｩ繝ｳ繧ｭ繝ｳ繧ｰ縺ｫ逋ｻ骭ｲ縺励∪縺励◆・・/div>}
+          <div style={{color:"var(--muted)",fontSize:".82rem"}}>クリアタイム</div>
+          {rankSaved&&<div style={{marginTop:6,fontSize:".82rem",color:"var(--success)",fontWeight:700}}>✅ ランキングに登録しました！</div>}
         </div>
         <div className="s3">
-          <div className="sb"><div className="sv" style={{color:"var(--primary)"}}>{result.score}</div><div className="sk">繧ｹ繧ｳ繧｢</div></div>
-          <div className="sb"><div className="sv">{result.totalAnswered}</div><div className="sk">隗｣遲疲焚</div></div>
-          <div className="sb"><div className="sv">{acc}%</div><div className="sk">豁｣遲皮紫</div></div>
+          <div className="sb"><div className="sv" style={{color:"var(--primary)"}}>{result.score}</div><div className="sk">スコア</div></div>
+          <div className="sb"><div className="sv">{result.totalAnswered}</div><div className="sk">解答数</div></div>
+          <div className="sb"><div className="sv">{acc}%</div><div className="sk">正答率</div></div>
         </div>
-        <p className="muted tc" style={{fontSize:".78rem"}}>10蝠乗ｭ｣隗｣縺吶ｋ縺ｾ縺ｧ縺ｮ邱剰ｧ｣遲疲焚 {result.totalAnswered}蝠・/p>
+        <p className="muted tc" style={{fontSize:".78rem"}}>10問正解するまでの総解答数 {result.totalAnswered}問</p>
       </div>
       <div className="gap8">
-        <button className="btn" style={{flex:1,background:"linear-gradient(135deg,#f59e0b,#ef4444)",color:"#fff",fontWeight:700}} onClick={onRetry}>煤 繧ゅ≧荳蠎ｦ</button>
-        <button className="btn btn-s" style={{flex:1}} onClick={onHome}>匠 繝帙・繝</button>
+        <button className="btn" style={{flex:1,background:"linear-gradient(135deg,#f59e0b,#ef4444)",color:"#fff",fontWeight:700}} onClick={onRetry}>🔁 もう一度</button>
+        <button className="btn btn-s" style={{flex:1}} onClick={onHome}>🏠 ホーム</button>
       </div>
     </div>
   );
 }
 
-// 笏笏 MolBattleLobby 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── MolBattleLobby ──────────────────────────────────────────
 function MolBattleLobby({ nickname, onBack }) {
   const [phase, setPhase] = useState("menu");
   const [molMode, setMolMode] = useState("intro");
@@ -2275,16 +2306,16 @@ function MolBattleLobby({ nickname, onBack }) {
   const joinRoom = async () => {
     const code = joinCode.toUpperCase().trim();
     const res = await sGet(`mol_room:${code}`, true);
-    if (!res) { alert("繝ｫ繝ｼ繝縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ"); return; }
+    if (!res) { alert("ルームが見つかりません"); return; }
     try {
       const room = JSON.parse(res.value);
-      if (room.status !== "waiting") { alert("縺吶〒縺ｫ蟇ｾ謌ｦ縺悟ｧ九∪縺｣縺ｦ縺・∪縺・); return; }
+      if (room.status !== "waiting") { alert("すでに対戦が始まっています"); return; }
       if (!room.players.find(p=>p.name===nickname))
         room.players.push({name:nickname, status:"waiting", score:0, miss:0});
       await sSet(`mol_room:${code}`, JSON.stringify(room), true);
       setRoomCode(code); setRoomData(room); setMolMode(room.molMode); setIsHost(false); setPhase("waiting");
       startPoll(code);
-    } catch { alert("繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆"); }
+    } catch { alert("エラーが発生しました"); }
   };
 
   const startPoll = (code) => {
@@ -2338,19 +2369,19 @@ function MolBattleLobby({ nickname, onBack }) {
 
   useEffect(()=>()=>clearInterval(pollRef.current),[]);
 
-  const modeLabels = {intro:"蜈･髢",basic:"蝓ｺ遉・,adv:"蠢懃畑",random:"繝ｩ繝ｳ繝繝"};
+  const modeLabels = {intro:"入門",basic:"基礎",adv:"応用",random:"ランダム"};
 
   if (phase==="quiz") return <MolQuizScreen mode={molMode} onFinish={handleQuizFinish}/>;
 
   if (phase==="result") return (
     <div>
       <div className="card">
-        <div style={{fontWeight:700,marginBottom:10}}>笞費ｸ・mol蟇ｾ謌ｦ邨先棡</div>
+        <div style={{fontWeight:700,marginBottom:10}}>⚔️ mol対戦結果</div>
         {battleResult.map((p,i)=>(
           <div key={i} className="btr" style={p.isMe?{background:"#ede9fe"}:{}}>
-            <span style={{fontSize:"1.25rem"}}>{i===0?"･・:i===1?"･・:i===2?"･・:`${i+1}菴港}</span>
-            <span style={{flex:1,fontWeight:700}}>{p.name}{p.isMe&&<span className="bdg by" style={{marginLeft:5}}>縺ゅ↑縺・/span>}</span>
-            <span style={{fontFamily:"Space Mono",fontWeight:700,color:"#6366f1"}}>{p.score}/10豁｣隗｣</span>
+            <span style={{fontSize:"1.25rem"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":`${i+1}位`}</span>
+            <span style={{flex:1,fontWeight:700}}>{p.name}{p.isMe&&<span className="bdg by" style={{marginLeft:5}}>あなた</span>}</span>
+            <span style={{fontFamily:"Space Mono",fontWeight:700,color:"#6366f1"}}>{p.score}/10正解</span>
           </div>
         ))}
       </div>
@@ -2362,38 +2393,38 @@ function MolBattleLobby({ nickname, onBack }) {
 
   if (phase==="result_wait") {
     const w = roomData?.players.filter(p=>p.status!=="done").length||0;
-    return <div className="card tc"><p style={{fontSize:"2rem",marginBottom:10}}>竢ｳ</p>
-      <h3 style={{fontWeight:700,marginBottom:6}}>豁｣隗｣謨ｰ: {quizResult?.total - quizResult?.miss}蝠・/h3>
-      <p className="muted">莉悶・繝励Ξ繧､繝､繝ｼ繧貞ｾ・▲縺ｦ縺・∪縺・.. ({w}莠ｺ)</p></div>;
+    return <div className="card tc"><p style={{fontSize:"2rem",marginBottom:10}}>⏳</p>
+      <h3 style={{fontWeight:700,marginBottom:6}}>正解数: {quizResult?.total - quizResult?.miss}問</h3>
+      <p className="muted">他のプレイヤーを待っています... ({w}人)</p></div>;
   }
 
   if (phase==="waiting") return (
     <div>
       <div className="card">
         <div className="fb2 mb13">
-          <button className="btn btn-s btn-sm" onClick={()=>{clearInterval(pollRef.current);setPhase("menu");}}>竊・謌ｻ繧・/button>
-          <span style={{fontWeight:700}}>{isHost?"繝ｫ繝ｼ繝菴懈・":"蜿ょ刈荳ｭ"}</span><span/>
+          <button className="btn btn-s btn-sm" onClick={()=>{clearInterval(pollRef.current);setPhase("menu");}}>← 戻る</button>
+          <span style={{fontWeight:700}}>{isHost?"ルーム作成":"参加中"}</span><span/>
         </div>
-        <p className="muted tc mb8">繝ｫ繝ｼ繝繧ｳ繝ｼ繝峨ｒ蜈ｱ譛峨＠繧医≧</p>
+        <p className="muted tc mb8">ルームコードを共有しよう</p>
         <div className="rc">{roomCode}</div>
         <p className="muted tc" style={{fontSize:".75rem",marginBottom:13}}>
-          mol險育ｮ・{modeLabels[molMode]}) ・・縺薙・繧ｳ繝ｼ繝峨ｒ蜿矩＃縺ｫ莨昴∴縺ｦ縺ｭ
+          mol計算({modeLabels[molMode]}) ｜ このコードを友達に伝えてね
         </p>
-        <h4 style={{fontWeight:700,marginBottom:6}}>蜿ょ刈閠・({roomData?.players?.length||0}莠ｺ)</h4>
+        <h4 style={{fontWeight:700,marginBottom:6}}>参加者 ({roomData?.players?.length||0}人)</h4>
         <ul className="rlist">
           {roomData?.players?.map((p,i)=>(
             <li key={i} className="pli">
               <span className="pldot"/>
               <span style={{flex:1,fontWeight:700}}>{p.name}</span>
-              {p.name===roomData.host&&<span className="bdg bh">繝帙せ繝・/span>}
-              {p.name===nickname&&<span className="bdg by">縺ゅ↑縺・/span>}
+              {p.name===roomData.host&&<span className="bdg bh">ホスト</span>}
+              {p.name===nickname&&<span className="bdg by">あなた</span>}
             </li>
           ))}
         </ul>
-        {!isHost&&<p className="muted tc" style={{marginTop:10}}>繝帙せ繝医′繧ｲ繝ｼ繝繧帝幕蟋九☆繧九∪縺ｧ縺雁ｾ・■縺上□縺輔＞</p>}
+        {!isHost&&<p className="muted tc" style={{marginTop:10}}>ホストがゲームを開始するまでお待ちください</p>}
       </div>
       {isHost&&<button className="btn btn-blk" style={{background:"linear-gradient(135deg,#f59e0b,#ef4444)",color:"#fff",fontWeight:700}} onClick={startGame}>
-        噫 繧ｲ繝ｼ繝髢句ｧ具ｼ・({roomData?.players?.length||0}莠ｺ)
+        🚀 ゲーム開始！ ({roomData?.players?.length||0}人)
       </button>}
     </div>
   );
@@ -2407,17 +2438,17 @@ function MolBattleLobby({ nickname, onBack }) {
   if (phase==="join") return (
     <div className="card">
       <div className="fb2 mb13">
-        <button className="btn btn-s btn-sm" onClick={()=>setPhase("menu")}>竊・謌ｻ繧・/button>
-        <span style={{fontWeight:700}}>繝ｫ繝ｼ繝縺ｫ蜿ょ刈</span><span/>
+        <button className="btn btn-s btn-sm" onClick={()=>setPhase("menu")}>← 戻る</button>
+        <span style={{fontWeight:700}}>ルームに参加</span><span/>
       </div>
       <div className="ig">
-        <label>繝ｫ繝ｼ繝繧ｳ繝ｼ繝峨ｒ蜈･蜉・/label>
+        <label>ルームコードを入力</label>
         <input className="inp" value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())}
-          placeholder="萓・ AB12" maxLength={4}
+          placeholder="例: AB12" maxLength={4}
           style={{fontFamily:"Space Mono",fontSize:"1.4rem",letterSpacing:6,textAlign:"center"}}/>
       </div>
       <button className="btn btn-blk" style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",color:"#fff",fontWeight:700}}
-        onClick={joinRoom} disabled={joinCode.length<4}>蜿ょ刈縺吶ｋ</button>
+        onClick={joinRoom} disabled={joinCode.length<4}>参加する</button>
     </div>
   );
 
@@ -2426,16 +2457,16 @@ function MolBattleLobby({ nickname, onBack }) {
     <div>
       <div className="card">
         <div className="fb2 mb13">
-          <button className="btn btn-s btn-sm" onClick={onBack}>竊・謌ｻ繧・/button>
-          <span style={{fontWeight:700}}>笞費ｸ・mol蟇ｾ謌ｦ繝｢繝ｼ繝・/span><span/>
+          <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
+          <span style={{fontWeight:700}}>⚔️ mol対戦モード</span><span/>
         </div>
-        <p className="muted tc mb13">蜿矩＃縺ｨ繝ｫ繝ｼ繝繧ｳ繝ｼ繝峨〒蜷梧凾蟇ｾ謌ｦ・・br/>蜷後§蝠城｡後ｒ隗｣縺・※豁｣隗｣謨ｰ繧堤ｫｶ縺翫≧</p>
+        <p className="muted tc mb13">友達とルームコードで同時対戦！<br/>同じ問題を解いて正解数を競おう</p>
         <div className="g2">
           <div className="sc" onClick={()=>setPhase("create")} style={{borderColor:"#6366f1"}}>
-            <div className="ic">匠</div><div className="nm">繝ｫ繝ｼ繝繧剃ｽ懊ｋ</div>
+            <div className="ic">🏠</div><div className="nm">ルームを作る</div>
           </div>
           <div className="sc" onClick={()=>setPhase("join")} style={{borderColor:"#6366f1"}}>
-            <div className="ic">坎</div><div className="nm">繝ｫ繝ｼ繝縺ｫ蜈･繧・/div>
+            <div className="ic">🚪</div><div className="nm">ルームに入る</div>
           </div>
         </div>
       </div>
@@ -2443,7 +2474,7 @@ function MolBattleLobby({ nickname, onBack }) {
   );
 }
 
-// 笏笏 MolQuizScreen 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── MolQuizScreen ──────────────────────────────────────────
 function MolQuizScreen({ mode, onFinish }) {
   const [questions] = useState(()=>getMolQuestions(mode));
   const [qIdx, setQIdx] = useState(0);
@@ -2464,38 +2495,42 @@ function MolQuizScreen({ mode, onFinish }) {
   const q = questions[qIdx];
   const hints = getMolHints(q);
 
-  // 驕ｸ謚櫁い逕滓・
+  // 選択肢生成
   const [choices] = useState(()=>{
-    // 豁｣隗｣縺ｮ譛牙柑謨ｰ蟄玲｡∵焚繧定ｪｿ縺ｹ縺ｦ縲√ム繝溘・繧ょ酔縺俶｡∵焚縺ｫ繝輔か繝ｼ繝槭ャ繝医☆繧・    const fmtNum = (val, ansStr) => {
+    // 正解の有効数字桁数を調べて、ダミーも同じ桁数にフォーマットする
+    const fmtNum = (val, ansStr) => {
       const s = String(ansStr);
-      // 蟆乗焚轤ｹ莉･荳九・譯∵焚繧呈ｭ｣隗｣縺九ｉ蜿門ｾ・      const dotIdx = s.indexOf(".");
+      // 小数点以下の桁数を正解から取得
+      const dotIdx = s.indexOf(".");
       const decimals = dotIdx >= 0 ? s.length - dotIdx - 1 : 0;
       const rounded = Math.round(val * Math.pow(10, decimals)) / Math.pow(10, decimals);
       return decimals > 0 ? rounded.toFixed(decimals) : String(rounded);
     };
 
     return questions.map(qq=>{
-      const isExp = typeof qq.ans === "string"; // 謖・焚陦ｨ險倥・遲斐∴
+      const isExp = typeof qq.ans === "string"; // 指数表記の答え
       if (isExp) {
         const numer = qq.numer || 6.0;
         const candidates = [];
         const c23 = [numer*2, numer/2, numer*3, numer*0.5].filter(x=>x>0&&x!==numer);
         c23.forEach(n=>{
-          if(n>=10) candidates.push(`${(n/10).toFixed(1).replace(/\.0$/,"")}ﾃ・0ﾂｲ竅ｴ`);
-          else candidates.push(`${n.toFixed(1).replace(/\.0$/,"")}ﾃ・0ﾂｲﾂｳ`);
+          if(n>=10) candidates.push(`${(n/10).toFixed(1).replace(/\.0$/,"")}×10²⁴`);
+          else candidates.push(`${n.toFixed(1).replace(/\.0$/,"")}×10²³`);
         });
-        candidates.push(`${numer.toFixed(1).replace(/\.0$/,"")}ﾃ・0ﾂｲﾂｲ`);
-        candidates.push(`${numer.toFixed(1).replace(/\.0$/,"")}ﾃ・0ﾂｲ竅ｵ`);
+        candidates.push(`${numer.toFixed(1).replace(/\.0$/,"")}×10²²`);
+        candidates.push(`${numer.toFixed(1).replace(/\.0$/,"")}×10²⁵`);
         const dummies = shuffle(candidates.filter(x=>x!==qq.ans)).slice(0,3);
         return shuffle([qq.ans, ...dummies]);
       } else {
-        // 謨ｰ蛟､・壽ｭ｣隗｣縺ｨ蜷後§譛牙柑謨ｰ蟄励〒繝繝溘・繧偵ヵ繧ｩ繝ｼ繝槭ャ繝・        const dummies = genMolDummies(qq.ans, qq.qtype);
+        // 数値：正解と同じ有効数字でダミーをフォーマット
+        const dummies = genMolDummies(qq.ans, qq.qtype);
         const formatted = dummies
           .map(d => fmtNum(d, qq.ans))
           .filter(d => d !== String(qq.ans));
-        // 驥崎､・勁蜴ｻ
+        // 重複除去
         const unique = [...new Set(formatted)];
-        // 3蛟九↓雜ｳ繧翫↑縺・ｴ蜷医・蛟肴焚繝ｻ蛻・焚縺ｧ陬懷ｮ・        const multipliers = [2, 3, 4, 5, 0.25, 6, 0.1, 10];
+        // 3個に足りない場合は倍数・分数で補完
+        const multipliers = [2, 3, 4, 5, 0.25, 6, 0.1, 10];
         for (const m of multipliers) {
           if (unique.length >= 3) break;
           const extra = fmtNum(qq.ans * m, qq.ans);
@@ -2543,7 +2578,7 @@ function MolQuizScreen({ mode, onFinish }) {
     missRef.current+=1; skipRef.current+=1; setMissCount(missRef.current); setSkipCount(skipRef.current);
     setTimeLeft(t=>{ const nt=t+5; tlRef.current=nt; return nt; });
     setPenaltyAnim(true); setTimeout(()=>setPenaltyAnim(false),1500);
-    mistakesRef.current=[...mistakesRef.current,{q,yours:"繧ｹ繧ｭ繝・・"}]; setMistakes(mistakesRef.current);
+    mistakesRef.current=[...mistakesRef.current,{q,yours:"スキップ"}]; setMistakes(mistakesRef.current);
     setSelected(null); setFeedback("none"); setHintLevel(0); setShowHint(false);
     if(qIdx+1>=questions.length) finishGame();
     else setQIdx(i=>i+1);
@@ -2561,46 +2596,46 @@ function MolQuizScreen({ mode, onFinish }) {
 
   return (
     <div>
-      {/* 蜴溷ｭ宣㍼螳壽焚繝舌・ */}
+      {/* 原子量定数バー */}
       <div style={{background:"#1e293b",color:"#94a3b8",fontSize:".65rem",padding:"6px 12px",borderRadius:8,marginBottom:10,fontFamily:"monospace",lineHeight:1.6}}>
         {MOL_CONST_TEXT}
       </div>
       <div className="card">
-        {/* 繝倥ャ繝繝ｼ */}
+        {/* ヘッダー */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div style={{fontFamily:"Space Mono,monospace",fontSize:"1.3rem",fontWeight:700,color:urgent?"var(--danger)":"var(--primary)",animation:urgent?"pulse .5s infinite alternate":"none"}}>
-            竢ｱ {mins}:{String(secs).padStart(2,"0")}
+            ⏱ {mins}:{String(secs).padStart(2,"0")}
             <span style={{marginLeft:8,fontSize:".9rem"}}>
               {Array(lamps).fill(0).map((_,i)=>(
-                <span key={i} style={{color:i<litLamps?(urgent?"#ef4444":"#3b82f6"):"#cbd5e1"}}>笳・/span>
+                <span key={i} style={{color:i<litLamps?(urgent?"#ef4444":"#3b82f6"):"#cbd5e1"}}>●</span>
               ))}
             </span>
-            {penaltyAnim&&<span style={{color:"#f59e0b",marginLeft:6,fontSize:".85rem",fontWeight:700}}>+5遘・/span>}
+            {penaltyAnim&&<span style={{color:"#f59e0b",marginLeft:6,fontSize:".85rem",fontWeight:700}}>+5秒</span>}
           </div>
           <div style={{fontSize:".8rem",display:"flex",gap:8}}>
-            <span style={{color:"#ef4444",fontWeight:700}}>笨養missCount}</span>
-            <span style={{color:"#3b82f6",fontWeight:700}}>庁{hintCount}</span>
-            <span style={{color:"#f59e0b",fontWeight:700}}>竢ｭ{skipCount}</span>
+            <span style={{color:"#ef4444",fontWeight:700}}>✗{missCount}</span>
+            <span style={{color:"#3b82f6",fontWeight:700}}>💡{hintCount}</span>
+            <span style={{color:"#f59e0b",fontWeight:700}}>⏭{skipCount}</span>
           </div>
           <div style={{fontFamily:"Space Mono,monospace",fontSize:".85rem",color:"var(--muted)"}}>{qIdx+1}/10</div>
         </div>
 
         <div className={`fb fb-${feedback}`}/>
 
-        {/* 蝠城｡・*/}
+        {/* 問題 */}
         <div style={{textAlign:"center",marginBottom:16}}>
-          <div style={{fontSize:".8rem",color:"var(--muted)",marginBottom:6,fontWeight:700,letterSpacing:".5px"}}>ｧｮ mol險育ｮ怜撫鬘・/div>
+          <div style={{fontSize:".8rem",color:"var(--muted)",marginBottom:6,fontWeight:700,letterSpacing:".5px"}}>🧮 mol計算問題</div>
           <div style={{fontSize:"1.2rem",fontWeight:700,color:"var(--text)",lineHeight:1.5}}>{q.q}</div>
         </div>
 
-        {/* 繝偵Φ繝・*/}
+        {/* ヒント */}
         {showHint&&(
           <div style={{background:"#eff6ff",border:"1px solid #93c5fd",borderRadius:8,padding:"10px 12px",marginBottom:12,fontSize:".82rem",color:"#1e40af"}}>
-            {hints.slice(0,hintLevel).map((h,i)=><div key={i} style={{marginBottom:i<hintLevel-1?4:0}}>庁 {h}</div>)}
+            {hints.slice(0,hintLevel).map((h,i)=><div key={i} style={{marginBottom:i<hintLevel-1?4:0}}>💡 {h}</div>)}
           </div>
         )}
 
-        {/* 驕ｸ謚櫁い */}
+        {/* 選択肢 */}
         <div className="chs" style={{marginBottom:12}}>
           {(choices[qIdx]||[]).map((c,i)=>(
             <button key={i}
@@ -2612,21 +2647,21 @@ function MolQuizScreen({ mode, onFinish }) {
           ))}
         </div>
 
-        {/* 繝偵Φ繝医・繧ｹ繧ｭ繝・・ */}
+        {/* ヒント・スキップ */}
         <div style={{display:"flex",gap:8}}>
           <button className="btn btn-s btn-sm" style={{flex:1,color:"#3b82f6",borderColor:"#3b82f6"}}
             onClick={handleHint} disabled={hintLevel>=hints.length||selected!==null}>
-            庁 繝偵Φ繝・{hintLevel>0?`(${hintLevel}/3)`:""}</button>
+            💡 ヒント {hintLevel>0?`(${hintLevel}/3)`:""}</button>
           <button className="btn btn-s btn-sm" style={{flex:1,color:"#f59e0b",borderColor:"#f59e0b"}}
             onClick={handleSkip} disabled={selected!==null}>
-            竢ｭ 繧ｹ繧ｭ繝・・ (+5遘・</button>
+            ⏭ スキップ (+5秒)</button>
         </div>
       </div>
     </div>
   );
 }
 
-// 笏笏 MolResultScreen 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── MolResultScreen ─────────────────────────────────────────
 function MolResultScreen({ result, nickname="", onHome, onRetry }) {
   const [showMiss, setShowMiss] = useState(false);
   const [showRankModal, setShowRankModal] = useState(!!nickname);
@@ -2646,40 +2681,40 @@ function MolResultScreen({ result, nickname="", onHome, onRetry }) {
       <div className="card">
         <div style={{textAlign:"center",padding:"14px 0"}}>
           <div style={{fontSize:"1.7rem",marginBottom:4}}>
-            {acc>=90?"･・螳檎挑・・:acc>=70?"･・繧医￥縺ｧ縺阪∪縺励◆・・:acc>=50?"･・繧ゅ≧蟆代＠・・:"答 邱ｴ鄙偵＠繧医≧・・}
+            {acc>=90?"🥇 完璧！":acc>=70?"🥈 よくできました！":acc>=50?"🥉 もう少し！":"📚 練習しよう！"}
           </div>
           <div style={{fontSize:"2.5rem",fontWeight:900,color:"#6366f1",fontFamily:"Space Mono,monospace"}}>{result.score||0}</div>
-          <div style={{color:"var(--muted)",fontSize:".82rem"}}>轤ｹ</div>
-          {rankSaved&&<div style={{marginTop:6,fontSize:".82rem",color:"var(--success)",fontWeight:700}}>笨・繝ｩ繝ｳ繧ｭ繝ｳ繧ｰ縺ｫ逋ｻ骭ｲ縺励∪縺励◆・・/div>}
+          <div style={{color:"var(--muted)",fontSize:".82rem"}}>点</div>
+          {rankSaved&&<div style={{marginTop:6,fontSize:".82rem",color:"var(--success)",fontWeight:700}}>✅ ランキングに登録しました！</div>}
         </div>
         <div className="s3">
-          <div className="sb"><div className="sv" style={{color:"var(--success)"}}>{correct}</div><div className="sk">豁｣隗｣</div></div>
-          <div className="sb"><div className="sv">{acc}%</div><div className="sk">豁｣遲皮紫</div></div>
-          <div className="sb"><div className="sv">{mins}:{String(secs).padStart(2,"0")}</div><div className="sk">繧ｿ繧､繝</div></div>
+          <div className="sb"><div className="sv" style={{color:"var(--success)"}}>{correct}</div><div className="sk">正解</div></div>
+          <div className="sb"><div className="sv">{acc}%</div><div className="sk">正答率</div></div>
+          <div className="sb"><div className="sv">{mins}:{String(secs).padStart(2,"0")}</div><div className="sk">タイム</div></div>
         </div>
         <div style={{display:"flex",gap:12,justifyContent:"center",fontSize:".85rem",marginTop:4}}>
-          <span style={{color:"#3b82f6",fontWeight:700}}>庁 繝偵Φ繝・{result.hints}蝗・/span>
-          <span style={{color:"#f59e0b",fontWeight:700}}>竢ｭ 繧ｹ繧ｭ繝・・ {result.skips}蝗・/span>
+          <span style={{color:"#3b82f6",fontWeight:700}}>💡 ヒント {result.hints}回</span>
+          <span style={{color:"#f59e0b",fontWeight:700}}>⏭ スキップ {result.skips}回</span>
         </div>
       </div>
 
       {result.mistakes&&result.mistakes.length>0&&(
         <div className="card">
           <div className="fb2 mb8">
-            <span style={{fontWeight:700}}>笶・髢馴＆縺医◆蝠城｡・({result.mistakes.length}蝠・</span>
-            <button className="btn btn-s btn-sm" onClick={()=>setShowMiss(v=>!v)}>{showMiss?"髢峨§繧・:"隕九ｋ"}</button>
+            <span style={{fontWeight:700}}>❌ 間違えた問題 ({result.mistakes.length}問)</span>
+            <button className="btn btn-s btn-sm" onClick={()=>setShowMiss(v=>!v)}>{showMiss?"閉じる":"見る"}</button>
           </div>
           {showMiss&&result.mistakes.map((m,i)=>{
             const formula = getMolFormula(m.q);
             return (
               <div key={i} style={{padding:"9px 0",borderBottom:"1px solid var(--border)",fontSize:".83rem"}}>
                 <div style={{fontWeight:700,marginBottom:4}}>{m.q.q}</div>
-                <div style={{color:"var(--success)"}}>笨・豁｣隗｣: {m.q.ans}</div>
-                <div style={{color:"var(--danger)"}}>笨・縺ゅ↑縺・ {m.yours==="繧ｹ繧ｭ繝・・"?"繧ｹ繧ｭ繝・・":m.yours}</div>
+                <div style={{color:"var(--success)"}}>✓ 正解: {m.q.ans}</div>
+                <div style={{color:"var(--danger)"}}>✗ あなた: {m.yours==="スキップ"?"スキップ":m.yours}</div>
                 {formula&&(
                   <div style={{marginTop:5,background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:6,padding:"7px 10px",fontFamily:"monospace",fontSize:".78rem",color:"#166534",lineHeight:2}}>
                     {formula.split("\n").map((line,i)=>(
-                      <div key={i}>{i===0?"盗 ":""}{line}</div>
+                      <div key={i}>{line}</div>
                     ))}
                   </div>
                 )}
@@ -2690,14 +2725,14 @@ function MolResultScreen({ result, nickname="", onHome, onRetry }) {
       )}
 
       <div className="gap8">
-        <button className="btn btn-p" style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}} onClick={onRetry}>煤 繧ゅ≧荳蠎ｦ</button>
-        <button className="btn btn-s" style={{flex:1}} onClick={onHome}>匠 繝帙・繝</button>
+        <button className="btn btn-p" style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}} onClick={onRetry}>🔁 もう一度</button>
+        <button className="btn btn-s" style={{flex:1}} onClick={onHome}>🏠 ホーム</button>
       </div>
     </div>
   );
 }
 
-// 笏笏 BattleLobby 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── BattleLobby ────────────────────────────────────────────────
 function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="junior", difficulty="normal", onBack }) {
   const isIon=quizMode==="ion";
   const isFormula=quizMode==="formula";
@@ -2726,16 +2761,16 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
   const joinRoom=async()=>{
     const code=joinCode.toUpperCase().trim();
     const res=await sGet(`room:${code}`,true);
-    if(!res){alert("繝ｫ繝ｼ繝縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ");return;}
+    if(!res){alert("ルームが見つかりません");return;}
     try{
       const room=JSON.parse(res.value);
-      if(room.status!=="waiting"){alert("縺吶〒縺ｫ蟇ｾ謌ｦ縺悟ｧ九∪縺｣縺ｦ縺・∪縺・);return;}
+      if(room.status!=="waiting"){alert("すでに対戦が始まっています");return;}
       if(!room.players.find(p=>p.name===nickname))
         room.players.push({id:myId.current,name:nickname,status:"waiting",score:0});
       await sSet(`room:${code}`,JSON.stringify(room),true);
       setRoomCode(code);setRoomData(room);setMaxNum(room.maxNum||20);setIsHost(false);setPhase("waiting");
       startPoll(code);
-    }catch{alert("繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆");}
+    }catch{alert("エラーが発生しました");}
   };
 
   const startPoll=(code)=>{
@@ -2789,72 +2824,72 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
     battleResult={battleResult} onHome={()=>{clearInterval(pollRef.current);onBack();}} onRetry={()=>{clearInterval(pollRef.current);onBack();}}/>;
   if(phase==="result_wait"){
     const w=roomData?.players.filter(p=>p.status!=="done").length||0;
-    return <div className="card tc"><p style={{fontSize:"2rem",marginBottom:10}}>竢ｳ</p>
-      <h3 style={{fontWeight:700,marginBottom:6}}>縺ゅ↑縺溘・邨先棡: {quizResult?.score}轤ｹ</h3>
-      <p className="muted">莉悶・繝励Ξ繧､繝､繝ｼ繧貞ｾ・▲縺ｦ縺・∪縺・.. ({w}莠ｺ)</p></div>;
+    return <div className="card tc"><p style={{fontSize:"2rem",marginBottom:10}}>⏳</p>
+      <h3 style={{fontWeight:700,marginBottom:6}}>あなたの結果: {quizResult?.score}点</h3>
+      <p className="muted">他のプレイヤーを待っています... ({w}人)</p></div>;
   }
   if(phase==="waiting") return (
     <div>
       <div className="card">
         <div className="fb2 mb13">
-          <button className="btn btn-s btn-sm" onClick={()=>{clearInterval(pollRef.current);setPhase("menu");}}>竊・謌ｻ繧・/button>
-          <span style={{fontWeight:700}}>{isHost?"繝ｫ繝ｼ繝菴懈・":"蜿ょ刈荳ｭ"}</span><span/>
+          <button className="btn btn-s btn-sm" onClick={()=>{clearInterval(pollRef.current);setPhase("menu");}}>← 戻る</button>
+          <span style={{fontWeight:700}}>{isHost?"ルーム作成":"参加中"}</span><span/>
         </div>
-        <p className="muted tc mb8">繝ｫ繝ｼ繝繧ｳ繝ｼ繝峨ｒ蜈ｱ譛峨＠繧医≧</p>
+        <p className="muted tc mb8">ルームコードを共有しよう</p>
         <div className="rc">{roomCode}</div>
         <p className="muted tc" style={{fontSize:".75rem",marginBottom:13}}>
-          {isIon?`繧､繧ｪ繝ｳ(${roomData?.subLevel==="junior"?"荳ｭ蟄ｦ":"鬮俶｡"})`:isFormula?`蛹門ｭｦ蠑・${roomData?.subLevel==="junior"?"荳ｭ蟄ｦ":"鬮俶｡"})`:`遽・峇: 1縲・{maxNum}逡ｪ`} ・・縺薙・繧ｳ繝ｼ繝峨ｒ蜿矩＃縺ｫ莨昴∴縺ｦ縺ｭ
+          {isIon?`イオン(${roomData?.subLevel==="junior"?"中学":"高校"})`:isFormula?`化学式(${roomData?.subLevel==="junior"?"中学":"高校"})`:`範囲: 1〜${maxNum}番`} ｜ このコードを友達に伝えてね
         </p>
-        <h4 style={{fontWeight:700,marginBottom:6}}>蜿ょ刈閠・({roomData?.players?.length||0}莠ｺ)</h4>
+        <h4 style={{fontWeight:700,marginBottom:6}}>参加者 ({roomData?.players?.length||0}人)</h4>
         <ul className="rlist">
           {roomData?.players?.map((p,i)=>(
             <li key={i} className="pli">
               <span className="pldot"/>
               <span style={{flex:1,fontWeight:700}}>{p.name}</span>
-              {p.name===roomData.host&&<span className="bdg bh">繝帙せ繝・/span>}
-              {p.name===nickname&&<span className="bdg by">縺ゅ↑縺・/span>}
+              {p.name===roomData.host&&<span className="bdg bh">ホスト</span>}
+              {p.name===nickname&&<span className="bdg by">あなた</span>}
             </li>
           ))}
         </ul>
-        {!isHost&&<p className="muted tc" style={{marginTop:10}}>繝帙せ繝医′繧ｲ繝ｼ繝繧帝幕蟋九☆繧九∪縺ｧ縺雁ｾ・■縺上□縺輔＞</p>}
+        {!isHost&&<p className="muted tc" style={{marginTop:10}}>ホストがゲームを開始するまでお待ちください</p>}
       </div>
-      {isHost&&<button className="btn btn-a btn-blk" onClick={startGame}>噫 繧ｲ繝ｼ繝髢句ｧ具ｼ・({roomData?.players?.length||0}莠ｺ)</button>}
+      {isHost&&<button className="btn btn-a btn-blk" onClick={startGame}>🚀 ゲーム開始！ ({roomData?.players?.length||0}人)</button>}
     </div>
   );
-  if(phase==="create") return <SetupScreen title={isIon?"繧､繧ｪ繝ｳ蟇ｾ謌ｦ:繝ｫ繝ｼ繝菴懈・":isFormula?"蛹門ｭｦ蠑丞ｯｾ謌ｦ:繝ｫ繝ｼ繝菴懈・":"蜈・ｴ蟇ｾ謌ｦ:繝ｫ繝ｼ繝菴懈・"} quizMode={quizMode} isBattle onStart={(mn,dm,sl,dif)=>createRoom(mn,dm,sl,dif)} onBack={()=>setPhase("menu")}/>;
+  if(phase==="create") return <SetupScreen title={isIon?"イオン対戦:ルーム作成":isFormula?"化学式対戦:ルーム作成":"元素対戦:ルーム作成"} quizMode={quizMode} isBattle onStart={(mn,dm,sl,dif)=>createRoom(mn,dm,sl,dif)} onBack={()=>setPhase("menu")}/>;
   if(phase==="join") return (
     <div className="card">
       <div className="fb2 mb13">
-        <button className="btn btn-s btn-sm" onClick={()=>setPhase("menu")}>竊・謌ｻ繧・/button>
-        <span style={{fontWeight:700}}>繝ｫ繝ｼ繝縺ｫ蜿ょ刈</span><span/>
+        <button className="btn btn-s btn-sm" onClick={()=>setPhase("menu")}>← 戻る</button>
+        <span style={{fontWeight:700}}>ルームに参加</span><span/>
       </div>
       <div className="ig">
-        <label>繝ｫ繝ｼ繝繧ｳ繝ｼ繝峨ｒ蜈･蜉・/label>
+        <label>ルームコードを入力</label>
         <input className="inp" value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())}
-          placeholder="萓・ AB12" maxLength={4}
+          placeholder="例: AB12" maxLength={4}
           style={{fontFamily:"Space Mono",fontSize:"1.4rem",letterSpacing:6,textAlign:"center"}}/>
       </div>
-      <button className={`btn ${isIon?"btn-ion":"btn-p"} btn-blk`} onClick={joinRoom} disabled={joinCode.length<4}>蜿ょ刈縺吶ｋ</button>
+      <button className={`btn ${isIon?"btn-ion":"btn-p"} btn-blk`} onClick={joinRoom} disabled={joinCode.length<4}>参加する</button>
     </div>
   );
   return (
     <div>
       <div className="card">
         <div className="fb2 mb13">
-          <button className="btn btn-s btn-sm" onClick={onBack}>竊・謌ｻ繧・/button>
-          <span style={{fontWeight:700}}>{isIon?"笞｡ 繧､繧ｪ繝ｳ蟇ｾ謌ｦ":isFormula?"ｧｬ 蛹門ｭｦ蠑丞ｯｾ謌ｦ":"笞費ｸ・蜈・ｴ蟇ｾ謌ｦ"}</span><span/>
+          <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
+          <span style={{fontWeight:700}}>{isIon?"⚡ イオン対戦":isFormula?"🧬 化学式対戦":"⚔️ 元素対戦"}</span><span/>
         </div>
-        <p className="muted tc mb13">蜿矩＃縺ｨ繝ｫ繝ｼ繝繧ｳ繝ｼ繝峨〒蜷梧凾蟇ｾ謌ｦ・・br/>蜷後§蝠城｡後ｒ隗｣縺・※轤ｹ謨ｰ繧堤ｫｶ縺翫≧</p>
+        <p className="muted tc mb13">友達とルームコードで同時対戦！<br/>同じ問題を解いて点数を競おう</p>
         <div className="g2">
-          <div className={`sc ${isIon?"ion-sc":isFormula?"form-sc":""}`} onClick={()=>setPhase("create")}><div className="ic">匠</div><div className="nm">繝ｫ繝ｼ繝繧剃ｽ懊ｋ</div></div>
-          <div className={`sc ${isIon?"ion-sc":isFormula?"form-sc":""}`} onClick={()=>setPhase("join")}><div className="ic">坎</div><div className="nm">繝ｫ繝ｼ繝縺ｫ蜈･繧・/div></div>
+          <div className={`sc ${isIon?"ion-sc":isFormula?"form-sc":""}`} onClick={()=>setPhase("create")}><div className="ic">🏠</div><div className="nm">ルームを作る</div></div>
+          <div className={`sc ${isIon?"ion-sc":isFormula?"form-sc":""}`} onClick={()=>setPhase("join")}><div className="ic">🚪</div><div className="nm">ルームに入る</div></div>
         </div>
       </div>
     </div>
   );
 }
 
-// 笏笏 App 笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏笏
+// ── App ────────────────────────────────────────────────────────
 export default function App() {
   const [screen,setScreen]=useState("home");
   const [nickname,setNickname]=useState("");
@@ -2900,12 +2935,12 @@ export default function App() {
         <div className={`hdr ${screen!=="home"&&isIon?"ion-mode":""}`}>
           <div className="hdr-orb"/>
           <div className="hdr-inner">
-            <span style={{fontSize:"1.2rem",filter:"drop-shadow(0 0 6px rgba(165,180,252,.8))"}}>笞幢ｸ・/span>
+            <span style={{fontSize:"1.2rem",filter:"drop-shadow(0 0 6px rgba(165,180,252,.8))"}}>⚛️</span>
             <div className="hdr-title-wrap">
               <div className="hdr-app-name">CHEM BATTLE</div>
               <div className="hdr-tagline">SCIENCE QUIZ APP</div>
             </div>
-            <button onClick={toggleBgm} style={{background:"none",border:"none",color:"rgba(165,243,252,.8)",cursor:"pointer",fontSize:"1rem",padding:4}}>{bgmOn?"矧":"這"}</button>
+            <button onClick={toggleBgm} style={{background:"none",border:"none",color:"rgba(165,243,252,.8)",cursor:"pointer",fontSize:"1rem",padding:4}}>{bgmOn?"🔊":"🔇"}</button>
           </div>
         </div>
         <div className="main">
@@ -2918,7 +2953,7 @@ export default function App() {
               bgmOn={bgmOn} onToggleBgm={toggleBgm}/>
           )}
           {screen==="setup"&&(
-            <SetupScreen title={isIon?"繧､繧ｪ繝ｳ繧ｯ繧､繧ｺ險ｭ螳・:"蜃ｺ鬘檎ｯ・峇繧帝∈謚・} quizMode={quizMode} onBack={goHome}
+            <SetupScreen title={isIon?"イオンクイズ設定":"出題範囲を選択"} quizMode={quizMode} onBack={goHome}
               onStart={(mn,dm,sl,dif)=>{setMaxNum(mn||20);setDirectionMode(dm||"random");setSubLevel(sl||"junior");setDifficulty(dif||"normal");bgm.stop();setScreen("countdown");}}/>
           )}
           {screen==="countdown"&&<Countdown onDone={()=>setScreen("quiz")}/>}
