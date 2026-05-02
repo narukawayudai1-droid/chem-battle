@@ -2527,7 +2527,27 @@ function MolQuizScreen({ mode, onFinish }) {
   const hints = getMolHints(q);
 
   // 選択肢生成（科学的記数法で統一）
-  const ansDisplay = (qq) => fmtMolVal(qq.ans); // 選択肢・正解判定用
+  // 指数表記文字列ansを実数に戻す（個数系のみ）
+  const ansToNum = (qq) => {
+    if (typeof qq.ans !== "string") return qq.ans;
+    // "6.0×10²³" → 6.0e23 などに変換
+    const s = qq.ans;
+    const expMap = {"²²":22,"²³":23,"²⁴":24,"²⁵":25,"²⁶":26};
+    for (const [k,v] of Object.entries(expMap)) {
+      if (s.includes(k)) {
+        const coef = parseFloat(s.split("×")[0]);
+        return coef * Math.pow(10, v);
+      }
+    }
+    return parseFloat(s);
+  };
+  const ansDisplay = (qq) => {
+    if (typeof qq.ans === "string") {
+      const num = ansToNum(qq);
+      return toSciNotation(num, 2);
+    }
+    return fmtMolVal(qq.ans);
+  };
 
   const [choices] = useState(()=>{
     return questions.map(qq=>{
@@ -2535,18 +2555,18 @@ function MolQuizScreen({ mode, onFinish }) {
       const ansStr = fmtMolVal(qq.ans);
 
       if (isExp) {
-        // 個数系：既存の指数表記ダミー生成
+        // 個数系：実際の個数値からtoSciNotationで正規化したダミーを生成
         const numer = qq.numer || 6.0;
-        const candidates = [];
-        const c23 = [numer*2, numer/2, numer*3, numer*0.5].filter(x=>x>0&&x!==numer);
-        c23.forEach(n=>{
-          if(n>=10) candidates.push(`${(n/10).toFixed(1).replace(/\.0$/,"")}×10²⁴`);
-          else candidates.push(`${n.toFixed(1).replace(/\.0$/,"")}×10²³`);
-        });
-        candidates.push(`${numer.toFixed(1).replace(/\.0$/,"")}×10²²`);
-        candidates.push(`${numer.toFixed(1).replace(/\.0$/,"")}×10²⁵`);
-        const dummies = shuffle(candidates.filter(x=>x!==qq.ans)).slice(0,3);
-        return shuffle([qq.ans, ...dummies]);
+        const base = numer * 1e23; // 実際の値
+        const correctStr = toSciNotation(base, 2); // 正規化した正解
+        const rawDummies = [
+          base * 2, base / 2, base * 3, base * 0.5,
+          base * 10, base / 10,
+        ].filter(x => x > 0);
+        const candidates = [...new Set(rawDummies.map(d => toSciNotation(d, 2)))]
+          .filter(x => x !== correctStr);
+        const dummies = shuffle(candidates).slice(0,3);
+        return shuffle([correctStr, ...dummies]);
       } else {
         // 数値系：科学的記数法でフォーマット
         const dummies = genMolDummies(qq.ans, qq.qtype);
@@ -2591,7 +2611,10 @@ function MolQuizScreen({ mode, onFinish }) {
 
   const handleChoice = (choice)=>{
     if(selected!==null) return;
-        const isOk = String(choice) === fmtMolVal(q.ans); setSelected(choice); setFeedback(isOk?"ok":"ng");
+        const correctAns = typeof q.ans === "string"
+      ? toSciNotation((q.numer||6)*1e23, 2)
+      : fmtMolVal(q.ans);
+    const isOk = String(choice) === correctAns; setSelected(choice); setFeedback(isOk?"ok":"ng");
     if(!isOk){ missRef.current+=1; setMissCount(missRef.current); mistakesRef.current=[...mistakesRef.current,{q,yours:choice}]; setMistakes(mistakesRef.current); bgm.se("wrong"); }
     else bgm.se("correct");
     setTimeout(()=>{
@@ -2734,7 +2757,7 @@ function MolResultScreen({ result, nickname="", onHome, onRetry }) {
             return (
               <div key={i} style={{padding:"9px 0",borderBottom:"1px solid var(--border)",fontSize:".83rem"}}>
                 <div style={{fontWeight:700,marginBottom:4}}>{m.q.q}</div>
-                <div style={{color:"var(--success)"}}>✓ 正解: {fmtMolVal(m.q.ans)}</div>
+                <div style={{color:"var(--success)"}}>✓ 正解: {typeof m.q.ans==="string" ? toSciNotation((m.q.numer||6)*1e23,2) : fmtMolVal(m.q.ans)}</div>
                 <div style={{color:"var(--danger)"}}>✗ あなた: {m.yours==="スキップ"?"スキップ":m.yours}</div>
                 {formula&&(
                   <div style={{marginTop:5,background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:6,padding:"7px 10px",fontFamily:"monospace",fontSize:".78rem",color:"#166534",lineHeight:2}}>
