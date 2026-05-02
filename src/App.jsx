@@ -1491,32 +1491,34 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
         </div>
       </div>
 
-      {/* 難易度選択 */}
-      <div style={{marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>難易度</div>
-        <div style={{display:"flex",gap:6}}>
-          {DIFFICULTY_OPTIONS.map(opt=>{
-            const active = difficulty===opt.value;
-            return (
-              <div key={opt.value} onClick={()=>setDifficulty(opt.value)}
-                style={{
-                  flex:1,textAlign:"center",
-                  border:`2px solid ${active?opt.color:"var(--border)"}`,
-                  borderRadius:10,padding:"10px 6px",cursor:"pointer",
-                  background:active?opt.light:"#fff",transition:"all .13s"
-                }}>
-                <div style={{fontSize:"1.2rem",marginBottom:3}}>{opt.label.split(" ")[0]}</div>
-                <div style={{fontWeight:700,fontSize:".85rem",color:active?opt.color:"var(--text)"}}>{opt.label.split(" ")[1]}</div>
-                <div style={{fontSize:".68rem",color:"var(--muted)",marginTop:2,lineHeight:1.3}}>{opt.desc}</div>
-              </div>
-            );
-          })}
+      {/* 難易度：元素は自動、イオン/化学式は手動選択 */}
+      {!isElement&&(
+        <div style={{marginBottom:14}}>
+          <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>難易度</div>
+          <div style={{display:"flex",gap:6}}>
+            {DIFFICULTY_OPTIONS.map(opt=>{
+              const active = difficulty===opt.value;
+              return (
+                <div key={opt.value} onClick={()=>setDifficulty(opt.value)}
+                  style={{
+                    flex:1,textAlign:"center",
+                    border:`2px solid ${active?opt.color:"var(--border)"}`,
+                    borderRadius:10,padding:"10px 6px",cursor:"pointer",
+                    background:active?opt.light:"#fff",transition:"all .13s"
+                  }}>
+                  <div style={{fontSize:"1.2rem",marginBottom:3}}>{opt.label.split(" ")[0]}</div>
+                  <div style={{fontWeight:700,fontSize:".85rem",color:active?opt.color:"var(--text)"}}>{opt.label.split(" ")[1]}</div>
+                  <div style={{fontSize:".68rem",color:"var(--muted)",marginTop:2,lineHeight:1.3}}>{opt.desc}</div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       <button
         className={`btn ${btnClass} btn-blk`}
-        onClick={()=>onStart(isElement?{min:minNum,max:maxNum}:null, directionMode, subLevel, difficulty)}
+        onClick={()=>onStart(isElement?{min:minNum,max:maxNum}:null, directionMode, subLevel, isElement?getElementAutodifficulty(maxNum):difficulty)}
         disabled={isElement&&ALL_ELEMENTS.filter(e=>e.number>=minNum&&e.number<=maxNum).length<4}>
         {isBattle?"🚀 この設定でルーム作成":"🚀 スタート！"}
       </button>
@@ -2470,21 +2472,21 @@ function MolBattleLobby({ nickname, onBack }) {
     const room = { code, molMode:mode, host:nickname, seed,
       players:[{name:nickname, status:"waiting", score:0, miss:0}],
       status:"waiting", createdAt:Date.now() };
-    await sSet(`mol_room:${code}`, JSON.stringify(room), true);
+    await sSet(`molroom_${code}`, JSON.stringify(room), true);
     setRoomCode(code); setRoomData(room); setMolMode(mode); setIsHost(true); setPhase("waiting");
     startPoll(code);
   };
 
   const joinRoom = async () => {
     const code = joinCode.toUpperCase().trim();
-    const res = await sGet(`mol_room:${code}`, true);
+    const res = await sGet(`molroom_${code}`, true);
     if (!res) { alert("ルームが見つかりません"); return; }
     try {
       const room = JSON.parse(res.value);
       if (room.status !== "waiting") { alert("すでに対戦が始まっています"); return; }
       if (!room.players.find(p=>p.name===nickname))
         room.players.push({name:nickname, status:"waiting", score:0, miss:0});
-      await sSet(`mol_room:${code}`, JSON.stringify(room), true);
+      await sSet(`molroom_${code}`, JSON.stringify(room), true);
       setRoomCode(code); setRoomData(room); setMolMode(room.molMode); setIsHost(false); setPhase("waiting");
       startPoll(code);
     } catch { alert("エラーが発生しました"); }
@@ -2493,7 +2495,7 @@ function MolBattleLobby({ nickname, onBack }) {
   const startPoll = (code) => {
     clearInterval(pollRef.current);
     pollRef.current = setInterval(async () => {
-      const res = await sGet(`mol_room:${code}`, true);
+      const res = await sGet(`molroom_${code}`, true);
       if (!res) return;
       try {
         const room = JSON.parse(res.value);
@@ -2504,28 +2506,28 @@ function MolBattleLobby({ nickname, onBack }) {
   };
 
   const startGame = async () => {
-    const res = await sGet(`mol_room:${roomCode}`, true);
+    const res = await sGet(`molroom_${roomCode}`, true);
     if (!res) return;
     const room = JSON.parse(res.value);
     room.status = "playing";
-    await sSet(`mol_room:${roomCode}`, JSON.stringify(room), true);
+    await sSet(`molroom_${roomCode}`, JSON.stringify(room), true);
     clearInterval(pollRef.current); setPhase("quiz");
   };
 
   const handleQuizFinish = async (result) => {
     setQuizResult(result);
-    const res = await sGet(`mol_room:${roomCode}`, true);
+    const res = await sGet(`molroom_${roomCode}`, true);
     if (res) {
       const room = JSON.parse(res.value);
       const pl = room.players.find(p=>p.name===nickname);
       if (pl) { pl.score = result.total - result.miss; pl.miss = result.miss; pl.status = "done"; }
       if (room.players.every(p=>p.status==="done")) room.status = "done";
-      await sSet(`mol_room:${roomCode}`, JSON.stringify(room), true);
+      await sSet(`molroom_${roomCode}`, JSON.stringify(room), true);
       setRoomData(room);
     }
     setPhase("result_wait");
     pollRef.current = setInterval(async () => {
-      const r = await sGet(`mol_room:${roomCode}`, true);
+      const r = await sGet(`molroom_${roomCode}`, true);
       if (r) {
         const rm = JSON.parse(r.value);
         setRoomData(rm);
@@ -2574,7 +2576,7 @@ function MolBattleLobby({ nickname, onBack }) {
     <div>
       <div className="card">
         <div className="fb2 mb13">
-          <button className="btn btn-s btn-sm" onClick={()=>{clearInterval(pollRef.current);setPhase("menu");}}>← 戻る</button>
+          <button className="btn btn-s btn-sm" onClick={()=>{clearInterval(pollRef.current);onBack();}}>🏠 退出</button>
           <span style={{fontWeight:700}}>{isHost?"ルーム作成":"参加中"}</span><span/>
         </div>
         <p className="muted tc mb8">ルームコードを共有しよう</p>
@@ -2934,6 +2936,7 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
   const [joinCode,setJoinCode]=useState("");
   const [roomData,setRoomData]=useState(null);
   const [maxNum,setMaxNum]=useState(20);
+  const [minNum,setMinNum]=useState(1);
   const [quizResult,setQuizResult]=useState(null);
   const [battleResult,setBattleResult]=useState(null);
   const [isHost,setIsHost]=useState(false);
@@ -2944,24 +2947,27 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
 
   const createRoom=async(mn,dm,sl,dif)=>{
     const code=genCode();
-    const room={code,maxNum:mn,quizMode,directionMode:dm||directionMode,subLevel:sl||subLevel,difficulty:dif||difficulty,host:nickname,seed:Math.floor(Math.random()*100000),
+    // mn は {min,max} オブジェクトまたは数値
+    const minN = (mn&&typeof mn==="object") ? (mn.min||1) : 1;
+    const maxN = (mn&&typeof mn==="object") ? (mn.max||20) : (mn||20);
+    const room={code,minNum:minN,maxNum:maxN,quizMode,directionMode:dm||directionMode,subLevel:sl||subLevel,difficulty:dif||difficulty,host:nickname,seed:Math.floor(Math.random()*100000),
       players:[{id:myId.current,name:nickname,status:"waiting",score:0}],status:"waiting",createdAt:Date.now()};
-    await sSet(`room:${code}`,JSON.stringify(room),true);
-    setRoomCode(code);setRoomData(room);setMaxNum(mn||20);setIsHost(true);setPhase("waiting");
+    await sSet(`chemroom_${code}`,JSON.stringify(room),true);
+    setRoomCode(code);setRoomData(room);setMaxNum(maxN);setIsHost(true);setPhase("waiting");
     startPoll(code);
   };
 
   const joinRoom=async()=>{
     const code=joinCode.toUpperCase().trim();
-    const res=await sGet(`room:${code}`,true);
+    const res=await sGet(`chemroom_${code}`,true);
     if(!res){alert("ルームが見つかりません");return;}
     try{
       const room=JSON.parse(res.value);
       if(room.status!=="waiting"){alert("すでに対戦が始まっています");return;}
       if(!room.players.find(p=>p.name===nickname))
         room.players.push({id:myId.current,name:nickname,status:"waiting",score:0});
-      await sSet(`room:${code}`,JSON.stringify(room),true);
-      setRoomCode(code);setRoomData(room);setMaxNum(room.maxNum||20);setIsHost(false);setPhase("waiting");
+      await sSet(`chemroom_${code}`,JSON.stringify(room),true);
+      setRoomCode(code);setRoomData(room);setMaxNum(room.maxNum||20);setMinNum&&setMinNum(room.minNum||1);setIsHost(false);setPhase("waiting");
       startPoll(code);
     }catch{alert("エラーが発生しました");}
   };
@@ -2969,7 +2975,7 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
   const startPoll=(code)=>{
     clearInterval(pollRef.current);
     pollRef.current=setInterval(async()=>{
-      const res=await sGet(`room:${code}`,true);
+      const res=await sGet(`chemroom_${code}`,true);
       if(!res)return;
       try{const room=JSON.parse(res.value);setRoomData(room);
         if(room.status==="playing"){clearInterval(pollRef.current);setPhase("countdown");}
@@ -3012,7 +3018,7 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
   useEffect(()=>()=>clearInterval(pollRef.current),[]);
 
   if(phase==="countdown") return <Countdown onDone={()=>setPhase("quiz")}/>;
-  if(phase==="quiz") return <QuizScreen maxNum={roomData?.maxNum||maxNum} minNum={roomData?.minNum||1} quizMode={quizMode} directionMode={roomData?.directionMode||directionMode} subLevel={roomData?.subLevel||subLevel} difficulty={roomData?.difficulty||difficulty} onFinish={handleQuizFinish} seed={roomData?.seed}/>;
+  if(phase==="quiz") return <QuizScreen maxNum={roomData?.maxNum||maxNum} minNum={roomData?.minNum||minNum||1} quizMode={quizMode} directionMode={roomData?.directionMode||directionMode} subLevel={roomData?.subLevel||subLevel} difficulty={roomData?.difficulty||difficulty} onFinish={handleQuizFinish} onExit={()=>{clearInterval(pollRef.current);onBack();}} seed={roomData?.seed}/>;
   if(phase==="result") return <ResultScreen result={quizResult} nickname={nickname} maxNum={maxNum} quizMode={quizMode} subLevel={roomData?.subLevel||subLevel}
     battleResult={battleResult} onHome={()=>{clearInterval(pollRef.current);onBack();}} onRetry={()=>{clearInterval(pollRef.current);onBack();}}/>;
   if(phase==="result_wait"){
@@ -3025,7 +3031,7 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
     <div>
       <div className="card">
         <div className="fb2 mb13">
-          <button className="btn btn-s btn-sm" onClick={()=>{clearInterval(pollRef.current);setPhase("menu");}}>← 戻る</button>
+          <button className="btn btn-s btn-sm" onClick={()=>{clearInterval(pollRef.current);onBack();}}>🏠 退出</button>
           <span style={{fontWeight:700}}>{isHost?"ルーム作成":"参加中"}</span><span/>
         </div>
         <p className="muted tc mb8">ルームコードを共有しよう</p>
