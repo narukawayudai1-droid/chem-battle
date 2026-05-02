@@ -704,7 +704,8 @@ async function sSet(key, val, shared=false) {
   try {
     const col = shared ? "shared" : "private";
     const ref = doc(db, col, _fbKey(key));
-    await setDoc(ref, { value: val, updatedAt: Date.now() }, { merge: true });
+    // merge:false で完全上書き（ルームデータの整合性を保つため）
+    await setDoc(ref, { value: val, updatedAt: Date.now() });
     return true;
   } catch(e) {
     console.warn("sSet error", key, e);
@@ -1112,30 +1113,22 @@ function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLe
 // ── 元素難易度自動判定バッジ ─────────────────────────────────
 // A案：固定レンジ / B案：中央値ベース
 // 両方表示して参考にできるようにする
-function ElementDifficultyBadge({ minNum=1, maxNum=20 }) {
-  // A案：固定レンジ判定（上限値で判定）
-  const getDiffA = (max) => {
-    if (max <= 20) return { label:"😊 易", color:"#22c55e", bg:"#dcfce7", desc:"原子番号1〜20" };
-    if (max <= 50) return { label:"😐 普通", color:"#f59e0b", bg:"#fef3c7", desc:"原子番号21〜50" };
-    return { label:"😈 難", color:"#ef4444", bg:"#fee2e2", desc:"原子番号51以上" };
-  };
-  // B案：中央値ベース判定
-  const getDiffB = (min, max) => {
-    const mid = (min + max) / 2;
-    if (mid <= 20) return { label:"😊 易", color:"#22c55e", bg:"#dcfce7", desc:`中央値 ${Math.round(mid)}番` };
-    if (mid <= 50) return { label:"😐 普通", color:"#f59e0b", bg:"#fef3c7", desc:`中央値 ${Math.round(mid)}番` };
-    return { label:"😈 難", color:"#ef4444", bg:"#fee2e2", desc:`中央値 ${Math.round(mid)}番` };
-  };
-  const dA = getDiffA(maxNum);
-  const dB = getDiffB(minNum, maxNum);
+// A案（固定レンジ）で難易度を自動判定して返す
+function getElementAutodifficulty(maxNum) {
+  if (maxNum <= 20) return "easy";
+  if (maxNum <= 50) return "normal";
+  return "hard";
+}
+
+function ElementDifficultyBadge({ maxNum=20 }) {
+  const diff = getElementAutodifficulty(maxNum);
+  const opt = DIFFICULTY_OPTIONS.find(o=>o.value===diff);
+  if (!opt) return null;
   return (
-    <div style={{marginTop:8,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-      <span style={{fontSize:".75rem",color:"var(--muted)"}}>難易度目安：</span>
-      <span style={{background:dA.bg,color:dA.color,padding:"2px 10px",borderRadius:12,fontSize:".78rem",fontWeight:700}}>
-        A案：{dA.label} <span style={{fontWeight:400,opacity:.8}}>({dA.desc})</span>
-      </span>
-      <span style={{background:dB.bg,color:dB.color,padding:"2px 10px",borderRadius:12,fontSize:".78rem",fontWeight:700}}>
-        B案：{dB.label} <span style={{fontWeight:400,opacity:.8}}>({dB.desc})</span>
+    <div style={{marginTop:8,display:"flex",gap:6,alignItems:"center"}}>
+      <span style={{fontSize:".75rem",color:"var(--muted)"}}>難易度：</span>
+      <span style={{background:opt.light,color:opt.color,padding:"3px 12px",borderRadius:12,fontSize:".82rem",fontWeight:700}}>
+        {opt.label}
       </span>
     </div>
   );
@@ -1532,7 +1525,7 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
 }
 
 // ── QuizScreen ─────────────────────────────────────────────────
-function QuizScreen({ maxNum, minNum=1, quizMode, directionMode="random", subLevel="junior", difficulty="normal", onFinish, seed=null }) {
+function QuizScreen({ maxNum, minNum=1, quizMode, directionMode="random", subLevel="junior", difficulty="normal", onFinish, onExit=null, seed=null }) {
   const isIon = quizMode==="ion";
   const isFormula = quizMode==="formula";
   const elements = isFormula ? getFormulas(subLevel) : isIon ? getIons(subLevel) : ALL_ELEMENTS.filter(e=>e.number>=(minNum||1)&&e.number<=(maxNum||20));
@@ -1587,7 +1580,10 @@ function QuizScreen({ maxNum, minNum=1, quizMode, directionMode="random", subLev
     <div>
       <div className="card">
         <div className="qhd">
-          <div className={`tmr ${timeLeft<=10?"urg":""}`}>⏱ {timeLeft}</div>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <div className={`tmr ${timeLeft<=10?"urg":""}`}>⏱ {timeLeft}</div>
+            {onExit&&<button onClick={()=>{bgm.stop();onExit();}} style={{background:"none",border:"1px solid var(--border)",borderRadius:7,padding:"2px 8px",fontSize:".72rem",color:"var(--muted)",cursor:"pointer"}}>退出</button>}
+          </div>
           <div className="gap8" style={{alignItems:"center"}}>
             <span className="muted" style={{fontSize:".8rem"}}>#{answered+1}</span>
             {isIon&&<span style={{fontSize:".75rem",background:"var(--ion-l)",color:"var(--ion)",padding:"2px 7px",borderRadius:20,fontWeight:700}}>⚡イオン</span>}
@@ -1897,7 +1893,7 @@ function MemoScreen({ onBack }) {
           <>
             <div style={{marginBottom:10}}>
               <RangeSelector minNum={elMin} maxNum={elMax} onChangeMin={setElMin} onChangeMax={setElMax}/>
-              <ElementDifficultyBadge minNum={elMin} maxNum={elMax}/>
+              <ElementDifficultyBadge maxNum={elMax}/>
             </div>
             <div style={{fontSize:".78rem",color:"var(--muted)",marginBottom:8,textAlign:"center"}}>
               {elMin}〜{elMax}番の元素 <b style={{color:"var(--primary)"}}>{elItems.length}</b> 種
@@ -2651,7 +2647,7 @@ function MolBattleLobby({ nickname, onBack }) {
 }
 
 // ── MolQuizScreen ──────────────────────────────────────────
-function MolQuizScreen({ mode, onFinish }) {
+function MolQuizScreen({ mode, onFinish, onExit=null }) {
   const [questions] = useState(()=>getMolQuestions(mode));
   const [qIdx, setQIdx] = useState(0);
   const [timeLeft, setTimeLeft] = useState(300);
@@ -2796,6 +2792,7 @@ function MolQuizScreen({ mode, onFinish }) {
       <div className="card">
         {/* ヘッダー */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
           <div style={{fontFamily:"Space Mono,monospace",fontSize:"1.3rem",fontWeight:700,color:urgent?"var(--danger)":"var(--primary)",animation:urgent?"pulse .5s infinite alternate":"none"}}>
             ⏱ {mins}:{String(secs).padStart(2,"0")}
             <span style={{marginLeft:8,fontSize:".9rem"}}>
@@ -2804,6 +2801,8 @@ function MolQuizScreen({ mode, onFinish }) {
               ))}
             </span>
             {penaltyAnim&&<span style={{color:"#f59e0b",marginLeft:6,fontSize:".85rem",fontWeight:700}}>+5秒</span>}
+          </div>
+          {onExit&&<button onClick={()=>{clearInterval(timerRef.current);bgm.stop();onExit();}} style={{background:"none",border:"1px solid var(--border)",borderRadius:7,padding:"2px 8px",fontSize:".72rem",color:"var(--muted)",cursor:"pointer"}}>退出</button>}
           </div>
           <div style={{fontSize:".8rem",display:"flex",gap:8}}>
             <span style={{color:"#ef4444",fontWeight:700}}>✗{missCount}</span>
@@ -3152,7 +3151,7 @@ export default function App() {
               onStart={(mn,dm,sl,dif)=>{if(mn&&typeof mn==="object"){setMinNum(mn.min||1);setMaxNum(mn.max||20);}else{setMinNum(1);setMaxNum(mn||20);}setDirectionMode(dm||"random");setSubLevel(sl||"junior");setDifficulty(dif||"normal");bgm.stop();setScreen("countdown");}}/>
           )}
           {screen==="countdown"&&<Countdown onDone={()=>setScreen("quiz")}/>}
-          {screen==="quiz"&&<QuizScreen maxNum={maxNum} minNum={minNum} quizMode={quizMode} directionMode={directionMode} subLevel={subLevel} difficulty={difficulty} onFinish={handleSoloFinish}/>}
+          {screen==="quiz"&&<QuizScreen maxNum={maxNum} minNum={minNum} quizMode={quizMode} directionMode={directionMode} subLevel={subLevel} difficulty={difficulty} onFinish={handleSoloFinish} onExit={()=>{bgm.stop();if(bgmOn)bgm.start("home");setScreen("home");}}/>}
           {screen==="result"&&quizResult&&(
             <ResultScreen result={quizResult} nickname={nickname} maxNum={maxNum} quizMode={quizMode} subLevel={subLevel}
               onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}
@@ -3163,7 +3162,7 @@ export default function App() {
           {screen==="mol_setup"&&<MolSetupScreen onBack={()=>setScreen("home")} onStart={(m,t)=>{setMolMode(m);bgm.stop();setScreen("mol_countdown");}}/>}
           {screen==="mol_battle"&&<MolBattleLobby nickname={nickname} onBack={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
           {screen==="mol_countdown"&&<Countdown onDone={()=>setScreen("mol_quiz")}/>}
-          {screen==="mol_quiz"&&<MolQuizScreen mode={molMode} onFinish={r=>{bgm.stop();bgm.se("finish");setQuizResult({...r,_mol:true,molMode});setScreen("mol_result");}}/>}
+          {screen==="mol_quiz"&&<MolQuizScreen mode={molMode} onFinish={r=>{bgm.stop();bgm.se("finish");setQuizResult({...r,_mol:true,molMode});setScreen("mol_result");}} onExit={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
           {screen==="mol_result"&&quizResult?._mol&&<MolResultScreen result={quizResult} nickname={nickname} onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}} onRetry={()=>{bgm.stop();setScreen("mol_quiz");}}/>}
           {screen==="battle"&&<BattleLobby nickname={nickname} quizMode={quizMode} directionMode={directionMode} subLevel={subLevel} difficulty={difficulty} onBack={goHome}/>}
         </div>
