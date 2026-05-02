@@ -2500,7 +2500,7 @@ function MolBattleLobby({ nickname, onBack }) {
       try {
         const room = JSON.parse(res.value);
         setRoomData(room);
-        if (room.status === "playing") { clearInterval(pollRef.current); setPhase("quiz"); }
+        if (room.status === "playing") { clearInterval(pollRef.current); setPhase("countdown"); }
       } catch {}
     }, 1500);
   };
@@ -2511,7 +2511,7 @@ function MolBattleLobby({ nickname, onBack }) {
     const room = JSON.parse(res.value);
     room.status = "playing";
     await sSet(`molroom_${roomCode}`, JSON.stringify(room), true);
-    clearInterval(pollRef.current); setPhase("quiz");
+    clearInterval(pollRef.current); setPhase("countdown");
   };
 
   const handleQuizFinish = async (result) => {
@@ -2545,7 +2545,8 @@ function MolBattleLobby({ nickname, onBack }) {
 
   const modeLabels = {intro:"入門",basic:"基礎",adv:"応用",random:"ランダム"};
 
-  if (phase==="quiz") return <MolQuizScreen mode={molMode} onFinish={handleQuizFinish}/>;
+  if (phase==="countdown") return <Countdown onDone={()=>setPhase("quiz")}/>;
+  if (phase==="quiz") return <MolQuizScreen mode={molMode} onFinish={handleQuizFinish} onExit={()=>{clearInterval(pollRef.current);onBack();}}/>;
 
   if (phase==="result") return (
     <div>
@@ -2567,9 +2568,12 @@ function MolBattleLobby({ nickname, onBack }) {
 
   if (phase==="result_wait") {
     const w = roomData?.players.filter(p=>p.status!=="done").length||0;
-    return <div className="card tc"><p style={{fontSize:"2rem",marginBottom:10}}>⏳</p>
+    return <div className="card tc">
+      <p style={{fontSize:"2rem",marginBottom:10}}>⏳</p>
       <h3 style={{fontWeight:700,marginBottom:6}}>正解数: {quizResult?.total - quizResult?.miss}問</h3>
-      <p className="muted">他のプレイヤーを待っています... ({w}人)</p></div>;
+      <p className="muted">他のプレイヤーを待っています... ({w}人)</p>
+      <button className="btn btn-s" style={{marginTop:12}} onClick={()=>{clearInterval(pollRef.current);onBack();}}>🏠 退出</button>
+    </div>;
   }
 
   if (phase==="waiting") return (
@@ -2984,26 +2988,26 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
   };
 
   const startGame=async()=>{
-    const res=await sGet(`room:${roomCode}`,true);
+    const res=await sGet(`chemroom_${roomCode}`,true);
     if(!res)return;
     const room=JSON.parse(res.value);room.status="playing";
-    await sSet(`room:${roomCode}`,JSON.stringify(room),true);
+    await sSet(`chemroom_${roomCode}`,JSON.stringify(room),true);
     clearInterval(pollRef.current);setPhase("countdown");
   };
 
   const handleQuizFinish=async(result)=>{
     setQuizResult(result);
-    const res=await sGet(`room:${roomCode}`,true);
+    const res=await sGet(`chemroom_${roomCode}`,true);
     if(res){
       const room=JSON.parse(res.value);
       const pl=room.players.find(p=>p.name===nickname);
       if(pl){pl.score=result.score;pl.status="done";}
       if(room.players.every(p=>p.status==="done"))room.status="done";
-      await sSet(`room:${roomCode}`,JSON.stringify(room),true);setRoomData(room);
+      await sSet(`chemroom_${roomCode}`,JSON.stringify(room),true);setRoomData(room);
     }
     setPhase("result_wait");
     pollRef.current=setInterval(async()=>{
-      const r=await sGet(`room:${roomCode}`,true);
+      const r=await sGet(`chemroom_${roomCode}`,true);
       if(r){const rm=JSON.parse(r.value);setRoomData(rm);
         if(rm.status==="done"||rm.players.every(p=>p.status==="done")){
           clearInterval(pollRef.current);
@@ -3023,9 +3027,12 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
     battleResult={battleResult} onHome={()=>{clearInterval(pollRef.current);onBack();}} onRetry={()=>{clearInterval(pollRef.current);onBack();}}/>;
   if(phase==="result_wait"){
     const w=roomData?.players.filter(p=>p.status!=="done").length||0;
-    return <div className="card tc"><p style={{fontSize:"2rem",marginBottom:10}}>⏳</p>
+    return <div className="card tc">
+      <p style={{fontSize:"2rem",marginBottom:10}}>⏳</p>
       <h3 style={{fontWeight:700,marginBottom:6}}>あなたの結果: {quizResult?.score}点</h3>
-      <p className="muted">他のプレイヤーを待っています... ({w}人)</p></div>;
+      <p className="muted">他のプレイヤーを待っています... ({w}人)</p>
+      <button className="btn btn-s" style={{marginTop:12}} onClick={()=>{clearInterval(pollRef.current);onBack();}}>🏠 退出</button>
+    </div>;
   }
   if(phase==="waiting") return (
     <div>
