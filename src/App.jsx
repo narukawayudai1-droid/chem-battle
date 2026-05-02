@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
@@ -268,15 +268,15 @@ function shuffle(arr) {
 // ── スコア計算 ────────────────────────────────────────────
 // 元素/イオン/化学式クイズ：時間点 + 正解率ボーナス
 function calcQuizScore(correct, total, rawScore) {
-  if (total === 0) return 0;
+  if (total === 0 || correct === 0) return 0;
   const acc = correct / total;
-  const accBonus = Math.round(acc * acc * 200); // 正解率²×200点
+  const accBonus = Math.round(acc * acc * 200);
   return rawScore + accBonus;
 }
 
 // mol計算：正解数×100 + 正解率ボーナス + 残り時間ボーナス
 function calcMolScore(correct, total, timeLeft) {
-  if (total === 0) return 0;
+  if (total === 0 || correct === 0) return 0;
   const acc = correct / total;
   const base = correct * 100;
   const accBonus = Math.round(acc * acc * 100);
