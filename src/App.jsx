@@ -1516,12 +1516,19 @@ function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
         </div>
       )}
 
+      {isElement&&(
+        <div style={{marginBottom:10,padding:"10px 14px",background:"var(--bg)",borderRadius:9,display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:".82rem",color:"var(--muted)"}}>この設定の難易度：</span>
+          <ElementDifficultyBadge maxNum={maxNum}/>
+        </div>
+      )}
       <button
         className={`btn ${btnClass} btn-blk`}
         onClick={()=>onStart(isElement?{min:minNum,max:maxNum}:null, directionMode, subLevel, isElement?getElementAutodifficulty(maxNum):difficulty)}
         disabled={isElement&&ALL_ELEMENTS.filter(e=>e.number>=minNum&&e.number<=maxNum).length<4}>
         {isBattle?"🚀 この設定でルーム作成":"🚀 スタート！"}
       </button>
+      <AppFooter/>
     </div>
   );
 }
@@ -1608,6 +1615,7 @@ function QuizScreen({ maxNum, minNum=1, quizMode, directionMode="random", subLev
           ))}
         </div>
       </div>
+      <AppFooter/>
     </div>
   );
 }
@@ -2264,6 +2272,7 @@ function MolSetupScreen({ onStart, onBack }) {
       <button className="btn btn-blk" style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",color:"#fff",fontWeight:700}} onClick={()=>onStart(mode,"solo")}>
         🚀 スタート！
       </button>
+      <AppFooter/>
     </div>
   );
 }
@@ -2736,17 +2745,17 @@ function MolQuizScreen({ mode, onFinish, onExit=null }) {
   });
 
   useEffect(()=>{
+    bgm.start("play");
     timerRef.current = setInterval(()=>{
       setTimeLeft(t=>{
         const next = t - 1;
         if(next <= 0){clearInterval(timerRef.current);finishGame();return 0;}
-        // スキップペナルティで300秒超えた場合も終了
         if(next >= 300){clearInterval(timerRef.current);finishGame();return 0;}
         tlRef.current = next;
         return next;
       });
     },1000);
-    return()=>clearInterval(timerRef.current);
+    return()=>{clearInterval(timerRef.current);bgm.stop();};
   },[]);
 
   const finishGame = ()=>{
@@ -2855,6 +2864,7 @@ function MolQuizScreen({ mode, onFinish, onExit=null }) {
             ⏭ スキップ</button>
         </div>
       </div>
+      <AppFooter/>
     </div>
   );
 }
