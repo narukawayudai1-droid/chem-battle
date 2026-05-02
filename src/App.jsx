@@ -1211,11 +1211,6 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
         </div>
       </div>
 
-      {!nickname&&(
-        <div className="tc" style={{marginTop:3,marginBottom:8}}>
-          <span className="hero-nologin">✋ ニックネームを登録してスタート！</span>
-        </div>
-      )}
       <div style={{marginBottom:10}}>
         <div style={{fontWeight:800,fontSize:".78rem",color:"#6366f1",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧮 mol計算ドリル</div>
         <div className="g2">
