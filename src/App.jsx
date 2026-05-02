@@ -2224,6 +2224,7 @@ function MolSetupScreen({ onStart, onBack }) {
 function TimeAttackSetupScreen({ onStart, onBack }) {
   const [quizMode, setQMode] = useState("element");
   const [maxNum, setMaxNum] = useState(20);
+  const [minNum, setMinNum] = useState(1);
   const [subLevel, setSubLevel] = useState("junior");
 
   const modes = [
@@ -3034,6 +3035,7 @@ export default function App() {
   const [screen,setScreen]=useState("home");
   const [nickname,setNickname]=useState("");
   const [maxNum,setMaxNum]=useState(20);
+  const [minNum,setMinNum]=useState(1);
   const [quizMode,setQuizMode]=useState("element"); // "element" | "ion"
   const [directionMode,setDirectionMode]=useState("s2n");
   const [subLevel,setSubLevel]=useState("junior");
