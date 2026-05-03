@@ -1440,7 +1440,7 @@ function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLe
         if(quizMode==="mol") return r.molMode!==subLevel;
         return r.maxNum!==maxNum;
       });
-      const entry = { name:nickname, score, correct, total, acc, quizMode, subLevel, maxNum, difficulty, date:Date.now() };
+      const entry = { name:nickname, score, correct, total, acc, quizMode, subLevel, maxNum, difficulty, date:Date.now(), grade:userGrade, school:userSchool };
       filtered.push(entry);
       filtered.sort((a,b)=>b.score-a.score);
       await sSet(key, JSON.stringify(filtered.slice(0,100)), true);
@@ -1685,11 +1685,23 @@ function checkNickname(name) {
   return true;
 }
 
-function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm, weekCount=0 }) {
+function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm, weekCount=0 }) {
   const [edit,setEdit]=useState(false);
+  const [step,setStep]=useState("grade"); // "grade"|"school"|"name"
+  const [selGrade,setSelGrade]=useState("");
+  const [selSchool,setSelSchool]=useState("");
   const [ni,setNi]=useState(nickname||"");
   const [showHowTo,setShowHowTo]=useState(false);
   const [ngMsg,setNgMsg]=useState("");
+
+  const GRADES=[
+    {v:"elementary",l:"小学生",icon:"🎒"},
+    {v:"junior",    l:"中学生",icon:"📚"},
+    {v:"high",      l:"高校生",icon:"🎓"},
+    {v:"general",   l:"一般",  icon:"👤"},
+  ];
+
+  const gradeLabel=(g)=>GRADES.find(x=>x.v===g)?.l||"";
 
   const save=()=>{
     const name=ni.trim();
@@ -1699,35 +1711,101 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
       return;
     }
     setNgMsg("");
-    onSetNickname(name);
+    onSetNickname(name, selGrade||userGrade, selSchool||userSchool);
     setEdit(false);
   };
+
+  // 編集時にstepをリセット
+  const startEdit=()=>{
+    setSelGrade(userGrade||"");
+    setSelSchool(userSchool||"");
+    setNi(nickname||"");
+    setStep("grade");
+    setNgMsg("");
+    setEdit(true);
+  };
+
+  const needsSchool = (g)=>g==="elementary"||g==="junior"||g==="high";
+
   return (
     <div>
       {showHowTo&&<HowToModal onClose={()=>setShowHowTo(false)}/>}
-      {/* ── Hero ── */}
       {/* ── Hero Banner ── */}
       <div style={{borderRadius:"14px",overflow:"hidden",marginBottom:12,boxShadow:"0 4px 20px rgba(0,0,0,.25)"}}>
         <img src="/hero.png" alt="CHEM BATTLE" style={{width:"100%",display:"block",objectFit:"cover"}}/>
       </div>
 
-      {/* ── ニックネーム入力 ── */}
+      {/* ── 登録フォーム ── */}
       <div style={{marginBottom:12,background:"linear-gradient(135deg,#0f0c29,#1a1040)",borderRadius:12,padding:"14px 16px"}}>
-        {!nickname||edit?(
+        {(!nickname||edit)?(
           <div>
-            <div style={{color:"rgba(255,255,255,.8)",fontSize:".88rem",fontWeight:700,marginBottom:8,textAlign:"center",letterSpacing:".5px"}}>
-              ニックネームを登録してスタート！
-            </div>
-            <div style={{display:"flex",gap:8}}>
-              <input className="hero-input" style={{flex:1}} value={ni} onChange={e=>{setNi(e.target.value);setNgMsg("");}}
-                placeholder="ニックネームを入力" maxLength={12}
-                onKeyDown={e=>e.key==="Enter"&&save()} autoFocus={edit}/>
-              <button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 14px"}} onClick={save}>✓ 保存</button>
-              {edit&&<button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 10px",background:"rgba(255,255,255,.12)",color:"rgba(255,255,255,.7)"}} onClick={()=>{setEdit(false);setNgMsg("");}}>✕</button>}
-            </div>
-            {ngMsg&&(
-              <div style={{marginTop:8,background:"rgba(239,68,68,.2)",border:"1px solid rgba(239,68,68,.5)",borderRadius:8,padding:"7px 10px",color:"#fca5a5",fontSize:".8rem",textAlign:"center",fontWeight:600}}>
-                ⚠️ {ngMsg}
+            {/* STEP 1: 区分選択 */}
+            {step==="grade"&&(
+              <div>
+                <div style={{color:"rgba(255,255,255,.8)",fontSize:".88rem",fontWeight:700,marginBottom:10,textAlign:"center"}}>
+                  あなたは？
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  {GRADES.map(g=>(
+                    <button key={g.v} onClick={()=>{
+                      setSelGrade(g.v);
+                      if(needsSchool(g.v)) setStep("school");
+                      else setStep("name");
+                    }} style={{
+                      background:"rgba(255,255,255,.1)",border:"2px solid rgba(255,255,255,.2)",
+                      borderRadius:10,padding:"10px 8px",color:"#fff",cursor:"pointer",
+                      fontWeight:700,fontSize:".9rem",display:"flex",alignItems:"center",
+                      justifyContent:"center",gap:6,fontFamily:"inherit"
+                    }}>
+                      <span>{g.icon}</span><span>{g.l}</span>
+                    </button>
+                  ))}
+                </div>
+                {edit&&<button style={{marginTop:10,background:"none",border:"none",color:"rgba(255,255,255,.5)",cursor:"pointer",width:"100%",fontSize:".78rem"}} onClick={()=>{setEdit(false);setNgMsg("");}}>キャンセル</button>}
+              </div>
+            )}
+
+            {/* STEP 2: 学校名入力 */}
+            {step==="school"&&(
+              <div>
+                <div style={{color:"rgba(255,255,255,.8)",fontSize:".88rem",fontWeight:700,marginBottom:8,textAlign:"center"}}>
+                  {GRADES.find(g=>g.v===selGrade)?.icon} 学校名を入力
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <input className="hero-input" style={{flex:1}} value={selSchool}
+                    onChange={e=>setSelSchool(e.target.value)}
+                    placeholder="例：○○中学校" maxLength={20}
+                    onKeyDown={e=>e.key==="Enter"&&selSchool.trim()&&setStep("name")}
+                    autoFocus/>
+                  <button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 14px"}}
+                    onClick={()=>selSchool.trim()&&setStep("name")} disabled={!selSchool.trim()}>
+                    次へ →
+                  </button>
+                </div>
+                <button style={{marginTop:8,background:"none",border:"none",color:"rgba(255,255,255,.5)",cursor:"pointer",width:"100%",fontSize:".78rem"}} onClick={()=>setStep("grade")}>← 戻る</button>
+              </div>
+            )}
+
+            {/* STEP 3: ニックネーム入力 */}
+            {step==="name"&&(
+              <div>
+                <div style={{color:"rgba(255,255,255,.8)",fontSize:".88rem",fontWeight:700,marginBottom:8,textAlign:"center"}}>
+                  ニックネームを入力
+                  {selSchool&&<div style={{fontSize:".75rem",color:"rgba(255,255,255,.6)",fontWeight:400,marginTop:2}}>{selSchool}</div>}
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <input className="hero-input" style={{flex:1}} value={ni}
+                    onChange={e=>{setNi(e.target.value);setNgMsg("");}}
+                    placeholder="ニックネームを入力" maxLength={12}
+                    onKeyDown={e=>e.key==="Enter"&&save()} autoFocus/>
+                  <button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 14px"}} onClick={save}>✓ 保存</button>
+                </div>
+                {ngMsg&&(
+                  <div style={{marginTop:8,background:"rgba(239,68,68,.2)",border:"1px solid rgba(239,68,68,.5)",borderRadius:8,padding:"7px 10px",color:"#fca5a5",fontSize:".8rem",textAlign:"center",fontWeight:600}}>
+                    ⚠️ {ngMsg}
+                  </div>
+                )}
+                <button style={{marginTop:8,background:"none",border:"none",color:"rgba(255,255,255,.5)",cursor:"pointer",width:"100%",fontSize:".78rem"}} onClick={()=>setStep(needsSchool(selGrade)?"school":"grade")}>← 戻る</button>
               </div>
             )}
           </div>
@@ -1737,9 +1815,13 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
               🎮 今週 <span style={{color:"#facc15",fontSize:"1.1rem"}}>{weekCount}</span> 人目のプレイヤー！
             </div>
             <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-              <div className="hero-nick">👤 {nickname}</div>
-              <button className="hero-nick-btn" onClick={()=>setEdit(true)}>変更</button>
+              <div className="hero-nick">
+                {GRADES.find(g=>g.v===userGrade)?.icon||"👤"} {nickname}
+                {userSchool&&<span style={{fontSize:".72rem",opacity:.8,marginLeft:4}}>[{userSchool}]</span>}
+              </div>
+              <button className="hero-nick-btn" onClick={startEdit}>変更</button>
             </div>
+            {userGrade&&<div style={{textAlign:"center",marginTop:4,fontSize:".72rem",color:"rgba(255,255,255,.5)"}}>{gradeLabel(userGrade)}</div>}
           </div>
         )}
       </div>
@@ -2060,7 +2142,7 @@ function QuizScreen({ maxNum, minNum=1, quizMode, directionMode="random", subLev
 }
 
 // ── ResultScreen ───────────────────────────────────────────────
-function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", onHome, onRetry, battleResult=null }) {
+function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", onHome, onRetry, battleResult=null, userGrade="", userSchool="" }) {
   const [showMiss,setShowMiss]=useState(false);
   const [showRankModal,setShowRankModal]=useState(true);
   const [rankSaved,setRankSaved]=useState(false);
@@ -2147,7 +2229,8 @@ function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", o
 function RankingScreen({ onBack, myNickname }) {
   const [tab,setTab]=useState("element_all");
   const [diffFilter,setDiffFilter]=useState("all");
-  const [molFilter,setMolFilter]=useState("all"); // mol専用モードフィルター
+  const [molFilter,setMolFilter]=useState("all");
+  const [gradeFilter,setGradeFilter]=useState("all"); // 区分フィルター
   const [allRanks,setAllRanks]=useState([]);
   const [loading,setLoading]=useState(true);
 
@@ -2178,15 +2261,20 @@ function RankingScreen({ onBack, myNickname }) {
     setAllRanks(all);
     setDiffFilter("all");
     setMolFilter("all");
+    setGradeFilter("all");
     setLoading(false);
   };
 
-  // フィルター適用
+  // フィルター適用（難易度/molモード → gradeの順に絞り込み）
   let ranks = allRanks;
   if(tab==="mol") {
-    ranks = molFilter==="all" ? allRanks : allRanks.filter(r=>(r.subLevel||"random")===molFilter);
+    ranks = molFilter==="all" ? ranks : ranks.filter(r=>(r.subLevel||"random")===molFilter);
   } else {
-    ranks = diffFilter==="all" ? allRanks : allRanks.filter(r=>(r.difficulty||"normal")===diffFilter);
+    ranks = diffFilter==="all" ? ranks : ranks.filter(r=>(r.difficulty||"normal")===diffFilter);
+  }
+  // 区分フィルター（全タブ共通）
+  if(gradeFilter!=="all") {
+    ranks = ranks.filter(r=>(r.grade||"general")===gradeFilter);
   }
 
   const tabs=[
@@ -2196,6 +2284,13 @@ function RankingScreen({ onBack, myNickname }) {
 
   const showDiffFilter = ["element_all","ion","formula"].includes(tab);
   const showMolFilter = tab==="mol";
+  const GRADE_OPTIONS = [
+    {v:"all",        l:"全体",   icon:"🏆"},
+    {v:"elementary", l:"小学生", icon:"🎒"},
+    {v:"junior",     l:"中学生", icon:"📚"},
+    {v:"high",       l:"高校生", icon:"🎓"},
+    {v:"general",    l:"一般",   icon:"👤"},
+  ];
 
   const modeLabel = (r) => {
     if(r.quizMode==="ion") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--ion-l)", color:"var(--ion)"};
@@ -2277,6 +2372,26 @@ function RankingScreen({ onBack, myNickname }) {
             })}
           </div>
         )}
+        {/* 区分フィルター（全タブ共通） */}
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:8,marginBottom:4}}>
+          {GRADE_OPTIONS.map(d=>{
+            const active = gradeFilter===d.v;
+            return (
+              <button key={d.v} onClick={()=>setGradeFilter(d.v)}
+                style={{
+                  padding:"3px 10px",borderRadius:20,
+                  border:`2px solid ${active?"var(--primary)":"var(--border)"}`,
+                  background:active?"var(--pl)":"#fff",
+                  color:active?"var(--primary)":"var(--muted)",
+                  fontWeight:active?700:400,fontSize:".75rem",
+                  cursor:"pointer",fontFamily:"inherit",transition:"all .12s",
+                  display:"flex",alignItems:"center",gap:3
+                }}>
+                <span>{d.icon}</span><span>{d.l}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
       {loading?<p className="tc muted" style={{padding:16}}>読み込み中...</p>
         :ranks.length===0?<p className="tc muted" style={{padding:16}}>まだ記録がありません</p>
@@ -2292,6 +2407,7 @@ function RankingScreen({ onBack, myNickname }) {
                     <span className="rcard-rank">{medal(i)||<span style={{fontSize:".85rem",color:"var(--muted)"}}>{i+1}</span>}</span>
                     <span className="rcard-name">
                       {r.name}
+                      {r.school&&<span style={{fontSize:".7rem",color:"var(--muted)",marginLeft:4}}>[{r.school}]</span>}
                       {isMe&&<span className="bdg by" style={{marginLeft:5}}>あなた</span>}
                     </span>
                     {/* スコア左：絵文字アイコンのみ */}
@@ -3385,7 +3501,7 @@ function MolQuizScreen({ mode, onFinish, onExit=null }) {
 }
 
 // ── MolResultScreen ─────────────────────────────────────────
-function MolResultScreen({ result, nickname="", onHome, onRetry }) {
+function MolResultScreen({ result, nickname="", onHome, onRetry, userGrade="", userSchool="" }) {
   const [showMiss, setShowMiss] = useState(false);
   const [showRankModal, setShowRankModal] = useState(!!nickname);
   const [rankSaved, setRankSaved] = useState(false);
@@ -3632,6 +3748,8 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
 export default function App() {
   const [screen,setScreen]=useState("home");
   const [nickname,setNickname]=useState("");
+  const [userGrade,setUserGrade]=useState(""); // "elementary"|"junior"|"high"|"general"
+  const [userSchool,setUserSchool]=useState("");
   const [maxNum,setMaxNum]=useState(20);
   const [minNum,setMinNum]=useState(1);
   const [quizMode,setQuizMode]=useState("element"); // "element" | "ion"
@@ -3664,8 +3782,10 @@ export default function App() {
     return `weekly_${yyyy}${mm}${dd}`;
   };
 
-  const saveNickname=async(nick)=>{
+  const saveNickname=async(nick, grade="", school="")=>{
     setNickname(nick);
+    setUserGrade(grade);
+    setUserSchool(school);
     try {
       const key = getWeekKey();
       const res = await sGet(key, true);
@@ -3721,7 +3841,7 @@ export default function App() {
         </div>
         <div className="main">
           {screen==="home"&&(
-            <HomeScreen nickname={nickname} onSetNickname={saveNickname}
+            <HomeScreen nickname={nickname} userGrade={userGrade} userSchool={userSchool} onSetNickname={saveNickname}
               onSolo={goSetup} onBattle={goBattle}
               onRanking={()=>{bgm.se("fanfare");setScreen("ranking");}}
               onMemo={()=>setScreen("memo")}
@@ -3745,7 +3865,7 @@ export default function App() {
           {screen==="mol_battle"&&<MolBattleLobby nickname={nickname} onBack={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
           {screen==="mol_countdown"&&<Countdown onDone={()=>setScreen("mol_quiz")}/>}
           {screen==="mol_quiz"&&<MolQuizScreen mode={molMode} onFinish={r=>{bgm.stop();bgm.se("finish");setQuizResult({...r,_mol:true,molMode});setScreen("mol_result");}} onExit={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
-          {screen==="mol_result"&&quizResult?._mol&&<MolResultScreen result={quizResult} nickname={nickname} onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}} onRetry={()=>{bgm.stop();setScreen("mol_quiz");}}/>}
+          {screen==="mol_result"&&quizResult?._mol&&<MolResultScreen result={quizResult} nickname={nickname} userGrade={userGrade} userSchool={userSchool} onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}} onRetry={()=>{bgm.stop();setScreen("mol_quiz");}}/>}
           {screen==="battle"&&<BattleLobby nickname={nickname} quizMode={quizMode} directionMode={directionMode} subLevel={subLevel} difficulty={difficulty} onBack={goHome}/>}
         </div>
       </div>
