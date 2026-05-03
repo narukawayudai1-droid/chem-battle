@@ -1464,7 +1464,7 @@ function HowToModal({ onClose }) {
 }
 
 // ── HomeScreen ─────────────────────────────────────────────────
-function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm, todayCount=0 }) {
+function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm, weekCount=0 }) {
   const [edit,setEdit]=useState(false);
   const [ni,setNi]=useState(nickname||"");
   const [showHowTo,setShowHowTo]=useState(false);
@@ -1478,17 +1478,13 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
         <img src="/hero.png" alt="CHEM BATTLE" style={{width:"100%",display:"block",objectFit:"cover"}}/>
       </div>
 
-      {/* ── 今日のプレイヤー数 ── */}
-      {todayCount>0&&(
-        <div style={{textAlign:"center",marginBottom:8,fontSize:".78rem",color:"var(--muted)"}}>
-          🎮 今日 <b style={{color:"var(--primary)",fontSize:"1rem"}}>{todayCount}</b> 人目のプレイヤー！
-        </div>
-      )}
       {/* ── ニックネーム入力 ── */}
       <div style={{marginBottom:12,background:"linear-gradient(135deg,#0f0c29,#1a1040)",borderRadius:12,padding:"14px 16px"}}>
         {!nickname||edit?(
           <div>
-            <div style={{color:"rgba(255,255,255,.7)",fontSize:".8rem",marginBottom:8,textAlign:"center"}}>ニックネームを登録してスタート！</div>
+            <div style={{color:"rgba(255,255,255,.8)",fontSize:".88rem",fontWeight:700,marginBottom:8,textAlign:"center",letterSpacing:".5px"}}>
+              ニックネームを登録してスタート！
+            </div>
             <div style={{display:"flex",gap:8}}>
               <input className="hero-input" style={{flex:1}} value={ni} onChange={e=>setNi(e.target.value)}
                 placeholder="ニックネームを入力" maxLength={12}
@@ -1498,9 +1494,14 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
             </div>
           </div>
         ):(
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-            <div className="hero-nick">👤 {nickname}</div>
-            <button className="hero-nick-btn" onClick={()=>setEdit(true)}>変更</button>
+          <div>
+            <div style={{color:"rgba(255,255,255,.8)",fontSize:".88rem",fontWeight:700,textAlign:"center",marginBottom:8,letterSpacing:".5px"}}>
+              🎮 今週 <span style={{color:"#facc15",fontSize:"1.1rem"}}>{weekCount}</span> 人目のプレイヤー！
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+              <div className="hero-nick">👤 {nickname}</div>
+              <button className="hero-nick-btn" onClick={()=>setEdit(true)}>変更</button>
+            </div>
           </div>
         )}
       </div>
@@ -3380,29 +3381,40 @@ export default function App() {
     return()=>document.removeEventListener("click",start);
   },[]);
 
-  const [todayCount,setTodayCount]=useState(0);
+  const [weekCount,setWeekCount]=useState(0);
+
+  // 今週の月曜日の日付をキーに（月〜日サイクル、日曜23:59リセット）
+  const getWeekKey = () => {
+    const now = new Date();
+    const day = now.getDay(); // 0=日, 1=月...6=土
+    // 月曜始まりで今週の月曜を求める
+    const monday = new Date(now);
+    const diff = day === 0 ? 6 : day - 1; // 日曜なら6日前が月曜
+    monday.setDate(now.getDate() - diff);
+    const yyyy = monday.getFullYear();
+    const mm = String(monday.getMonth()+1).padStart(2,"0");
+    const dd = String(monday.getDate()).padStart(2,"0");
+    return `weekly_${yyyy}${mm}${dd}`;
+  };
 
   const saveNickname=async(nick)=>{
     setNickname(nick);
-    // 今日のプレイヤー数をカウント
     try {
-      const today = new Date().toISOString().slice(0,10).replace(/-/g,"");
-      const key = `players_${today}`;
+      const key = getWeekKey();
       const res = await sGet(key, true);
       let count = 1;
-      if(res) { try { count = parseInt(res.value)||0; count+=1; } catch{} }
+      if(res) { try { count = (parseInt(res.value)||0) + 1; } catch{} }
       await sSet(key, String(count), true);
-      setTodayCount(count);
+      setWeekCount(count);
     } catch{}
   };
 
   useEffect(()=>{
-    // 起動時に今日のカウントを取得
+    // 起動時に今週のカウントを取得（ニックネーム前でも件数だけ取る）
     (async()=>{
       try {
-        const today = new Date().toISOString().slice(0,10).replace(/-/g,"");
-        const res = await sGet(`players_${today}`, true);
-        if(res) setTodayCount(parseInt(res.value)||0);
+        const res = await sGet(getWeekKey(), true);
+        if(res) setWeekCount(parseInt(res.value)||0);
       } catch{}
     })();
   },[]);
@@ -3447,7 +3459,7 @@ export default function App() {
               onRanking={()=>setScreen("ranking")}
               onMemo={()=>setScreen("memo")}
               onMol={(t)=>{bgm.stop();if(t==="battle")setScreen("mol_battle");else setScreen("mol_setup");}}
-              bgmOn={bgmOn} onToggleBgm={toggleBgm} todayCount={todayCount}/>
+              bgmOn={bgmOn} onToggleBgm={toggleBgm} weekCount={weekCount}/>
           )}
           {screen==="setup"&&(
             <SetupScreen title={isIon?"イオンクイズ設定":"出題範囲を選択"} quizMode={quizMode} onBack={goHome}
