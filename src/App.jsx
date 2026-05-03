@@ -1659,51 +1659,45 @@ function HowToModal({ onClose }) {
 }
 
 // ── HomeScreen ─────────────────────────────────────────────────
+// ── ニックネーム審査（禁止ワードリスト） ──────────────────
+const NG_PATTERNS = [
+  // 性的・卑猥
+  /セックス|セクス|えっち|エッチ|おっぱい|まんこ|ちんこ|ちんぽ|陰茎|陰部|性器|ふぇら|フェラ|ぽるの|ポルノ|えろ(?!い)|エロ(?!い)|はだか|裸|わいせつ|淫|売春|援交/,
+  /s[e3][x×]|s[e3]k[s5u]|f[u\*]ck|sh[i1]t|b[i1]tch|a[s5][s5]|p[u\*][s5][s5]|d[i1]ck|c[o0]ck|p[o0]rn|n[u\*]de/i,
+  // 暴力・犯罪・薬物
+  /殺す|殺せ|死ね|死んで|爆破|爆弾|テロ|覚醒剤|麻薬|コカイン|ヘロイン|大麻|拳銃|自殺|自傷|リスカ/,
+  /kill|bomb|terror|drug|cocaine|heroin|meth|suicide|murder/i,
+  // 差別・誹謗中傷
+  /きちく|基地外|キチガイ|きちがい|知恵遅れ|池沼|ガイジ|ガイ者|ニガー|チョン|朝鮮人|支那/,
+  // 伏せ字・記号回避（よくあるパターン）
+  /し[.\-＿_・]ね|殺[.\-＿_・]す|死[.\-＿_・]ね|う[.\-＿_・]ん[.\-＿_・]こ/,
+  /[ck][.\-_*][o0][.\-_*][ck]|[df][.\-_*][u\*][.\-_*][ck]/i,
+  // うんこ・クソ系（子供向けアプリのため）
+  /うんこ|うんち|クソ|くそ|糞|ブス|ぶす|デブ|でぶ|ハゲ|はげ/,
+];
+
+function checkNickname(name) {
+  const n = name.toLowerCase();
+  for (const pat of NG_PATTERNS) {
+    if (pat.test(n)) return false;
+  }
+  return true;
+}
+
 function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm, weekCount=0 }) {
   const [edit,setEdit]=useState(false);
   const [ni,setNi]=useState(nickname||"");
   const [showHowTo,setShowHowTo]=useState(false);
-  const [checking,setChecking]=useState(false);
   const [ngMsg,setNgMsg]=useState("");
 
-  const save=async()=>{
+  const save=()=>{
     const name=ni.trim();
     if(!name) return;
-    setChecking(true);
-    setNgMsg("");
-    try {
-      const res=await fetch("https://api.anthropic.com/v1/messages",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          model:"claude-sonnet-4-20250514",
-          max_tokens:50,
-          system:`あなたはオンラインゲームのユーザー名を審査する厳格かつ公平なモデレーターです。
-入力されたニックネームが教育上の観点から適切かどうかを判定してください。
-以下のいずれかに該当する場合は「NG」とだけ返してください。それ以外は「OK」とだけ返してください。
-1. 暴力・犯罪・薬物・自傷行為を助長または連想させる表現
-2. 性的・卑猥な表現（直接的な単語・隠語・卑猥な意味を持つ当て字を含む）
-3. 差別・誹謗中傷（人種・宗教・性別・障害・職業・特定の個人や団体への攻撃）
-4. 個人情報の露出（本名・住所・電話番号・SNS ID・学校名など）
-5. 運営スタッフや有名人へのなりすまし
-6. 公序良俗に反する社会問題・政治的宗教的な強い主張
-7. 伏せ字・記号・数字で禁止ワードを回避しようとする意図
-必ず「OK」か「NG」の2文字のみで答えてください。`,
-          messages:[{role:"user",content:`ニックネーム：「${name}」`}]
-        })
-      });
-      const data=await res.json();
-      const verdict=(data.content?.[0]?.text||"").trim().toUpperCase();
-      if(verdict==="NG"){
-        setNgMsg("このニックネームは使用できません。別の名前を入力してください。");
-        setChecking(false);
-        return;
-      }
-    } catch(e) {
-      // API失敗時はそのまま通す（ユーザー体験を優先）
-      console.warn("nickname check failed",e);
+    if(!checkNickname(name)){
+      setNgMsg("このニックネームは使用できません。別の名前を入力してください。");
+      return;
     }
-    setChecking(false);
+    setNgMsg("");
     onSetNickname(name);
     setEdit(false);
   };
@@ -1726,10 +1720,8 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
             <div style={{display:"flex",gap:8}}>
               <input className="hero-input" style={{flex:1}} value={ni} onChange={e=>{setNi(e.target.value);setNgMsg("");}}
                 placeholder="ニックネームを入力" maxLength={12}
-                onKeyDown={e=>e.key==="Enter"&&!checking&&save()} autoFocus={edit}/>
-              <button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 14px",opacity:checking?0.6:1}} onClick={save} disabled={checking}>
-                {checking?"⏳":"✓ 保存"}
-              </button>
+                onKeyDown={e=>e.key==="Enter"&&save()} autoFocus={edit}/>
+              <button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 14px"}} onClick={save}>✓ 保存</button>
               {edit&&<button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 10px",background:"rgba(255,255,255,.12)",color:"rgba(255,255,255,.7)"}} onClick={()=>{setEdit(false);setNgMsg("");}}>✕</button>}
             </div>
             {ngMsg&&(
