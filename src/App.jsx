@@ -1420,7 +1420,7 @@ function Countdown({ onDone }) {
 }
 
 // ── ランキング登録モーダル ─────────────────────────────────────
-function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLevel="junior", difficulty="normal", onDone }) {
+function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLevel="junior", difficulty="normal", userGrade="", userSchool="", onDone }) {
   const [saving, setSaving] = useState(false);
   const acc = total > 0 ? Math.round(correct/total*100) : 0;
 
