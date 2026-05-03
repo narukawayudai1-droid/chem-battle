@@ -1634,7 +1634,7 @@ const LEVEL_LABELS = {
 const DIFFICULTY_OPTIONS = [
   { value:"easy",   label:"😊 初級", desc:"明らかに違う選択肢",   color:"#22c55e", light:"#dcfce7" },
   { value:"normal", label:"😐 中級", desc:"一部似ている選択肢",   color:"#f59e0b", light:"#fef3c7" },
-  { value:"hard",   label:"😈 上級", desc:"非常に似たダミーのみ", color:"#ef4444", light:"#fee2e2" },
+  { value:"hard",   label:"👿 上級", desc:"非常に似たダミーのみ", color:"#ef4444", light:"#fee2e2" },
 ];
 
 function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
@@ -2030,7 +2030,7 @@ function RankingScreen({ onBack, myNickname }) {
               {v:"all",   icon:"🏆", l:"全て",  color:"var(--primary)", bg:"var(--pl)"},
               {v:"easy",  icon:"😊", l:"初級",  color:"#166534",        bg:"#dcfce7"},
               {v:"normal",icon:"😐", l:"中級",  color:"#92400e",        bg:"#fef3c7"},
-              {v:"hard",  icon:"😈", l:"上級",  color:"#991b1b",        bg:"#fee2e2"},
+              {v:"hard",  icon:"👿", l:"上級",  color:"#991b1b",        bg:"#fee2e2"},
             ].map(d=>{
               const active = diffFilter===d.v;
               return (
