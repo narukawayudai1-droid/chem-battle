@@ -1809,8 +1809,7 @@ function RankingScreen({ onBack, myNickname }) {
       const mi = MOL_MODE_ICONS[r.subLevel||"random"];
       return mi ? {text:`${mi.icon}${mi.label}`, bg:mi.bg, color:mi.color} : {text:r.subLevel||"?", bg:"#ede9fe", color:"#6366f1"};
     }
-    if(r.maxNum && r.maxNum!==20) return {text:`〜${r.maxNum}`, bg:"var(--pl)", color:"var(--primary)"};
-    return null;
+    return null; // 元素はmaxNum表示なし
   };
 
   const medal = (i) => i===0?"🥇":i===1?"🥈":i===2?"🥉":null;
@@ -1859,22 +1858,24 @@ function RankingScreen({ onBack, myNickname }) {
         {showDiffFilter&&(
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:13}}>
             {[
-              {v:"all",  l:"全て",   bg:"var(--bg)", color:"var(--muted)",  activeBg:"var(--border)", activeColor:"var(--text)"},
-              {v:"easy",  l:"😊 易",  bg:"#dcfce7",   color:"#166534"},
-              {v:"normal",l:"😐 普通", bg:"#fef3c7",   color:"#92400e"},
-              {v:"hard",  l:"😈 難",  bg:"#fee2e2",   color:"#991b1b"},
+              {v:"all",   icon:"🏆", l:"全て",  color:"var(--primary)", bg:"var(--pl)"},
+              {v:"easy",  icon:"😊", l:"易",    color:"#166534",        bg:"#dcfce7"},
+              {v:"normal",icon:"😐", l:"普通",  color:"#92400e",        bg:"#fef3c7"},
+              {v:"hard",  icon:"😈", l:"難",    color:"#991b1b",        bg:"#fee2e2"},
             ].map(d=>{
               const active = diffFilter===d.v;
               return (
                 <button key={d.v} onClick={()=>setDiffFilter(d.v)}
                   style={{
-                    padding:"4px 12px",borderRadius:20,border:`2px solid ${active?(d.color||"var(--text)"):"var(--border)"}`,
-                    background:active?(d.bg||"var(--bg)"):"#fff",
-                    color:active?(d.color||"var(--text)"):"var(--muted)",
+                    padding:"4px 10px",borderRadius:20,
+                    border:`2px solid ${active?d.color:"var(--border)"}`,
+                    background:active?d.bg:"#fff",
+                    color:active?d.color:"var(--muted)",
                     fontWeight:active?700:400,fontSize:".78rem",cursor:"pointer",
-                    fontFamily:"inherit",transition:"all .12s"
+                    fontFamily:"inherit",transition:"all .12s",
+                    display:"flex",alignItems:"center",gap:3
                   }}>
-                  {d.l}
+                  <span>{d.icon}</span><span>{d.l}</span>
                 </button>
               );
             })}
