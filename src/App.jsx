@@ -3010,7 +3010,7 @@ function MolBattleLobby({ nickname, onBack }) {
       </div>
       <MolResultScreen result={quizResult}
         onHome={()=>{clearInterval(pollRef.current);onBack();}}
-        onRetry={()=>{clearInterval(pollRef.current);onBack();}}/>
+        onRetry={()=>{clearInterval(pollRef.current);setPhase("menu");setBattleResult(null);setRoomCode("");setRoomData(null);}}/>
     </div>
   );
 
@@ -3481,7 +3481,7 @@ function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="jun
   if(phase==="countdown") return <Countdown onDone={()=>setPhase("quiz")}/>;
   if(phase==="quiz") return <QuizScreen maxNum={roomData?.maxNum||maxNum} minNum={roomData?.minNum||minNum||1} quizMode={quizMode} directionMode={roomData?.directionMode||directionMode} subLevel={roomData?.subLevel||subLevel} difficulty={roomData?.difficulty||difficulty} onFinish={handleQuizFinish} onExit={()=>{clearInterval(pollRef.current);onBack();}} seed={roomData?.seed}/>;
   if(phase==="result") return <ResultScreen result={quizResult} nickname={nickname} maxNum={maxNum} quizMode={quizMode} subLevel={roomData?.subLevel||subLevel}
-    battleResult={battleResult} onHome={()=>{clearInterval(pollRef.current);onBack();}} onRetry={()=>{clearInterval(pollRef.current);onBack();}}/>;
+    battleResult={battleResult} onHome={()=>{clearInterval(pollRef.current);onBack();}} onRetry={()=>{clearInterval(pollRef.current);setPhase("menu");setBattleResult(null);setRoomCode("");setRoomData(null);}}/>;
   if(phase==="result_wait"){
     const w=roomData?.players.filter(p=>p.status!=="done").length||0;
     return <div className="card tc">
