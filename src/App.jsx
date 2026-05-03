@@ -1831,24 +1831,25 @@ function RankingScreen({ onBack, myNickname }) {
         {showMolFilter&&(
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:13}}>
             {[
-              {v:"all",    l:"全て"},
-              {v:"intro",  l:"入門"},
-              {v:"basic",  l:"基礎"},
-              {v:"adv",    l:"応用"},
-              {v:"random", l:"ランダム"},
+              {v:"all",    icon:"🏆", l:"全て",   color:"var(--primary)", bg:"var(--pl)"},
+              {v:"intro",  icon:"🌱", l:"入門",   color:MOL_MODE_ICONS.intro.color,  bg:MOL_MODE_ICONS.intro.bg},
+              {v:"basic",  icon:"📘", l:"基礎",   color:MOL_MODE_ICONS.basic.color,  bg:MOL_MODE_ICONS.basic.bg},
+              {v:"adv",    icon:"🔥", l:"応用",   color:MOL_MODE_ICONS.adv.color,    bg:MOL_MODE_ICONS.adv.bg},
+              {v:"random", icon:"🎲", l:"ランダム",color:MOL_MODE_ICONS.random.color, bg:MOL_MODE_ICONS.random.bg},
             ].map(d=>{
               const active = molFilter===d.v;
               return (
                 <button key={d.v} onClick={()=>setMolFilter(d.v)}
                   style={{
-                    padding:"4px 12px",borderRadius:20,
-                    border:`2px solid ${active?"#6366f1":"var(--border)"}`,
-                    background:active?"#ede9fe":"#fff",
-                    color:active?"#6366f1":"var(--muted)",
+                    padding:"4px 10px",borderRadius:20,
+                    border:`2px solid ${active?d.color:"var(--border)"}`,
+                    background:active?d.bg:"#fff",
+                    color:active?d.color:"var(--muted)",
                     fontWeight:active?700:400,fontSize:".78rem",
-                    cursor:"pointer",fontFamily:"inherit",transition:"all .12s"
+                    cursor:"pointer",fontFamily:"inherit",transition:"all .12s",
+                    display:"flex",alignItems:"center",gap:3
                   }}>
-                  {d.l}
+                  <span>{d.icon}</span><span>{d.l}</span>
                 </button>
               );
             })}
