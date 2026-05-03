@@ -383,52 +383,137 @@ function seededRng(seed) {
 // ── イオン用ダミー ──────────────────────────────────────────
 // 各イオンに「似ているイオン」を事前定義
 const ION_SIMILAR = {
-  // 陽イオン
-  "H⁺":    { normal:["ナトリウムイオン","カリウムイオン","リチウムイオン"],           hard:["水酸化物イオン","フッ化物イオン","アンモニウムイオン"] },
-  "Na⁺":   { normal:["カリウムイオン","リチウムイオン","マグネシウムイオン"],          hard:["ナトリウムイオン(2価)","Na²⁺","ナトリウムアニオン"] },
-  "K⁺":    { normal:["ナトリウムイオン","リチウムイオン","ルビジウムイオン"],           hard:["カリウムイオン(2価)","K²⁺","カリウムアニオン"] },
-  "Ca²⁺":  { normal:["マグネシウムイオン","バリウムイオン","銅イオン"],               hard:["カルシウムイオン(1価)","カルシウムイオン(3価)","カルシウムアニオン"] },
-  "Mg²⁺":  { normal:["カルシウムイオン","亜鉛イオン","バリウムイオン"],               hard:["マグネシウムイオン(1価)","マグネシウムイオン(3価)","マグネシウムアニオン"] },
-  "Ba²⁺":  { normal:["カルシウムイオン","マグネシウムイオン","ストロンチウムイオン"],   hard:["バリウムイオン(1価)","バリウムイオン(3価)","バリウムアニオン"] },
-  "Cu²⁺":  { normal:["亜鉛イオン","鉄(II)イオン","ニッケルイオン"],                  hard:["銅イオン(1価)","銅イオン(3価)","銅アニオン"] },
-  "Zn²⁺":  { normal:["銅イオン","ニッケルイオン","鉄(II)イオン"],                    hard:["亜鉛イオン(1価)","亜鉛イオン(3価)","亜鉛アニオン"] },
-  "Fe²⁺":  { normal:["鉄(III)イオン","銅イオン","マンガン(II)イオン"],               hard:["鉄(III)イオン","鉄(I)イオン","鉄アニオン"] },
-  "Fe³⁺":  { normal:["鉄(II)イオン","アルミニウムイオン","クロム(III)イオン"],        hard:["鉄(II)イオン","鉄(IV)イオン","鉄アニオン"] },
-  "Al³⁺":  { normal:["鉄(III)イオン","クロム(III)イオン","アルミニウムイオン(2価)"],  hard:["アルミニウムイオン(2価)","アルミニウムイオン(4価)","アルミニウムアニオン"] },
-  "NH₄⁺":  { normal:["ナトリウムイオン","カリウムイオン","水素イオン"],               hard:["アンモニウムイオン(2価)","アンモニアイオン","アンモニウムアニオン"] },
-  "Ag⁺":   { normal:["ナトリウムイオン","カリウムイオン","銅イオン"],                 hard:["銀イオン(2価)","銀アニオン","銀イオン(0価)"] },
-  "Li⁺":   { normal:["ナトリウムイオン","カリウムイオン","水素イオン"],               hard:["リチウムイオン(2価)","リチウムアニオン","Li²⁺"] },
-  "Mn²⁺":  { normal:["鉄(II)イオン","銅イオン","亜鉛イオン"],                        hard:["マンガン(III)イオン","マンガン(I)イオン","マンガンアニオン"] },
-  "Pb²⁺":  { normal:["銅イオン","亜鉛イオン","鉄(II)イオン"],                        hard:["鉛イオン(1価)","鉛イオン(4価)","鉛アニオン"] },
-  "Ni²⁺":  { normal:["銅イオン","亜鉛イオン","コバルトイオン"],                       hard:["ニッケルイオン(3価)","ニッケルイオン(1価)","ニッケルアニオン"] },
-  "Cr³⁺":  { normal:["鉄(III)イオン","アルミニウムイオン","マンガン(III)イオン"],     hard:["クロム(II)イオン","クロム(IV)イオン","クロムアニオン"] },
-  "H₃O⁺":  { normal:["アンモニウムイオン","水素イオン","ナトリウムイオン"],            hard:["オキソニウムイオン(2価)","水分子イオン","H₂O⁺"] },
-  // 陰イオン
-  "Cl⁻":   { normal:["臭化物イオン","ヨウ化物イオン","フッ化物イオン"],               hard:["塩化物イオン(2価)","塩化物アニオン(2価)","Cl²⁻"] },
-  "OH⁻":   { normal:["フッ化物イオン","塩化物イオン","酸化物イオン"],                 hard:["水酸化物イオン(2価)","酸素イオン","O²⁻"] },
-  "SO₄²⁻": { normal:["亜硫酸イオン","炭酸イオン","リン酸イオン"],                    hard:["亜硫酸イオン","硫酸水素イオン","硫酸イオン(1価)"] },
-  "NO₃⁻":  { normal:["亜硝酸イオン","硫酸イオン","塩化物イオン"],                    hard:["亜硝酸イオン","硝酸イオン(2価)","NO₄⁻"] },
-  "CO₃²⁻": { normal:["炭酸水素イオン","硫酸イオン","亜硫酸イオン"],                  hard:["炭酸水素イオン","炭酸イオン(1価)","炭酸イオン(3価)"] },
-  "HCO₃⁻": { normal:["炭酸イオン","硫酸水素イオン","水酸化物イオン"],                hard:["炭酸イオン","炭酸水素イオン(2価)","HCO₄⁻"] },
-  "SO₃²⁻": { normal:["硫酸イオン","炭酸イオン","亜硝酸イオン"],                      hard:["硫酸イオン","亜硫酸イオン(1価)","亜硫酸イオン(3価)"] },
-  "NO₂⁻":  { normal:["硝酸イオン","亜硫酸イオン","塩化物イオン"],                    hard:["硝酸イオン","亜硝酸イオン(2価)","N₂O⁻"] },
-  "PO₄³⁻": { normal:["硫酸イオン","炭酸イオン","硝酸イオン"],                        hard:["リン酸イオン(2価)","リン酸イオン(4価)","HPO₄²⁻"] },
-  "HSO₄⁻": { normal:["硫酸イオン","炭酸水素イオン","水酸化物イオン"],                hard:["硫酸イオン","亜硫酸水素イオン","H₂SO₄"] },
-  "MnO₄⁻": { normal:["二クロム酸イオン","硫酸イオン","硝酸イオン"],                  hard:["過マンガン酸イオン(2価)","マンガン酸イオン","MnO₃⁻"] },
-  "Cr₂O₇²⁻":{ normal:["過マンガン酸イオン","硫酸イオン","炭酸イオン"],              hard:["クロム酸イオン","二クロム酸イオン(3価)","Cr₂O₆²⁻"] },
-  "CH₃COO⁻":{ normal:["ギ酸イオン","水酸化物イオン","炭酸水素イオン"],              hard:["酢酸イオン(2価)","プロピオン酸イオン","CH₂COO⁻"] },
-  "F⁻":    { normal:["塩化物イオン","臭化物イオン","水酸化物イオン"],                hard:["フッ化物イオン(2価)","F²⁻","フッ化物アニオン(2価)"] },
-  "Br⁻":   { normal:["塩化物イオン","ヨウ化物イオン","フッ化物イオン"],              hard:["臭化物イオン(2価)","Br²⁻","臭化物アニオン(2価)"] },
-  "I⁻":    { normal:["臭化物イオン","塩化物イオン","フッ化物イオン"],               hard:["ヨウ化物イオン(2価)","I₃⁻","ヨウ化物アニオン(2価)"] },
-  "S²⁻":   { normal:["酸化物イオン","塩化物イオン","硫酸イオン"],                   hard:["硫化物イオン(1価)","硫化物イオン(3価)","S²⁺"] },
-  "O²⁻":   { normal:["硫化物イオン","水酸化物イオン","フッ化物イオン"],              hard:["酸化物イオン(1価)","酸化物イオン(3価)","O²⁺"] },
-  "CN⁻":   { normal:["塩化物イオン","水酸化物イオン","亜硝酸イオン"],               hard:["シアン化物イオン(2価)","C₂N⁻","チオシアン酸イオン"] },
-  "SCN⁻":  { normal:["シアン化物イオン","塩化物イオン","硝酸イオン"],               hard:["チオシアン酸イオン(2価)","SC₂N⁻","シアン化物イオン"] },
+  // キー: イオン式
+  // f2n_*: 式→名前 問題のダミー名前リスト
+  // n2f_*: 名前→式 問題のダミー式リスト
+  "H⁺":    { f2n_normal:["ナトリウムイオン","塩化物イオン","カルシウムイオン"],        f2n_hard:["水素イオン(2価)","陽子","ヒドロニウムイオン"],
+              n2f_normal:["Na⁺","K⁺","Cl⁻"],                                        n2f_hard:["H₂⁺","H⁻","H₃⁺"] },
+  "Na⁺":   { f2n_normal:["カリウムイオン","塩化物イオン","カルシウムイオン"],          f2n_hard:["ナトリウムイオン(2価)","ナトリウムアニオン","リチウムイオン"],
+              n2f_normal:["K⁺","Li⁺","Cl⁻"],                                        n2f_hard:["Na²⁺","Na⁻","Na₂⁺"] },
+  "K⁺":    { f2n_normal:["ナトリウムイオン","塩化物イオン","カルシウムイオン"],         f2n_hard:["カリウムイオン(2価)","カリウムアニオン","ルビジウムイオン"],
+              n2f_normal:["Na⁺","Li⁺","Cl⁻"],                                       n2f_hard:["K²⁺","K⁻","K₂⁺"] },
+  "Ca²⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","硫酸イオン"],             f2n_hard:["カルシウムイオン(1価)","カルシウムイオン(3価)","カルシウムアニオン"],
+              n2f_normal:["K⁺","Cl⁻","Na⁺"],                                        n2f_hard:["Ca⁺","Ca³⁺","Ca²⁻"] },
+  "Mg²⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["マグネシウムイオン(1価)","マグネシウムイオン(3価)","マグネシウムアニオン"],
+              n2f_normal:["Ca²⁺","Na⁺","Cl⁻"],                                      n2f_hard:["Mg⁺","Mg³⁺","Mg²⁻"] },
+  "Ba²⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["バリウムイオン(1価)","バリウムイオン(3価)","バリウムアニオン"],
+              n2f_normal:["Ca²⁺","Mg²⁺","Na⁺"],                                     n2f_hard:["Ba⁺","Ba³⁺","Ba²⁻"] },
+  "Cu²⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["銅イオン(1価)","銅イオン(3価)","銅アニオン"],
+              n2f_normal:["Zn²⁺","Fe²⁺","Na⁺"],                                     n2f_hard:["Cu⁺","Cu³⁺","Cu²⁻"] },
+  "Zn²⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["亜鉛イオン(1価)","亜鉛イオン(3価)","亜鉛アニオン"],
+              n2f_normal:["Cu²⁺","Fe²⁺","Na⁺"],                                     n2f_hard:["Zn⁺","Zn³⁺","Zn²⁻"] },
+  "Fe²⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["鉄(III)イオン","鉄(I)イオン","鉄アニオン"],
+              n2f_normal:["Fe³⁺","Cu²⁺","Na⁺"],                                     n2f_hard:["Fe³⁺","Fe⁺","Fe²⁻"] },
+  "Fe³⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","硫酸イオン"],             f2n_hard:["鉄(II)イオン","鉄(IV)イオン","鉄アニオン"],
+              n2f_normal:["Fe²⁺","Al³⁺","Na⁺"],                                     n2f_hard:["Fe²⁺","Fe⁴⁺","Fe³⁻"] },
+  "Al³⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","硫酸イオン"],             f2n_hard:["アルミニウムイオン(2価)","アルミニウムイオン(4価)","アルミニウムアニオン"],
+              n2f_normal:["Fe³⁺","Ca²⁺","Na⁺"],                                     n2f_hard:["Al²⁺","Al⁴⁺","Al³⁻"] },
+  "NH₄⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["アンモニウムイオン(2価)","アンモニアイオン","アンモニウムアニオン"],
+              n2f_normal:["Na⁺","K⁺","H⁺"],                                         n2f_hard:["NH₃⁺","NH₅⁺","NH₄²⁺"] },
+  "Ag⁺":   { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["銀イオン(2価)","銀アニオン","銀イオン(0価)"],
+              n2f_normal:["Na⁺","K⁺","Cu²⁺"],                                       n2f_hard:["Ag²⁺","Ag⁻","Ag₂⁺"] },
+  "Li⁺":   { f2n_normal:["カリウムイオン","塩化物イオン","炭酸イオン"],               f2n_hard:["リチウムイオン(2価)","リチウムアニオン","リチウムイオン(0価)"],
+              n2f_normal:["Na⁺","K⁺","H⁺"],                                         n2f_hard:["Li²⁺","Li⁻","Li₂⁺"] },
+  "Mn²⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["マンガン(III)イオン","マンガン(I)イオン","マンガンアニオン"],
+              n2f_normal:["Fe²⁺","Cu²⁺","Zn²⁺"],                                    n2f_hard:["Mn³⁺","Mn⁺","Mn²⁻"] },
+  "Pb²⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","硫酸イオン"],             f2n_hard:["鉛イオン(1価)","鉛イオン(4価)","鉛アニオン"],
+              n2f_normal:["Cu²⁺","Zn²⁺","Fe²⁺"],                                    n2f_hard:["Pb⁺","Pb³⁺","Pb²⁻"] },
+  "Ni²⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["ニッケルイオン(3価)","ニッケルイオン(1価)","ニッケルアニオン"],
+              n2f_normal:["Cu²⁺","Co²⁺","Zn²⁺"],                                    n2f_hard:["Ni³⁺","Ni⁺","Ni²⁻"] },
+  "Cl⁻":   { f2n_normal:["ナトリウムイオン","カリウムイオン","炭酸イオン"],           f2n_hard:["塩化物イオン(2価)","塩化物アニオン(2価)","塩素アニオン"],
+              n2f_normal:["Br⁻","I⁻","OH⁻"],                                        n2f_hard:["Cl²⁻","Cl⁺","Cl₂⁻"] },
+  "OH⁻":   { f2n_normal:["ナトリウムイオン","カリウムイオン","炭酸イオン"],           f2n_hard:["水酸化物イオン(2価)","酸素イオン","ヒドロキシルアニオン"],
+              n2f_normal:["Cl⁻","F⁻","SO₄²⁻"],                                      n2f_hard:["OH²⁻","OH⁺","O₂H⁻"] },
+  "SO₄²⁻": { f2n_normal:["ナトリウムイオン","カリウムイオン","塩化物イオン"],         f2n_hard:["亜硫酸イオン","硫酸水素イオン","硫化物イオン"],
+              n2f_normal:["SO₃²⁻","CO₃²⁻","NO₃⁻"],                                 n2f_hard:["SO₃²⁻","HSO₄⁻","SO₄³⁻"] },
+  "NO₃⁻":  { f2n_normal:["ナトリウムイオン","カリウムイオン","硫酸イオン"],           f2n_hard:["亜硝酸イオン","硝酸イオン(2価)","窒素酸イオン"],
+              n2f_normal:["NO₂⁻","SO₄²⁻","Cl⁻"],                                   n2f_hard:["NO₂⁻","NO₃²⁻","NO₄⁻"] },
+  "CO₃²⁻": { f2n_normal:["ナトリウムイオン","カリウムイオン","塩化物イオン"],         f2n_hard:["炭酸水素イオン","炭酸イオン(1価)","炭酸イオン(3価)"],
+              n2f_normal:["HCO₃⁻","SO₄²⁻","NO₃⁻"],                                 n2f_hard:["HCO₃⁻","CO₃⁻","CO₃³⁻"] },
+  "HCO₃⁻": { f2n_normal:["ナトリウムイオン","塩化物イオン","硫酸イオン"],             f2n_hard:["炭酸イオン","炭酸水素イオン(2価)","重炭酸アニオン"],
+              n2f_normal:["CO₃²⁻","OH⁻","NO₃⁻"],                                   n2f_hard:["CO₃²⁻","HCO₄⁻","H₂CO₃"] },
+  "SO₃²⁻": { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["硫酸イオン","亜硫酸イオン(1価)","亜硫酸イオン(3価)"],
+              n2f_normal:["SO₄²⁻","NO₂⁻","CO₃²⁻"],                                 n2f_hard:["SO₄²⁻","SO₃⁻","SO₃³⁻"] },
+  "NO₂⁻":  { f2n_normal:["ナトリウムイオン","カリウムイオン","炭酸イオン"],           f2n_hard:["硝酸イオン","亜硝酸イオン(2価)","窒素酸(2価)イオン"],
+              n2f_normal:["NO₃⁻","SO₄²⁻","Cl⁻"],                                   n2f_hard:["NO₃⁻","NO₂²⁻","N₂O⁻"] },
+  "PO₄³⁻": { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["リン酸イオン(2価)","リン酸イオン(4価)","亜リン酸イオン"],
+              n2f_normal:["SO₄²⁻","CO₃²⁻","NO₃⁻"],                                 n2f_hard:["HPO₄²⁻","PO₄²⁻","PO₄⁴⁻"] },
+  "HSO₄⁻": { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["硫酸イオン","亜硫酸水素イオン","重硫酸アニオン"],
+              n2f_normal:["SO₄²⁻","HCO₃⁻","OH⁻"],                                  n2f_hard:["SO₄²⁻","HSO₃⁻","H₂SO₄"] },
+  "MnO₄⁻": { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["マンガン酸イオン","過マンガン酸イオン(2価)","マンガン酸アニオン"],
+              n2f_normal:["Cr₂O₇²⁻","SO₄²⁻","NO₃⁻"],                              n2f_hard:["MnO₄²⁻","MnO₃⁻","Mn₂O₄⁻"] },
+  "Cr₂O₇²⁻":{ f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],          f2n_hard:["クロム酸イオン","二クロム酸イオン(3価)","クロム酸アニオン"],
+              n2f_normal:["MnO₄⁻","SO₄²⁻","CO₃²⁻"],                               n2f_hard:["CrO₄²⁻","Cr₂O₆²⁻","Cr₂O₇³⁻"] },
+  "CH₃COO⁻":{ f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],          f2n_hard:["ギ酸イオン","プロピオン酸イオン","酢酸アニオン(2価)"],
+              n2f_normal:["HCOO⁻","OH⁻","HCO₃⁻"],                                 n2f_hard:["CH₃CO⁻","CH₂COO⁻","CH₃COO²⁻"] },
+  "F⁻":    { f2n_normal:["ナトリウムイオン","カリウムイオン","炭酸イオン"],           f2n_hard:["フッ化物イオン(2価)","フッ化物アニオン(2価)","フッ素アニオン"],
+              n2f_normal:["Cl⁻","Br⁻","OH⁻"],                                       n2f_hard:["F²⁻","F⁺","F₂⁻"] },
+  "Br⁻":   { f2n_normal:["ナトリウムイオン","カリウムイオン","炭酸イオン"],           f2n_hard:["臭化物イオン(2価)","臭化物アニオン(2価)","臭素アニオン"],
+              n2f_normal:["Cl⁻","I⁻","F⁻"],                                         n2f_hard:["Br²⁻","Br⁺","Br₂⁻"] },
+  "I⁻":    { f2n_normal:["ナトリウムイオン","カリウムイオン","炭酸イオン"],           f2n_hard:["ヨウ化物イオン(2価)","ヨウ化物アニオン(2価)","ヨウ素アニオン"],
+              n2f_normal:["Br⁻","Cl⁻","F⁻"],                                        n2f_hard:["I²⁻","I⁺","I₃⁻"] },
+  "S²⁻":   { f2n_normal:["ナトリウムイオン","カリウムイオン","炭酸イオン"],           f2n_hard:["硫化物イオン(1価)","硫化物イオン(3価)","硫化物アニオン"],
+              n2f_normal:["O²⁻","Cl⁻","SO₄²⁻"],                                    n2f_hard:["S⁻","S³⁻","S²⁺"] },
+  "O²⁻":   { f2n_normal:["ナトリウムイオン","カリウムイオン","炭酸イオン"],           f2n_hard:["酸化物イオン(1価)","酸化物イオン(3価)","酸化物アニオン"],
+              n2f_normal:["S²⁻","OH⁻","F⁻"],                                        n2f_hard:["O⁻","O³⁻","O²⁺"] },
+  "H₃O⁺":  { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["オキソニウムイオン(2価)","水分子イオン","オキソニウムアニオン"],
+              n2f_normal:["NH₄⁺","H⁺","Na⁺"],                                       n2f_hard:["H₂O⁺","H₄O⁺","H₃O²⁺"] },
+  "CN⁻":   { f2n_normal:["ナトリウムイオン","カリウムイオン","炭酸イオン"],           f2n_hard:["シアン化物イオン(2価)","炭素窒素アニオン","チオシアン酸イオン"],
+              n2f_normal:["Cl⁻","OH⁻","NO₂⁻"],                                     n2f_hard:["CN²⁻","CN⁺","C₂N⁻"] },
+  "SCN⁻":  { f2n_normal:["ナトリウムイオン","塩化物イオン","炭酸イオン"],             f2n_hard:["チオシアン酸イオン(2価)","シアン酸イオン","チオシアン酸アニオン"],
+              n2f_normal:["CN⁻","Cl⁻","NO₃⁻"],                                     n2f_hard:["SCN²⁻","SC₂N⁻","HSCN"] },
 };
+
+
 
 
 // ── イオン用ダミー ──────────────────────────────────────────
 // 各イオンに「似ているイオン」を事前定義
+// 化学式クイズ：名前→式 問題の難易度別ダミー（式リスト）
+const FORMULA_N2F = {
+  "水":          { normal:["CO₂","HCl","NH₃"],              hard:["H₂O₂","HO","H₃O"] },
+  "二酸化炭素":  { normal:["H₂O","SO₂","HCl"],              hard:["CO","CO₃","C₂O₄"] },
+  "一酸化炭素":  { normal:["CO₂","NO","SO₂"],               hard:["CO₂","C₂O","CO₃"] },
+  "塩化水素（塩酸）":{ normal:["NaCl","H₂","Cl₂"],          hard:["HClO","HCl₂","H₂Cl"] },
+  "塩化ナトリウム（食塩）":{ normal:["KCl","MgCl₂","NaOH"], hard:["NaCl₂","Na₂Cl","NaCl₃"] },
+  "水酸化ナトリウム":{ normal:["KOH","NaCl","Na₂O"],        hard:["Na₂OH","NaO","NaOH₂"] },
+  "硫酸":        { normal:["HNO₃","HCl","H₃PO₄"],           hard:["H₂SO₃","HSO₄","H₃SO₄"] },
+  "硝酸":        { normal:["H₂SO₄","HCl","HNO₂"],           hard:["HNO₂","H₂NO₃","HN₂O₃"] },
+  "アンモニア":  { normal:["N₂","H₂","N₂H₄"],               hard:["NH₂","NH₄","N₂H₃"] },
+  "過酸化水素":  { normal:["H₂O","HO","H₂"],                 hard:["HO₂","H₃O","H₂O"] },
+  "炭酸カルシウム":{ normal:["Na₂CO₃","CaO","Ca(OH)₂"],     hard:["CaCO","Ca₂CO₃","CaCO₄"] },
+  "水酸化カルシウム":{ normal:["CaCO₃","CaO","Mg(OH)₂"],    hard:["Ca(OH)","CaOH","Ca₂(OH)₂"] },
+  "酸化銅(II)":  { normal:["Cu₂O","FeO","ZnO"],              hard:["Cu₂O","CuO₂","Cu₃O"] },
+  "酸化鉄(III)": { normal:["FeO","Fe₃O₄","Al₂O₃"],          hard:["FeO","Fe₃O₄","Fe₂O₄"] },
+  "酸化マグネシウム":{ normal:["CaO","ZnO","Al₂O₃"],        hard:["Mg₂O","MgO₂","Mg₃O"] },
+  "酸化アルミニウム":{ normal:["Fe₂O₃","SiO₂","MgO"],       hard:["AlO","Al₃O₄","Al₂O"] },
+  "水素":        { normal:["O₂","N₂","Cl₂"],                 hard:["H","H₃","H₂⁺"] },
+  "酸素":        { normal:["O₃","N₂","H₂"],                  hard:["O₃","O","O₂⁻"] },
+  "窒素":        { normal:["O₂","NO","NH₃"],                 hard:["NO","N","N₃"] },
+  "塩素":        { normal:["HCl","Br₂","F₂"],                hard:["Cl","Cl₃","ClO"] },
+  "メタン":      { normal:["C₂H₆","C₂H₄","NH₃"],            hard:["CH₃","C₂H₄","CH₄O"] },
+  "エタノール":  { normal:["CH₃OH","C₂H₄","CH₄"],           hard:["C₂H₄OH","C₂H₆O","C₂H₅O"] },
+  "二酸化硫黄":  { normal:["SO₃","NO₂","CO₂"],               hard:["SO₃","S₂O","SO"] },
+  "三酸化硫黄":  { normal:["SO₂","NO₂","CO₂"],               hard:["SO₂","S₂O₃","SO₄"] },
+  "一酸化窒素":  { normal:["NO₂","N₂O","CO"],                hard:["NO₂","N₂O","NO₃"] },
+  "二酸化窒素":  { normal:["NO","N₂O₄","SO₂"],               hard:["NO","N₂O₄","NO₃"] },
+  "水酸化カリウム":{ normal:["NaOH","K₂O","KCl"],            hard:["K₂OH","KOH₂","KOOH"] },
+  "水酸化バリウム":{ normal:["Ca(OH)₂","BaO","BaCl₂"],       hard:["Ba(OH)","BaO","Ba₂(OH)₂"] },
+  "塩化アンモニウム":{ normal:["NaCl","NH₃","HCl"],          hard:["NH₄Cl₂","(NH₄)₂Cl","NH₃Cl"] },
+  "硫酸銅(II)":  { normal:["ZnSO₄","CuCl₂","CaCO₃"],        hard:["Cu₂SO₄","CuSO₃","Cu(SO₄)₂"] },
+  "塩化鉄(II)":  { normal:["FeCl₃","NaCl","MgCl₂"],          hard:["FeCl₃","FeCl","Fe₂Cl"] },
+  "塩化鉄(III)": { normal:["FeCl₂","AlCl₃","NaCl"],          hard:["FeCl₂","FeCl₄","Fe₂Cl₃"] },
+  "炭酸水素ナトリウム":{ normal:["Na₂CO₃","NaOH","CaCO₃"],  hard:["Na₂CO₃","NaCO₃","NaHCO₂"] },
+  "炭酸ナトリウム":{ normal:["NaHCO₃","Na₂O","NaOH"],        hard:["NaHCO₃","Na₃CO₃","Na₂CO₂"] },
+  "二酸化ケイ素":{ normal:["CO₂","SO₂","Al₂O₃"],             hard:["SiO","Si₂O₃","SiO₃"] },
+  "オゾン":      { normal:["O₂","SO₃","NO₃"],                hard:["O₂","O₄","O₂⁻"] },
+  "硫化水素":    { normal:["HCl","SO₂","H₂O"],               hard:["HS","H₂S₂","H₃S"] },
+  "リン酸":      { normal:["H₂SO₄","HNO₃","HCl"],            hard:["H₂PO₄","H₃PO₃","HPO₄"] },
+  "酸化銅(I)":   { normal:["CuO","FeO","ZnO"],                hard:["CuO","Cu₃O","Cu₂O₂"] },
+  "酸化カルシウム":{ normal:["MgO","CaO₂","Na₂O"],           hard:["Ca₂O","CaO₂","Ca₃O"] },
+  "一酸化マンガン":{ normal:["FeO","ZnO","MgO"],             hard:["Mn₂O","MnO₂","Mn₃O"] },
+};
+
 const FORMULA_SIMILAR = {
   // 式→名前 の難易度別ダミー名前リスト（名前のみ）
   "H₂O":    { normal:["二酸化炭素","塩化水素（塩酸）","アンモニア"],        hard:["過酸化水素","水酸化物","三酸化水素"] },
@@ -563,31 +648,57 @@ function generateIonQ(ions, rng, directionMode="random", difficulty="normal") {
   const isF2N = directionMode==="f2n" ? true : directionMode==="n2f" ? false : rand() > 0.5;
 
   if (isF2N) {
-    // 式→名前：選択肢は「名前」のみ
-    // ダミーはION_SIMILARの名前リストから（実在するものはname、しないものはname文字列）
-    const wrongCandidates = getDifficultyCandidates(ion, ions, difficulty, "ion");
-    const choiceItems = shuffle([ion, ...wrongCandidates]);
-    const finalChoices = choiceItems.map(c => c.name);
+    // ── 式→名前：選択肢は「名前」のみ ──
+    const sim = ION_SIMILAR[ion.formula];
+    let dummies;
+    if (difficulty === "easy" || !sim) {
+      dummies = shuffle(ions.filter(i => i.formula !== ion.formula)).slice(0,3).map(i=>i.name);
+    } else if (difficulty === "hard" && sim.f2n_hard) {
+      dummies = [...sim.f2n_hard].slice(0,3);
+    } else {
+      dummies = [...(sim.f2n_normal||[])].slice(0,3);
+      if (dummies.length < 3) {
+        const extras = shuffle(ions.filter(i=>i.formula!==ion.formula&&!dummies.includes(i.name)))
+          .slice(0, 3-dummies.length).map(i=>i.name);
+        dummies = [...dummies, ...extras];
+      }
+    }
+    while (dummies.length < 3) {
+      const extra = shuffle(ions.filter(i=>i.formula!==ion.formula&&!dummies.includes(i.name)));
+      if (extra.length) dummies.push(extra[0].name); else break;
+    }
     return {
-      id: ion.formula+isF2N,
+      id: ion.formula+"f2n",
       display: ion.formula,
       label: "このイオン式の名前は？",
-      choices: finalChoices,
+      choices: shuffle([ion.name, ...dummies.slice(0,3)]),
       answer: ion.name,
       isSymbol: true,
       meta: { symbol:ion.formula, name:ion.name },
     };
   } else {
-    // 名前→式：選択肢は「式」のみ
-    // ダミーは必ずallItemsから選ぶ（式を持つ実在データのみ）
-    const wrong = shuffle(ions.filter(i => i.formula !== ion.formula)).slice(0, 3);
-    const choiceItems = shuffle([ion, ...wrong]);
-    const finalChoices = choiceItems.map(c => c.formula);
+    // ── 名前→式：選択肢は「式」のみ ──
+    const sim = ION_SIMILAR[ion.formula];
+    let dummies;
+    if (difficulty === "easy" || !sim) {
+      dummies = shuffle(ions.filter(i => i.formula !== ion.formula)).slice(0,3).map(i=>i.formula);
+    } else if (difficulty === "hard" && sim.n2f_hard) {
+      dummies = [...sim.n2f_hard].slice(0,3);
+    } else {
+      const fromSim = [...(sim.n2f_normal||[])].slice(0,2);
+      const extras = shuffle(ions.filter(i=>i.formula!==ion.formula&&!fromSim.includes(i.formula)))
+        .slice(0, 3-fromSim.length).map(i=>i.formula);
+      dummies = [...fromSim, ...extras];
+    }
+    while (dummies.length < 3) {
+      const extra = shuffle(ions.filter(i=>i.formula!==ion.formula&&!dummies.includes(i.formula)));
+      if (extra.length) dummies.push(extra[0].formula); else break;
+    }
     return {
-      id: ion.formula+isF2N,
+      id: ion.formula+"n2f",
       display: ion.name,
       label: "このイオンの式は？",
-      choices: finalChoices,
+      choices: shuffle([ion.formula, ...dummies.slice(0,3)]),
       answer: ion.formula,
       isSymbol: false,
       meta: { symbol:ion.formula, name:ion.name },
@@ -595,43 +706,73 @@ function generateIonQ(ions, rng, directionMode="random", difficulty="normal") {
   }
 }
 
-// 化学式クイズ用問題生成 directionMode: "f2n"=式→名前, "n2f"=名前→式, "random"
+// 化学式クイズ用問題生成
 function generateFormulaQ(formulas, rng, directionMode="random", difficulty="normal") {
   const rand = rng || Math.random.bind(Math);
   const item = formulas[Math.floor(rand()*formulas.length)];
   const isF2N = directionMode==="f2n" ? true : directionMode==="n2f" ? false : rand() > 0.5;
 
   if (isF2N) {
-    // 式→名前：選択肢は「名前」のみ
-    const wrongCandidates = getDifficultyCandidates(item, formulas, difficulty, "formula");
-    const choiceItems = shuffle([item, ...wrongCandidates]);
-    const finalChoices = choiceItems.map(c => c.name);
+    // ── 式→名前：選択肢は「名前」のみ ──
+    const sim = FORMULA_SIMILAR[item.formula];
+    let dummies;
+    if (difficulty === "easy" || !sim) {
+      dummies = shuffle(formulas.filter(f=>f.formula!==item.formula)).slice(0,3).map(f=>f.name);
+    } else if (difficulty === "hard" && sim.hard) {
+      dummies = [...sim.hard].slice(0,3);
+    } else {
+      dummies = [...(sim.normal||[])].slice(0,3);
+      if (dummies.length < 3) {
+        const extras = shuffle(formulas.filter(f=>f.formula!==item.formula&&!dummies.includes(f.name)))
+          .slice(0, 3-dummies.length).map(f=>f.name);
+        dummies = [...dummies, ...extras];
+      }
+    }
+    while (dummies.length < 3) {
+      const extra = shuffle(formulas.filter(f=>f.formula!==item.formula&&!dummies.includes(f.name)));
+      if (extra.length) dummies.push(extra[0].name); else break;
+    }
     return {
-      id: item.formula+isF2N,
+      id: item.formula+"f2n",
       display: item.formula,
       label: "この化学式の物質名は？",
-      choices: finalChoices,
+      choices: shuffle([item.name, ...dummies.slice(0,3)]),
       answer: item.name,
       isSymbol: false,
       meta: { symbol:item.formula, name:item.name },
     };
   } else {
-    // 名前→式：選択肢は「式」のみ
-    // ダミーは必ずallItemsから選ぶ
-    const wrong = shuffle(formulas.filter(f => f.formula !== item.formula)).slice(0, 3);
-    const choiceItems = shuffle([item, ...wrong]);
-    const finalChoices = choiceItems.map(c => c.formula);
+    // ── 名前→式：選択肢は「式」のみ ──
+    const sim = FORMULA_N2F[item.name];
+    let dummies;
+    if (difficulty === "easy" || !sim) {
+      dummies = shuffle(formulas.filter(f=>f.formula!==item.formula)).slice(0,3).map(f=>f.formula);
+    } else if (difficulty === "hard" && sim.hard) {
+      dummies = [...sim.hard].slice(0,3);
+    } else {
+      dummies = [...(sim.normal||[])].slice(0,3);
+      if (dummies.length < 3) {
+        const extras = shuffle(formulas.filter(f=>f.formula!==item.formula&&!dummies.includes(f.formula)))
+          .slice(0, 3-dummies.length).map(f=>f.formula);
+        dummies = [...dummies, ...extras];
+      }
+    }
+    while (dummies.length < 3) {
+      const extra = shuffle(formulas.filter(f=>f.formula!==item.formula&&!dummies.includes(f.formula)));
+      if (extra.length) dummies.push(extra[0].formula); else break;
+    }
     return {
-      id: item.formula+isF2N,
+      id: item.formula+"n2f",
       display: item.name,
       label: "この物質の化学式は？",
-      choices: finalChoices,
+      choices: shuffle([item.formula, ...dummies.slice(0,3)]),
       answer: item.formula,
       isSymbol: true,
       meta: { symbol:item.formula, name:item.name },
     };
   }
 }
+
 
 
 // ============================================================
