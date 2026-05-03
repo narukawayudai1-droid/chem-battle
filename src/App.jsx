@@ -1900,7 +1900,7 @@ function RankingScreen({ onBack, myNickname }) {
                       {isMe&&<span className="bdg by" style={{marginLeft:5}}>あなた</span>}
                     </span>
                     {/* スコア左：絵文字アイコンのみ */}
-                    {r.quizMode==="mol"&&ml&&(
+                    {r.quizMode==="mol"&&ml&&molFilter==="all"&&(
                       <span style={{fontSize:"1rem"}} title={ml.text.slice(2)}>{ml.text.slice(0,2)}</span>
                     )}
                     {r.quizMode!=="mol"&&diff&&diffFilter==="all"&&(
