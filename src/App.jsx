@@ -299,9 +299,13 @@ function calcMolScore(correct, total, timeLeft) {
   return base + accBonus + timeBonus;
 }
 
-// ── mol計算：科学的記数法フォーマット ──────────────────────
-// 数値を「有効数字×10ⁿ」形式に変換
-// 例: 0.625 → "6.25×10⁻¹", 2 → "2×10⁰", 22.4 → "2.24×10¹"
+// ── mol計算：有効数字2桁フォーマット ──────────────────────
+// ルール：
+//  - 答え・問題の与値のみ有効数字2桁に変換
+//  - 原子量・22.4・6.0×10²³ などの定数はそのまま表示（丸めない）
+//  - 10^0（1.0〜9.9）→ 必ず小数1桁（例: 1.0, 2.0, 3.5）
+//  - 10^1（10〜99）  → 小数1桁または整数（例: 22, 45）
+//  - 10^2以上 or 10^-1以下 → 指数表記（例: 1.2×10², 6.0×10²³）
 const SUP_MAP = {"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹","-":"⁻"};
 function toSup(n) { return String(n).split("").map(c=>SUP_MAP[c]||c).join(""); }
 
@@ -313,30 +317,34 @@ function toSciNotation(val, sigFigs = 2) {
   const coef = abs / Math.pow(10, exp);
   const factor = Math.pow(10, sigFigs - 1);
   const rounded = Math.round(coef * factor) / factor;
-  // 有効数字2桁で表示
-  const coefStr = rounded.toFixed(sigFigs - 1);
-  // 10^0 や 10^1 の場合は通常表記に戻す
-  if (exp === 0) {
-    // 例: 1.0, 2.0 など
-    return `${sign}${coefStr}`;
-  }
+  const coefStr = rounded.toFixed(sigFigs - 1); // 例: "1.0", "2.3"
+
+  if (exp === 0) return `${sign}${coefStr}`;       // 1.0〜9.9
   if (exp === 1) {
-    // 例: 12, 22, 44 など
-    const plain = Math.round(abs * Math.pow(10, sigFigs-1-exp)) / Math.pow(10, sigFigs-1-exp);
+    // 10〜99: 小数1桁表示（22.0→22, 22.4→22）
+    const plain = (rounded * 10).toFixed(0);        // 整数
     return `${sign}${plain}`;
   }
-  return `${sign}${coefStr}×10${toSup(exp)}`;
+  return `${sign}${coefStr}×10${toSup(exp)}`;       // 指数表記
 }
 
-// MOL_QUESTIONS_RAW の答えと問題の数値を科学的記数法に変換
-// 選択肢生成・表示で使う
+// 答え・選択肢の表示用（有効数字2桁）
+// 定数（原子量・22.4・6.0e23）には使わない
 function fmtMolVal(val) {
-  if (typeof val === "string") return val; // すでに指数表記
+  if (typeof val === "string") return val;
   if (val === 0) return "0";
-  // 1桁の整数（1〜9）はそのまま
-  if (Number.isInteger(val) && val >= 1 && val <= 9) return String(val);
   return toSciNotation(val, 2);
 }
+
+// 問題文中の「与値」（質量・体積・mol数）を有効数字2桁でフォーマット
+// 定数（原子量・22.4）はそのまま → この関数は与値にのみ使う
+function fmtGiven(val) {
+  return fmtMolVal(val);
+}
+
+// 定数はそのまま文字列で返す（丸めない）
+// 原子量: molarMass → そのまま使う
+// 22.4L/mol, 6.0×10²³ → 文字列定数として定義
 
 // タイムアタック：正解数×100 + タイムボーナス（早いほど高得点）
 function calcTimeAttackScore(correct, total, elapsedSec) {
@@ -677,7 +685,27 @@ class BgmEngine {
     this.playing=true; this.mode=mode;
     const ctx=this._ctx();
     if(ctx.state==="suspended") ctx.resume();
-    if(mode==="home") this._loopHome(); else this._loopPlay();
+    if(mode==="home") this._loopHome();
+    else if(mode==="lobby") this._loopLobby();
+    else this._loopPlay();
+  }
+  _loopLobby() {
+    if(!this.playing||this.mode!=="lobby") return;
+    const ctx=this._ctx(); const now=ctx.currentTime;
+    const notes=[261.63,329.63,392.00,329.63,261.63,220.00,261.63,293.66];
+    notes.forEach((freq,i)=>{
+      const o=ctx.createOscillator(); const g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type="triangle"; o.frequency.value=freq;
+      const t=now+i*0.35;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(0.045,t+0.06);
+      g.gain.setValueAtTime(0.045,t+0.25);
+      g.gain.linearRampToValueAtTime(0,t+0.35);
+      o.start(t); o.stop(t+0.4);
+      this.nodes.push(o);
+    });
+    this.loopTO=setTimeout(()=>this._loopLobby(),notes.length*350+200);
   }
   stop() {
     this.playing=false; clearTimeout(this.loopTO);
@@ -1434,6 +1462,7 @@ const DIFFICULTY_OPTIONS = [
 ];
 
 function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
+  useEffect(()=>{ bgm.start("lobby"); return()=>{}; },[]);
   const [maxNum,setMaxNum]=useState(20);
   const [minNum,setMinNum]=useState(1);
   const [directionMode,setDirectionMode]=useState(quizMode==="ion"||quizMode==="formula"?"n2f":"s2n");
@@ -1759,7 +1788,7 @@ function RankingScreen({ onBack, myNickname }) {
 
   const tabs=[
     ["element_all","⚛️元素"],["ion","⚡イオン"],["formula","🧬化学式"],
-    ["mol","🧮mol"],
+    ["mol","🧮 mol"],
   ];
 
   const showDiffFilter = ["element_all","ion","formula"].includes(tab);
@@ -1792,7 +1821,7 @@ function RankingScreen({ onBack, myNickname }) {
         {showMolFilter&&(
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:13}}>
             {[
-              {v:"all",    l:"すべて"},
+              {v:"all",    l:"全て"},
               {v:"intro",  l:"入門"},
               {v:"basic",  l:"基礎"},
               {v:"adv",    l:"応用"},
@@ -2096,6 +2125,29 @@ function getMolFormula(q) {
   return "";
 }
 
+// 問題文を有効数字2桁で動的生成
+// 与値（given, numer）→ fmtGiven()で2桁
+// 原子量・22.4・6.0×10²³ → 定数なのでそのまま
+function buildMolQuestion(q) {
+  const mm = q.molarMass;   // 原子量：丸めない
+  const t = q.qtype;
+  const fg = (v) => fmtGiven(v); // 与値のみ有効数字2桁
+
+  if (t==="g_to_mol") return `${q.substance} ${fg(q.given)}gは何molか？`;
+  if (t==="mol_to_g") return `${q.substance} ${fg(q.given)}molは何gか？`;
+  if (t==="mol_to_L") return `${q.substance} ${fg(q.given)}molは標準状態の気体で何Lか？`;
+  if (t==="L_to_mol") return `${q.substance} 標準状態で${fg(q.given)}Lの気体は何molか？`;
+  if (t==="mol_to_N") return q.q; // 個数系は元の問題文そのまま
+  if (t==="N_to_mol") return `${q.substance}の分子数が${q.numer}×10²³個ある時何molか？`;
+  if (t==="g_to_L")   return `${q.substance} ${fg(q.given)}gは標準状態の気体で何Lか？`;
+  if (t==="L_to_g")   return `${q.substance} ${fg(q.given)}Lの標準状態の気体は何gか？`;
+  if (t==="g_to_N")   return `${q.substance} ${fg(q.given)}gの分子数はいくらか？`;
+  if (t==="N_to_g")   return `${q.substance}の分子数が${q.numer}×10²³個ある時何gか？`;
+  if (t==="L_to_N")   return `${q.substance} ${fg(q.given)}Lの標準状態の気体の分子数はいくらか？`;
+  if (t==="N_to_L")   return `${q.substance}の分子数が${q.numer}×10²³個ある時、標準状態の気体で何Lか？`;
+  return q.q;
+}
+
 function getMolHints(q) {
   const hints = [];
   if (q.qtype==="g_to_mol")  { hints.push("g → mol の変換：mol = g ÷ モル質量"); hints.push(`${q.substance}のモル質量 = ${q.molarMass} g/mol`); hints.push(`mol = ${q.given} ÷ ${q.molarMass}`); }
@@ -2272,6 +2324,7 @@ function MolChoice({ val }) {
 
 // ── MolSetupScreen ─────────────────────────────────────────
 function MolSetupScreen({ onStart, onBack }) {
+  useEffect(()=>{ bgm.start("lobby"); return()=>{}; },[]);
   const [mode, setMode] = useState("intro");
   const modes = [
     { value:"intro", label:"🌱 入門",   desc:"問題1〜20（g↔mol）",      color:"#22c55e", light:"#dcfce7" },
@@ -2741,7 +2794,7 @@ function MolQuizScreen({ mode, onFinish, onExit=null }) {
       const num = ansToNum(qq);
       return toSciNotation(num, 2);
     }
-    return fmtMolVal(qq.ans);
+    return fmtMolVal(qq.ans); // 整数1→"1.0" など有効数字2桁
   };
 
   const [choices] = useState(()=>{
@@ -2871,7 +2924,7 @@ function MolQuizScreen({ mode, onFinish, onExit=null }) {
         {/* 問題 */}
         <div style={{textAlign:"center",marginBottom:16}}>
           <div style={{fontSize:".8rem",color:"var(--muted)",marginBottom:6,fontWeight:700,letterSpacing:".5px"}}>🧮 mol計算問題</div>
-          <div style={{fontSize:"1.2rem",fontWeight:700,color:"var(--text)",lineHeight:1.5}}>{q.q}</div>
+          <div style={{fontSize:"1.2rem",fontWeight:700,color:"var(--text)",lineHeight:1.5}}>{buildMolQuestion(q)}</div>
         </div>
 
         {/* ヒント */}
@@ -2955,7 +3008,7 @@ function MolResultScreen({ result, nickname="", onHome, onRetry }) {
             const formula = getMolFormula(m.q);
             return (
               <div key={i} style={{padding:"9px 0",borderBottom:"1px solid var(--border)",fontSize:".83rem"}}>
-                <div style={{fontWeight:700,marginBottom:4}}>{m.q.q}</div>
+                <div style={{fontWeight:700,marginBottom:4}}>{buildMolQuestion(m.q)}</div>
                 <div style={{color:"var(--success)"}}>✓ 正解: {typeof m.q.ans==="string" ? toSciNotation((m.q.numer||6)*1e23,2) : fmtMolVal(m.q.ans)}</div>
                 <div style={{color:"var(--danger)"}}>✗ あなた: {m.yours==="スキップ"?"スキップ":m.yours}</div>
                 {formula&&(
@@ -2982,6 +3035,7 @@ function MolResultScreen({ result, nickname="", onHome, onRetry }) {
 
 // ── BattleLobby ────────────────────────────────────────────────
 function BattleLobby({ nickname, quizMode, directionMode="random", subLevel="junior", difficulty="normal", onBack }) {
+  useEffect(()=>{ bgm.start("lobby"); return()=>{}; },[]);
   const isIon=quizMode==="ion";
   const isFormula=quizMode==="formula";
   const [phase,setPhase]=useState("menu");
