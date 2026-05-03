@@ -1464,9 +1464,9 @@ const LEVEL_LABELS = {
 };
 
 const DIFFICULTY_OPTIONS = [
-  { value:"easy",   label:"😊 易",   desc:"明らかに違う選択肢",     color:"#22c55e", light:"#dcfce7" },
-  { value:"normal", label:"😐 普通", desc:"一部似ている選択肢",     color:"#f59e0b", light:"#fef3c7" },
-  { value:"hard",   label:"😈 難",   desc:"非常に似たダミーのみ",   color:"#ef4444", light:"#fee2e2" },
+  { value:"easy",   label:"😊 初級", desc:"明らかに違う選択肢",   color:"#22c55e", light:"#dcfce7" },
+  { value:"normal", label:"😐 中級", desc:"一部似ている選択肢",   color:"#f59e0b", light:"#fef3c7" },
+  { value:"hard",   label:"😈 上級", desc:"非常に似たダミーのみ", color:"#ef4444", light:"#fee2e2" },
 ];
 
 function SetupScreen({ onStart, onBack, title, quizMode, isBattle=false }) {
@@ -1859,9 +1859,9 @@ function RankingScreen({ onBack, myNickname }) {
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:13}}>
             {[
               {v:"all",   icon:"🏆", l:"全て",  color:"var(--primary)", bg:"var(--pl)"},
-              {v:"easy",  icon:"😊", l:"易",    color:"#166534",        bg:"#dcfce7"},
-              {v:"normal",icon:"😐", l:"普通",  color:"#92400e",        bg:"#fef3c7"},
-              {v:"hard",  icon:"😈", l:"難",    color:"#991b1b",        bg:"#fee2e2"},
+              {v:"easy",  icon:"😊", l:"初級",  color:"#166534",        bg:"#dcfce7"},
+              {v:"normal",icon:"😐", l:"中級",  color:"#92400e",        bg:"#fef3c7"},
+              {v:"hard",  icon:"😈", l:"上級",  color:"#991b1b",        bg:"#fee2e2"},
             ].map(d=>{
               const active = diffFilter===d.v;
               return (
@@ -1898,8 +1898,13 @@ function RankingScreen({ onBack, myNickname }) {
                       {r.name}
                       {isMe&&<span className="bdg by" style={{marginLeft:5}}>あなた</span>}
                     </span>
-                    {ml&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:ml.bg,color:ml.color,fontWeight:700}}>{ml.text}</span>}
-                    {diff&&diffFilter==="all"&&r.quizMode!=="mol"&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:diff.light,color:diff.color,fontWeight:700}}>{diff.label.split(" ")[0]}</span>}
+                    {/* スコア左：絵文字アイコンのみ */}
+                    {r.quizMode==="mol"&&ml&&(
+                      <span style={{fontSize:"1rem"}} title={ml.text.slice(2)}>{ml.text.slice(0,2)}</span>
+                    )}
+                    {r.quizMode!=="mol"&&diff&&diffFilter==="all"&&(
+                      <span style={{fontSize:"1rem"}} title={diff.label}>{diff.label.split(" ")[0]}</span>
+                    )}
                     <span className="rcard-score">{r.score}点</span>
                   </div>
                   <div className="rcard-meta">
