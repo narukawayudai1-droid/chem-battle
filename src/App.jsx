@@ -1023,6 +1023,18 @@ class BgmEngine {
     else if(type==="finish") [523,659,784,1047,1319,1047,1319].forEach((f,i)=>this._note(f,now+i*0.09,0.18,"square",0.09));
     else if(type==="count") this._note(660,now,0.12,"square",0.13);
     else if(type==="go") [523,659,784,1047].forEach((f,i)=>this._note(f,now+i*0.07,0.15,"square",0.13));
+    else if(type==="fanfare") {
+      // きらきらした豪華なファンファーレ
+      const notes = [
+        [523,0],[659,0.07],[784,0.14],[1047,0.21],[1319,0.28],[1047,0.35],[1319,0.42],[1568,0.49],
+        [1319,0.56],[1568,0.63],[1047,0.70],[1319,0.77],[1568,0.84],[2093,0.91]
+      ];
+      notes.forEach(([f,t])=>this._note(f,now+t,0.18,"sine",0.07));
+      // 和音を重ねてきらびやかに
+      [[523,0],[659,0],[784,0]].forEach(([f,t])=>this._note(f,now+t,0.3,"triangle",0.04));
+      [[1047,0.21],[1319,0.21],[1568,0.21]].forEach(([f,t])=>this._note(f,now+t,0.3,"triangle",0.04));
+      [[1047,0.63],[1319,0.63],[1568,0.63],[2093,0.63]].forEach(([f,t])=>this._note(f,now+t,0.45,"triangle",0.05));
+    }
   }
 }
 const bgm = new BgmEngine();
@@ -3649,7 +3661,7 @@ export default function App() {
           {screen==="home"&&(
             <HomeScreen nickname={nickname} onSetNickname={saveNickname}
               onSolo={goSetup} onBattle={goBattle}
-              onRanking={()=>setScreen("ranking")}
+              onRanking={()=>{bgm.se("fanfare");setScreen("ranking");}}
               onMemo={()=>setScreen("memo")}
               onMol={(t)=>{bgm.stop();if(t==="battle")setScreen("mol_battle");else setScreen("mol_setup");}}
               bgmOn={bgmOn} onToggleBgm={toggleBgm} weekCount={weekCount}/>
