@@ -1414,20 +1414,34 @@ function HowToModal({ onClose }) {
         </div>
         <div className="howto-body">
 
-          {/* 共通 */}
+          {/* 共通ルール */}
           <div className="howto-section">
             <h3>共通ルール</h3>
-            <p>・ニックネームを登録してプレイ。スコアはランキングに登録できる。</p>
+            <p>・ニックネームを入力してからプレイ開始。スコアはランキングに登録できる。</p>
             <p>・4択から正しい答えをタップで選ぶ。</p>
-            <p>・難易度：易（明らかに違う選択肢）→ 普通 → 難（非常に似たダミー）</p>
+            <p>・難易度（初級・中級・上級）で選択肢の紛らわしさが変わる。</p>
+            <p>・対戦モードは4文字のルームコードを共有して同時スタート。</p>
           </div>
 
-          {/* 暗記クイズ */}
+          {/* 元素クイズ */}
           <div className="howto-section">
-            <h3 style={{color:"var(--primary)"}}>⚛️⚡🧬 暗記クイズ（60秒）</h3>
-            <p>・60秒間ひたすら出題。何問正解できるか挑戦！</p>
-            <p>・出題方向を選べる：記号→名前 / 名前→記号 / ランダム</p>
-            <p>・対戦：ルームコードを共有して同時スタート、スコアを比較</p>
+            <h3 style={{color:"var(--primary)"}}>⚛️ 元素クイズ（60秒）</h3>
+            <p>・原子番号1〜118番の元素記号と元素名を答える。</p>
+            <p>・出題範囲をダブルスライダーで指定（例：1〜20番）。</p>
+            <p>・難易度はスライダーの上限で自動決定（〜20番：初級 / 〜50番：中級 / 51番〜：上級）。</p>
+            <p>・出題方向：記号→名前 / 名前→記号 / ランダムから選択。</p>
+            <p style={{marginTop:6,padding:"8px 10px",background:"var(--bg)",borderRadius:7,fontSize:".78rem"}}>
+              <b>スコア</b> ＝ 正解時の残り秒数の合計 ＋ 正答率²×200点
+            </p>
+          </div>
+
+          {/* イオン・化学式クイズ */}
+          <div className="howto-section">
+            <h3 style={{color:"var(--ion)"}}>⚡🧬 イオン・化学式クイズ（60秒）</h3>
+            <p>・イオン式↔イオン名、化学式↔物質名を答える。</p>
+            <p>・中学レベル・高校レベルを選択可能。</p>
+            <p>・難易度（初級・中級・上級）を手動で選択。上級は同一元素の価数違いなど非常に紛らわしいダミーが出る。</p>
+            <p>・出題方向：式→名前 / 名前→式 / ランダムから選択。</p>
             <p style={{marginTop:6,padding:"8px 10px",background:"var(--bg)",borderRadius:7,fontSize:".78rem"}}>
               <b>スコア</b> ＝ 正解時の残り秒数の合計 ＋ 正答率²×200点
             </p>
@@ -1435,11 +1449,15 @@ function HowToModal({ onClose }) {
 
           {/* mol計算 */}
           <div className="howto-section">
-            <h3 style={{color:"#6366f1"}}>🧮 mol計算ドリル（5分）</h3>
-            <p>・自分で計算して4択から選ぶ。10問・5分制限。</p>
+            <h3 style={{color:"#6366f1"}}>🧮 mol計算ドリル（5分・10問）</h3>
+            <p>・自分で計算して4択から正解を選ぶ。5分以内に10問。</p>
             <p>・ヒント：最大3段階（①変換の方向 ②使う値 ③計算手順）。答えは表示しない。</p>
-            <p>・スキップ：次の問題へ。ミスとしてカウント。</p>
-            <p>・モード：入門（g↔mol）/ 基礎（L↔mol・個数）/ 応用（2段変換）</p>
+            <p>・スキップ：次の問題へ進む。ミスとしてカウント。</p>
+            <p>・モード選択：</p>
+            <p style={{paddingLeft:10}}>🌱 入門：g↔mol の1段変換</p>
+            <p style={{paddingLeft:10}}>📘 基礎：L↔mol・個数↔mol の1段変換</p>
+            <p style={{paddingLeft:10}}>🔥 応用：g→L、g→個数 などの2段変換</p>
+            <p style={{paddingLeft:10}}>🎲 ランダム：全120問からランダム出題</p>
             <p>・対戦モードあり。同じ問題を解いて正解数を比較。</p>
             <p style={{marginTop:6,padding:"8px 10px",background:"var(--bg)",borderRadius:7,fontSize:".78rem"}}>
               <b>スコア</b> ＝ 正解数×100 ＋ 正答率²×100 ＋ 残り時間×0.5
@@ -1452,8 +1470,16 @@ function HowToModal({ onClose }) {
             <div style={{background:"#1e293b",color:"#94a3b8",borderRadius:7,padding:"9px 12px",fontFamily:"monospace",fontSize:".75rem",lineHeight:1.9}}>
               H=1.0　C=12　O=16　N=14<br/>
               Na=23　Cl=35.5　Cu=64　S=32<br/>
-              アボガドロ数: 6.0×10²³ /mol
+              アボガドロ数: 6.0×10²³ /mol　　22.4 L/mol
             </div>
+          </div>
+
+          {/* ランキング */}
+          <div className="howto-section">
+            <h3>🏆 ランキング</h3>
+            <p>・各クイズの上位5件を表示。全ユーザーに公開される。</p>
+            <p>・元素/イオン/化学式は難易度別（初級・中級・上級）でフィルター可能。</p>
+            <p>・mol計算はモード別（入門・基礎・応用・ランダム）でフィルター可能。</p>
           </div>
 
           <button className="btn btn-p btn-blk" onClick={onClose} style={{marginTop:4}}>閉じる</button>
