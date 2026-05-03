@@ -271,6 +271,14 @@ function getFormulas(level) {
   return level === "junior" ? FORMULAS_JUNIOR : FORMULAS_SENIOR;
 }
 
+// mol計算モードのアイコン定義
+const MOL_MODE_ICONS = {
+  intro:  { icon:"🌱", label:"入門",   color:"#22c55e", bg:"#dcfce7" },
+  basic:  { icon:"📘", label:"基礎",   color:"#3b82f6", bg:"#dbeafe" },
+  adv:    { icon:"🔥", label:"応用",   color:"#ef4444", bg:"#fee2e2" },
+  random: { icon:"🎲", label:"ランダム",color:"#8b5cf6", bg:"#ede9fe" },
+};
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length-1; i > 0; i--) {
@@ -1797,7 +1805,10 @@ function RankingScreen({ onBack, myNickname }) {
   const modeLabel = (r) => {
     if(r.quizMode==="ion") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--ion-l)", color:"var(--ion)"};
     if(r.quizMode==="formula") return {text:`${r.subLevel==="junior"?"中":"高"}`, bg:"var(--form-l)", color:"var(--form)"};
-    if(r.quizMode==="mol") return {text:({intro:"入門",basic:"基礎",adv:"応用",random:"乱"})[r.subLevel]||r.subLevel, bg:"#ede9fe", color:"#6366f1"};
+    if(r.quizMode==="mol") {
+      const mi = MOL_MODE_ICONS[r.subLevel||"random"];
+      return mi ? {text:`${mi.icon}${mi.label}`, bg:mi.bg, color:mi.color} : {text:r.subLevel||"?", bg:"#ede9fe", color:"#6366f1"};
+    }
     if(r.maxNum && r.maxNum!==20) return {text:`〜${r.maxNum}`, bg:"var(--pl)", color:"var(--primary)"};
     return null;
   };
@@ -1887,7 +1898,7 @@ function RankingScreen({ onBack, myNickname }) {
                       {isMe&&<span className="bdg by" style={{marginLeft:5}}>あなた</span>}
                     </span>
                     {ml&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:ml.bg,color:ml.color,fontWeight:700}}>{ml.text}</span>}
-                    {diff&&diffFilter==="all"&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:diff.light,color:diff.color,fontWeight:700}}>{diff.label.split(" ")[0]}</span>}
+                    {diff&&diffFilter==="all"&&r.quizMode!=="mol"&&<span style={{fontSize:".7rem",padding:"2px 6px",borderRadius:10,background:diff.light,color:diff.color,fontWeight:700}}>{diff.label.split(" ")[0]}</span>}
                     <span className="rcard-score">{r.score}点</span>
                   </div>
                   <div className="rcard-meta">
@@ -2553,6 +2564,7 @@ function TimeAttackResultScreen({ result, nickname, settings, onHome, onRetry })
 
 // ── MolBattleLobby ──────────────────────────────────────────
 function MolBattleLobby({ nickname, onBack }) {
+  useEffect(()=>{ bgm.start("lobby"); return()=>{}; },[]);
   const [phase, setPhase] = useState("menu");
   const [molMode, setMolMode] = useState("intro");
   const [roomCode, setRoomCode] = useState("");
