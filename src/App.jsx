@@ -1637,9 +1637,8 @@ function HowToModal({ onClose }) {
           <div className="howto-section">
             <h3>原子量（mol計算用）</h3>
             <div style={{background:"#1e293b",color:"#94a3b8",borderRadius:7,padding:"9px 12px",fontFamily:"monospace",fontSize:".75rem",lineHeight:1.9}}>
-              H=1.0　C=12　O=16　N=14<br/>
-              Na=23　Cl=35.5　Cu=64　S=32<br/>
-              アボガドロ数: 6.0×10²³ /mol　　22.4 L/mol
+              H=1.0　C=12　O=16　N=14　Na=23　Cl=35.5　Cu=64　S=32<br/>
+              アボガドロ定数: 6.0×10²³/mol　　モル体積: 22.4 L/mol
             </div>
           </div>
 
@@ -2434,7 +2433,10 @@ function MemoScreen({ onBack }) {
 // mol計算ドリル
 // ============================================================
 const AVOGADRO = 6.0e23;
-const MOL_CONST_TEXT = "H=1.0  C=12  O=16  N=14  Na=23  Cl=35.5  Cu=64  S=32　　アボガドロ数: 6.0×10²³/mol";
+// mol定数：2行分割で表示
+const MOL_CONST_LINE1 = "H=1.0　C=12　O=16　N=14　Na=23　Cl=35.5　Cu=64　S=32";
+const MOL_CONST_LINE2 = "アボガドロ定数: 6.0×10²³/mol　　モル体積: 22.4 L/mol";
+const MOL_CONST_TEXT = MOL_CONST_LINE1 + "　　" + MOL_CONST_LINE2;
 
 // 答えを見やすい文字列に
 function fmtAns(v) {
@@ -2454,7 +2456,7 @@ function genMolDummies(correct, qtype) {
   } else if (qtype === "mol_to_L" || qtype === "L_to_mol") {
     dummies = [c*2, c/2, c+22.4, c-22.4, c*3, c/3].filter(x=>x>0&&x!==c);
   } else if (qtype === "mol_to_N" || qtype === "N_to_mol") {
-    // アボガドロ数絡み
+    // アボガドロ定数絡み
     dummies = [c*2, c/2, c*3, c/3, c*0.5].filter(x=>x>0&&x!==c);
   } else if (qtype === "g_to_L" || qtype === "L_to_g") {
     dummies = [c*2, c/2, c+11.2, c*3, c/3].filter(x=>x>0&&x!==c);
@@ -2568,8 +2570,8 @@ function getMolHints(q) {
   else if (q.qtype==="mol_to_g") { hints.push("mol → g の変換：g = mol × モル質量"); hints.push(`${q.substance}のモル質量 = ${q.molarMass} g/mol`); hints.push(`g = ${q.given} × ${q.molarMass}`); }
   else if (q.qtype==="mol_to_L") { hints.push("mol → L の変換（標準状態）：L = mol × 22.4"); hints.push(`22.4 L/mol を使う`); hints.push(`L = ${q.given} × 22.4`); }
   else if (q.qtype==="L_to_mol") { hints.push("L → mol の変換（標準状態）：mol = L ÷ 22.4"); hints.push(`22.4 L/mol を使う`); hints.push(`mol = ${q.given} ÷ 22.4`); }
-  else if (q.qtype==="mol_to_N") { hints.push("mol → 個数の変換：個 = mol × 6.0×10²³"); hints.push(`アボガドロ数 6.0×10²³ を使う`); hints.push(`個 = ${q.given} × 6.0×10²³`); }
-  else if (q.qtype==="N_to_mol") { hints.push("個数 → mol の変換：mol = 個数 ÷ 6.0×10²³"); hints.push(`アボガドロ数 6.0×10²³ で割る`); hints.push(`mol = ${q.numer}×10²³ ÷ 6.0×10²³`); }
+  else if (q.qtype==="mol_to_N") { hints.push("mol → 個数の変換：個 = mol × 6.0×10²³"); hints.push(`アボガドロ定数 6.0×10²³ を使う`); hints.push(`個 = ${q.given} × 6.0×10²³`); }
+  else if (q.qtype==="N_to_mol") { hints.push("個数 → mol の変換：mol = 個数 ÷ 6.0×10²³"); hints.push(`アボガドロ定数 6.0×10²³ で割る`); hints.push(`mol = ${q.numer}×10²³ ÷ 6.0×10²³`); }
   else if (q.qtype==="g_to_L")   { hints.push("g → mol → L の2段変換"); hints.push(`モル質量 ${q.molarMass} g/mol → mol、次に × 22.4`); hints.push(`mol = ${q.given} ÷ ${q.molarMass}、L = mol × 22.4`); }
   else if (q.qtype==="L_to_g")   { hints.push("L → mol → g の2段変換"); hints.push(`22.4で割って mol、次に × モル質量 ${q.molarMass}`); hints.push(`mol = ${q.given} ÷ 22.4、g = mol × ${q.molarMass}`); }
   else if (q.qtype==="g_to_N")   { hints.push("g → mol → 個数 の2段変換"); hints.push(`モル質量 ${q.molarMass} g/mol で割って mol、次に × 6.0×10²³`); hints.push(`mol = ${q.given} ÷ ${q.molarMass}、個 = mol × 6.0×10²³`); }
@@ -2754,7 +2756,10 @@ function MolSetupScreen({ onStart, onBack }) {
       </div>
       <div style={{background:"#f8fafc",borderRadius:9,padding:"10px 12px",marginBottom:14,fontSize:".75rem",color:"#475569",lineHeight:1.7}}>
         <div style={{fontWeight:700,marginBottom:3}}>📌 原子量・定数</div>
-        <div style={{fontFamily:"monospace",fontSize:".72rem"}}>{MOL_CONST_TEXT}</div>
+        <div style={{textAlign:"center",lineHeight:1.8}}>
+          <div style={{fontFamily:"monospace",fontSize:".72rem"}}>{MOL_CONST_LINE1}</div>
+          <div style={{fontFamily:"monospace",fontSize:".72rem"}}>{MOL_CONST_LINE2}</div>
+        </div>
       </div>
       <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>モードを選択</div>
       <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:16}}>
@@ -3309,7 +3314,10 @@ function MolQuizScreen({ mode, onFinish, onExit=null }) {
     <div>
       {/* 原子量定数バー */}
       <div style={{background:"#1e293b",color:"#94a3b8",fontSize:".65rem",padding:"6px 12px",borderRadius:8,marginBottom:10,fontFamily:"monospace",lineHeight:1.6}}>
-        {MOL_CONST_TEXT}
+        <div style={{textAlign:"center",lineHeight:1.9}}>
+          <div>{MOL_CONST_LINE1}</div>
+          <div>{MOL_CONST_LINE2}</div>
+        </div>
       </div>
       <div className="card">
         {/* ヘッダー */}
