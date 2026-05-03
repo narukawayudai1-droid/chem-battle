@@ -1386,6 +1386,8 @@ input[type=range]{width:100%;accent-color:var(--primary);}
 .rcard-rank{font-family:'Space Mono',monospace;font-weight:700;font-size:1.1rem;width:30px;}
 .rcard-name{flex:1;font-weight:700;font-size:.95rem;}
 .rcard-score{font-family:'Space Mono',monospace;font-weight:700;color:var(--primary);font-size:1.1rem;}
+.teacher-img{width:72px;height:72px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(0,0,0,.15));}
+.score-teacher-wrap{display:flex;align-items:center;justify-content:center;gap:14px;}
 .rcard-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:.72rem;color:var(--muted);}
 .rcard-stat{background:var(--bg);padding:2px 7px;border-radius:10px;}
 `;
@@ -2023,8 +2025,13 @@ function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", o
       <div className="card">
         <div className="tc" style={{padding:"14px 0"}}>
           <div style={{fontSize:"1.7rem",marginBottom:4}}>{grade}</div>
-          <div className="rbig" style={isIon?{color:"var(--ion)"}:isFormula?{color:"var(--form)"}:{}}>{result.score}</div>
-          <div className="muted" style={{marginTop:2}}>点</div>
+          <div className="score-teacher-wrap">
+            <div>
+              <div className="rbig" style={isIon?{color:"var(--ion)"}:isFormula?{color:"var(--form)"}:{}}>{result.score}</div>
+              <div className="muted" style={{marginTop:2}}>点</div>
+            </div>
+            <img src="/teacher.png" alt="先生" className="teacher-img"/>
+          </div>
           {rankSaved&&<div style={{marginTop:8,fontSize:".85rem",color:"var(--success)",fontWeight:700}}>✅ ランキングに登録しました！</div>}
         </div>
         <div className="s3">
@@ -3325,8 +3332,13 @@ function MolResultScreen({ result, nickname="", onHome, onRetry }) {
           <div style={{fontSize:"1.7rem",marginBottom:4}}>
             {acc>=90?"🥇 完璧！":acc>=70?"🥈 よくできました！":acc>=50?"🥉 もう少し！":"📚 練習しよう！"}
           </div>
-          <div style={{fontSize:"2.5rem",fontWeight:900,color:"#6366f1",fontFamily:"Space Mono,monospace"}}>{result.score||0}</div>
-          <div style={{color:"var(--muted)",fontSize:".82rem"}}>点</div>
+          <div className="score-teacher-wrap">
+            <div>
+              <div style={{fontSize:"2.5rem",fontWeight:900,color:"#6366f1",fontFamily:"Space Mono,monospace"}}>{result.score||0}</div>
+              <div style={{color:"var(--muted)",fontSize:".82rem"}}>点</div>
+            </div>
+            <img src="/teacher.png" alt="先生" className="teacher-img"/>
+          </div>
           {rankSaved&&<div style={{marginTop:6,fontSize:".82rem",color:"var(--success)",fontWeight:700}}>✅ ランキングに登録しました！</div>}
         </div>
         <div className="s3">
