@@ -2108,6 +2108,16 @@ function RankingScreen({ onBack, myNickname }) {
   const [allRanks,setAllRanks]=useState([]);
   const [loading,setLoading]=useState(true);
 
+  // ランキングBGM（MP3をエンドレスで再生）
+  useEffect(()=>{
+    bgm.stop(); // 既存BGMを止める
+    const audio = new Audio("/ranking-bgm.mp3");
+    audio.loop = true;
+    audio.volume = 0.5;
+    audio.play().catch(()=>{});
+    return ()=>{ audio.pause(); audio.src=""; };
+  },[]);
+
   useEffect(()=>{load();},[tab]);
 
   const load=async()=>{
@@ -3677,7 +3687,7 @@ export default function App() {
               onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}
               onRetry={()=>{bgm.stop();setScreen("countdown");}}/>
           )}
-          {screen==="ranking"&&<RankingScreen myNickname={nickname} onBack={()=>setScreen("home")}/>}
+          {screen==="ranking"&&<RankingScreen myNickname={nickname} onBack={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
           {screen==="memo"&&<MemoScreen onBack={()=>setScreen("home")}/>}
           {screen==="mol_setup"&&<MolSetupScreen onBack={()=>setScreen("home")} onStart={(m,t)=>{setMolMode(m);bgm.stop();setScreen("mol_countdown");}}/>}
           {screen==="mol_battle"&&<MolBattleLobby nickname={nickname} onBack={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
