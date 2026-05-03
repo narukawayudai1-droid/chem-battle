@@ -1663,7 +1663,50 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
   const [edit,setEdit]=useState(false);
   const [ni,setNi]=useState(nickname||"");
   const [showHowTo,setShowHowTo]=useState(false);
-  const save=()=>{if(ni.trim()){onSetNickname(ni.trim());setEdit(false);}};
+  const [checking,setChecking]=useState(false);
+  const [ngMsg,setNgMsg]=useState("");
+
+  const save=async()=>{
+    const name=ni.trim();
+    if(!name) return;
+    setChecking(true);
+    setNgMsg("");
+    try {
+      const res=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          model:"claude-sonnet-4-20250514",
+          max_tokens:50,
+          system:`あなたはオンラインゲームのユーザー名を審査する厳格かつ公平なモデレーターです。
+入力されたニックネームが教育上の観点から適切かどうかを判定してください。
+以下のいずれかに該当する場合は「NG」とだけ返してください。それ以外は「OK」とだけ返してください。
+1. 暴力・犯罪・薬物・自傷行為を助長または連想させる表現
+2. 性的・卑猥な表現（直接的な単語・隠語・卑猥な意味を持つ当て字を含む）
+3. 差別・誹謗中傷（人種・宗教・性別・障害・職業・特定の個人や団体への攻撃）
+4. 個人情報の露出（本名・住所・電話番号・SNS ID・学校名など）
+5. 運営スタッフや有名人へのなりすまし
+6. 公序良俗に反する社会問題・政治的宗教的な強い主張
+7. 伏せ字・記号・数字で禁止ワードを回避しようとする意図
+必ず「OK」か「NG」の2文字のみで答えてください。`,
+          messages:[{role:"user",content:`ニックネーム：「${name}」`}]
+        })
+      });
+      const data=await res.json();
+      const verdict=(data.content?.[0]?.text||"").trim().toUpperCase();
+      if(verdict==="NG"){
+        setNgMsg("このニックネームは使用できません。別の名前を入力してください。");
+        setChecking(false);
+        return;
+      }
+    } catch(e) {
+      // API失敗時はそのまま通す（ユーザー体験を優先）
+      console.warn("nickname check failed",e);
+    }
+    setChecking(false);
+    onSetNickname(name);
+    setEdit(false);
+  };
   return (
     <div>
       {showHowTo&&<HowToModal onClose={()=>setShowHowTo(false)}/>}
@@ -1681,12 +1724,19 @@ function HomeScreen({ nickname, onSetNickname, onSolo, onBattle, onRanking, onMe
               ニックネームを登録してスタート！
             </div>
             <div style={{display:"flex",gap:8}}>
-              <input className="hero-input" style={{flex:1}} value={ni} onChange={e=>setNi(e.target.value)}
+              <input className="hero-input" style={{flex:1}} value={ni} onChange={e=>{setNi(e.target.value);setNgMsg("");}}
                 placeholder="ニックネームを入力" maxLength={12}
-                onKeyDown={e=>e.key==="Enter"&&save()} autoFocus={edit}/>
-              <button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 14px"}} onClick={save}>✓ 保存</button>
-              {edit&&<button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 10px",background:"rgba(255,255,255,.12)",color:"rgba(255,255,255,.7)"}} onClick={()=>setEdit(false)}>✕</button>}
+                onKeyDown={e=>e.key==="Enter"&&!checking&&save()} autoFocus={edit}/>
+              <button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 14px",opacity:checking?0.6:1}} onClick={save} disabled={checking}>
+                {checking?"⏳":"✓ 保存"}
+              </button>
+              {edit&&<button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 10px",background:"rgba(255,255,255,.12)",color:"rgba(255,255,255,.7)"}} onClick={()=>{setEdit(false);setNgMsg("");}}>✕</button>}
             </div>
+            {ngMsg&&(
+              <div style={{marginTop:8,background:"rgba(239,68,68,.2)",border:"1px solid rgba(239,68,68,.5)",borderRadius:8,padding:"7px 10px",color:"#fca5a5",fontSize:".8rem",textAlign:"center",fontWeight:600}}>
+                ⚠️ {ngMsg}
+              </div>
+            )}
           </div>
         ):(
           <div>
