@@ -2156,6 +2156,7 @@ function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", o
       {/* ランキング登録モーダル（対戦モード以外） */}
       {showRankModal && !battleResult && (
         <RankingModal score={result.score} correct={result.correct||0} total={result.total||0} nickname={nickname} quizMode={quizMode} maxNum={maxNum} subLevel={result.subLevel||"junior"} difficulty={result.difficulty||"normal"}
+          userGrade={userGrade} userSchool={userSchool}
           onDone={(saved)=>{setRankSaved(saved);setShowRankModal(false);}}/>
       )}
 
@@ -3062,6 +3063,7 @@ function TimeAttackResultScreen({ result, nickname, settings, onHome, onRetry })
       {showRankModal&&(
         <RankingModal score={result.score} correct={result.correct} total={result.totalAnswered}
           nickname={nickname} quizMode="timeattack" maxNum={settings?.maxNum} subLevel={settings?.subLevel||"junior"} difficulty="normal"
+          userGrade={""} userSchool={""}
           onDone={(saved)=>{setRankSaved(saved);setShowRankModal(false);}}/>
       )}
       <div className="card">
@@ -3515,6 +3517,7 @@ function MolResultScreen({ result, nickname="", onHome, onRetry, userGrade="", u
       {showRankModal&&nickname&&(
         <RankingModal score={result.score||0} correct={correct} total={result.total}
           nickname={nickname} quizMode="mol" maxNum={null} subLevel={result.molMode||"random"} difficulty="normal"
+          userGrade={userGrade} userSchool={userSchool}
           onDone={(saved)=>{setRankSaved(saved);setShowRankModal(false);}}/>
       )}
       <div className="card">
@@ -3856,6 +3859,7 @@ export default function App() {
           {screen==="quiz"&&<QuizScreen maxNum={maxNum} minNum={minNum} quizMode={quizMode} directionMode={directionMode} subLevel={subLevel} difficulty={difficulty} onFinish={handleSoloFinish} onExit={()=>{bgm.stop();if(bgmOn)bgm.start("home");setScreen("home");}}/>}
           {screen==="result"&&quizResult&&(
             <ResultScreen result={quizResult} nickname={nickname} maxNum={maxNum} quizMode={quizMode} subLevel={subLevel}
+              userGrade={userGrade} userSchool={userSchool}
               onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}
               onRetry={()=>{bgm.stop();setScreen("countdown");}}/>
           )}
