@@ -1712,11 +1712,8 @@ function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, on
     }
     setNgMsg("");
     const grade = selGrade||userGrade;
-    const schoolBase = (selSchool||userSchool).trim();
-    // サフィックスを付加（まだ付いていない場合）
-    const suffix = grade==="elementary"?"小学校":grade==="junior"?"中学校":grade==="high"?"高校":"";
-    const schoolFull = suffix&&schoolBase&&!schoolBase.endsWith(suffix) ? schoolBase+suffix : schoolBase;
-    onSetNickname(name, grade, schoolFull);
+    const school = (selSchool||userSchool).trim();
+    onSetNickname(name, grade, school);
     setEdit(false);
   };
 
