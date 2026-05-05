@@ -1782,10 +1782,9 @@ function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, on
                 <div style={{display:"flex",gap:6,alignItems:"center"}}>
                   <input className="hero-input" style={{flex:1}} value={selSchool}
                     onChange={e=>setSelSchool(e.target.value)}
-                    placeholder={placeholder} maxLength={15}
+                    placeholder={placeholder} maxLength={20}
                     onKeyDown={e=>e.key==="Enter"&&selSchool.trim()&&setStep("name")}
                     autoFocus/>
-                  <span style={{color:"rgba(255,255,255,.8)",fontWeight:700,fontSize:".9rem",whiteSpace:"nowrap",flexShrink:0}}>{suffix}</span>
                   <button className="hero-save-btn" style={{flex:"0 0 auto",padding:"0 12px"}}
                     onClick={()=>selSchool.trim()&&setStep("name")} disabled={!selSchool.trim()}>
                     次へ
