@@ -1772,8 +1772,8 @@ function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, on
 
             {/* STEP 2: 学校名入力（○○だけ入力、右にサフィックス表示） */}
             {step==="school"&&(()=>{
-              const suffix = selGrade==="elementary"?"小学校":selGrade==="junior"?"中学校":"高校";
-              const placeholder = selGrade==="elementary"?"例：○○":selGrade==="junior"?"例：○○":"例：○○";
+              const suffix = selGrade==="elementary"?"小学校":selGrade==="junior"?"中学校/中等教育学校":"高校/中等教育学校";
+              const placeholder = selGrade==="elementary"?"例：○○小学校":selGrade==="junior"?"例：○○中学校/中等教育学校":"例：○○高校/中等教育学校";
               return (
               <div>
                 <div style={{color:"rgba(255,255,255,.8)",fontSize:".88rem",fontWeight:700,marginBottom:8,textAlign:"center"}}>
