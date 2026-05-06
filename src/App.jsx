@@ -4023,8 +4023,8 @@ export default function App() {
               onMemo={()=>setScreen("memo")}
               onMol={(t)=>{bgm.stop();if(t==="battle")setScreen("mol_battle");else setScreen("mol_setup");}}
               bgmOn={bgmOn} onToggleBgm={toggleBgm} weekCount={weekCount} onAdmin={()=>setShowAdmin(true)}/>
-              {showAdmin&&<AdminScreen onClose={()=>setShowAdmin(false)}/>}
           )}
+          {showAdmin&&<AdminScreen onClose={()=>setShowAdmin(false)}/>}
           {screen==="setup"&&(
             <SetupScreen title={isIon?"イオンクイズ設定":"出題範囲を選択"} quizMode={quizMode} onBack={goHome}
               onStart={(mn,dm,sl,dif)=>{if(mn&&typeof mn==="object"){setMinNum(mn.min||1);setMaxNum(mn.max||20);}else{setMinNum(1);setMaxNum(mn||20);}setDirectionMode(dm||"random");setSubLevel(sl||"junior");setDifficulty(dif||"normal");bgm.stop();setScreen("countdown");}}/>
