@@ -1563,8 +1563,8 @@ function RangeSelector({ minNum=1, maxNum=20, onChangeMin, onChangeMax, onChange
 
 // ── 共通フッター ────────────────────────────────────────────
 function AppFooter({ onAdminTrigger=null }) {
-  const tapRef = React.useRef(0);
-  const timerRef = React.useRef(null);
+  const tapRef = useRef(0);
+  const timerRef = useRef(null);
   const handleTap = () => {
     if(!onAdminTrigger) return;
     tapRef.current += 1;
