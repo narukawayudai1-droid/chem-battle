@@ -1562,11 +1562,166 @@ function RangeSelector({ minNum=1, maxNum=20, onChangeMin, onChangeMax, onChange
 
 
 // ── 共通フッター ────────────────────────────────────────────
-function AppFooter() {
+function AppFooter({ onAdminTrigger=null }) {
+  const tapRef = React.useRef(0);
+  const timerRef = React.useRef(null);
+  const handleTap = () => {
+    if(!onAdminTrigger) return;
+    tapRef.current += 1;
+    clearTimeout(timerRef.current);
+    if(tapRef.current >= 5){ tapRef.current=0; onAdminTrigger(); return; }
+    timerRef.current = setTimeout(()=>{ tapRef.current=0; }, 2000);
+  };
   return (
-    <div style={{textAlign:"center",padding:"14px 10px 8px",color:"var(--muted)",fontSize:".72rem",lineHeight:1.7,borderTop:"1px solid var(--border)",marginTop:8}}>
+    <div onClick={handleTap} style={{textAlign:"center",padding:"14px 10px 8px",color:"var(--muted)",fontSize:".72rem",lineHeight:1.7,borderTop:"1px solid var(--border)",marginTop:8,cursor:"default",userSelect:"none"}}>
       © 2026 Narukawa All Rights Reserved.<br/>
       本アプリの無断転載・再配布を禁止します。
+    </div>
+  );
+}
+
+
+// ── 管理画面 ──────────────────────────────────────────────────
+const ADMIN_PW = "chem0526";
+const RANKING_KEYS = [
+  {key:"ranking:v2",   label:"⚛️ 元素"},
+  {key:"ranking:ion",  label:"⚡ イオン"},
+  {key:"ranking:formula", label:"🧬 化学式"},
+  {key:"ranking:mol",  label:"🧮 mol"},
+];
+
+function AdminScreen({ onClose }) {
+  const [authed, setAuthed] = useState(false);
+  const [pw, setPw] = useState("");
+  const [pwErr, setPwErr] = useState(false);
+  const [tab, setTab] = useState("ranking:v2");
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [editIdx, setEditIdx] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editSchool, setEditSchool] = useState("");
+  const [msg, setMsg] = useState("");
+
+  const login = () => {
+    if(pw === ADMIN_PW){ setAuthed(true); loadEntries(tab); }
+    else { setPwErr(true); setTimeout(()=>setPwErr(false),1500); }
+  };
+
+  const loadEntries = async(key) => {
+    setLoading(true); setMsg("");
+    const res = await sGet(key, true);
+    let all = [];
+    try { if(res) all = JSON.parse(res.value); } catch{}
+    setEntries(all);
+    setLoading(false);
+  };
+
+  const saveEntries = async(newList) => {
+    await sSet(tab, JSON.stringify(newList), true);
+    setEntries(newList);
+    setMsg("✅ 保存しました");
+    setTimeout(()=>setMsg(""),2000);
+  };
+
+  const deleteEntry = (idx) => {
+    if(!window.confirm(`「${entries[idx].name}」を削除しますか？`)) return;
+    const updated = entries.filter((_,i)=>i!==idx);
+    saveEntries(updated);
+  };
+
+  const startEdit = (idx) => {
+    setEditIdx(idx);
+    setEditName(entries[idx].name||"");
+    setEditSchool(entries[idx].school||"");
+  };
+
+  const saveEdit = () => {
+    const updated = entries.map((e,i)=>i===editIdx?{...e,name:editName,school:editSchool}:e);
+    setEditIdx(null);
+    saveEntries(updated);
+  };
+
+  const fmtDate = (ts) => ts ? new Date(ts).toLocaleDateString("ja-JP") : "-";
+  const gradeIcon = (g) => ({elementary:"🎒",junior:"📚",high:"🎓",general:"👤"})[g]||"";
+
+  if(!authed) return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="howto-modal" style={{maxWidth:320}} onClick={e=>e.stopPropagation()}>
+        <div className="howto-header">
+          <button className="howto-close" onClick={onClose}>✕</button>
+          <h2>🔐 管理画面</h2>
+          <p>パスワードを入力してください</p>
+        </div>
+        <div className="howto-body">
+          <input type="password" value={pw} onChange={e=>setPw(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&login()}
+            placeholder="パスワード" autoFocus
+            style={{width:"100%",padding:"10px 12px",borderRadius:8,border:`2px solid ${pwErr?"#ef4444":"var(--border)"}`,fontSize:"1rem",marginBottom:10,boxSizing:"border-box"}}/>
+          {pwErr&&<p style={{color:"#ef4444",fontSize:".82rem",textAlign:"center",marginBottom:8}}>パスワードが違います</p>}
+          <button className="btn btn-p btn-blk" onClick={login}>ログイン</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="howto-modal" style={{maxWidth:500}} onClick={e=>e.stopPropagation()}>
+        <div className="howto-header">
+          <button className="howto-close" onClick={onClose}>✕</button>
+          <h2>⚙️ 管理画面</h2>
+          <p>ランキングの編集・削除</p>
+        </div>
+        <div className="howto-body">
+          {/* タブ */}
+          <div style={{display:"flex",gap:5,marginBottom:12,flexWrap:"wrap"}}>
+            {RANKING_KEYS.map(r=>(
+              <button key={r.key} onClick={()=>{setTab(r.key);loadEntries(r.key);setEditIdx(null);}}
+                style={{padding:"4px 10px",borderRadius:16,border:`2px solid ${tab===r.key?"var(--primary)":"var(--border)"}`,
+                  background:tab===r.key?"var(--pl)":"#fff",color:tab===r.key?"var(--primary)":"var(--muted)",
+                  fontWeight:tab===r.key?700:400,fontSize:".78rem",cursor:"pointer",fontFamily:"inherit"}}>
+                {r.label}
+              </button>
+            ))}
+          </div>
+          {msg&&<p style={{color:"#22c55e",textAlign:"center",fontWeight:700,marginBottom:8}}>{msg}</p>}
+          {loading?<p className="tc muted">読み込み中...</p>:(
+            <div>
+              <p style={{fontSize:".75rem",color:"var(--muted)",marginBottom:8}}>{entries.length}件のデータ</p>
+              {entries.map((e,i)=>(
+                <div key={i} style={{border:"1px solid var(--border)",borderRadius:8,padding:"8px 10px",marginBottom:8,fontSize:".82rem"}}>
+                  {editIdx===i?(
+                    <div>
+                      <div style={{display:"flex",gap:6,marginBottom:6}}>
+                        <input value={editName} onChange={ev=>setEditName(ev.target.value)}
+                          placeholder="ニックネーム" style={{flex:1,padding:"4px 8px",borderRadius:6,border:"1px solid var(--border)",fontSize:".82rem"}}/>
+                        <input value={editSchool} onChange={ev=>setEditSchool(ev.target.value)}
+                          placeholder="学校名" style={{flex:1,padding:"4px 8px",borderRadius:6,border:"1px solid var(--border)",fontSize:".82rem"}}/>
+                      </div>
+                      <div style={{display:"flex",gap:6}}>
+                        <button onClick={saveEdit} style={{flex:1,padding:"4px",background:"#22c55e",color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontSize:".78rem"}}>保存</button>
+                        <button onClick={()=>setEditIdx(null)} style={{flex:1,padding:"4px",background:"var(--border)",color:"var(--text)",border:"none",borderRadius:6,cursor:"pointer",fontSize:".78rem"}}>キャンセル</button>
+                      </div>
+                    </div>
+                  ):(
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <span style={{flex:1}}>
+                        <b>{i+1}位</b> {gradeIcon(e.grade)} <b>{e.name}</b>
+                        {e.school&&<span style={{color:"var(--muted)",fontSize:".75rem"}}> [{e.school}]</span>}
+                        <span style={{marginLeft:6,color:"var(--primary)",fontWeight:700}}>{e.score}点</span>
+                        <span style={{color:"var(--muted)",fontSize:".72rem",marginLeft:4}}>{fmtDate(e.date)}</span>
+                      </span>
+                      <button onClick={()=>startEdit(i)} style={{padding:"3px 8px",background:"var(--pl)",color:"var(--primary)",border:"1px solid var(--primary)",borderRadius:6,cursor:"pointer",fontSize:".72rem"}}>編集</button>
+                      <button onClick={()=>deleteEntry(i)} style={{padding:"3px 8px",background:"#fee2e2",color:"#ef4444",border:"1px solid #ef4444",borderRadius:6,cursor:"pointer",fontSize:".72rem"}}>削除</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {entries.length===0&&<p className="tc muted">データがありません</p>}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1685,7 +1840,7 @@ function checkNickname(name) {
   return true;
 }
 
-function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm, weekCount=0 }) {
+function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm, weekCount=0, onAdmin=null }) {
   const [edit,setEdit]=useState(false);
   const [step,setStep]=useState("grade"); // "grade"|"school"|"name"
   const [selGrade,setSelGrade]=useState("");
@@ -1901,7 +2056,7 @@ function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, on
         <button className="btn btn-s" style={{flex:1}} onClick={onRanking}>🏆 ランキング</button>
         <button className="btn btn-s" style={{flex:"0 0 auto",padding:"10px 12px"}} onClick={onToggleBgm}>{bgmOn?"🔊":"🔇"}</button>
       </div>
-      <AppFooter/>
+      <AppFooter onAdminTrigger={onAdmin}/>
     </div>
   );
 }
@@ -2084,6 +2239,7 @@ function QuizScreen({ maxNum, minNum=1, quizMode, directionMode="random", subLev
   const [selected,setSelected]=useState(null);
   const [feedback,setFeedback]=useState("none");
   const [bgmOn,setBgmOn]=useState(true);
+  const [showAdmin,setShowAdmin]=useState(false);
   const [molMode,setMolMode]=useState("intro");
   const sRef=useRef(0),cRef=useRef(0),aRef=useRef(0),mRef=useRef([]);
 
@@ -3866,7 +4022,8 @@ export default function App() {
               onRanking={()=>{bgm.se("fanfare");setScreen("ranking");}}
               onMemo={()=>setScreen("memo")}
               onMol={(t)=>{bgm.stop();if(t==="battle")setScreen("mol_battle");else setScreen("mol_setup");}}
-              bgmOn={bgmOn} onToggleBgm={toggleBgm} weekCount={weekCount}/>
+              bgmOn={bgmOn} onToggleBgm={toggleBgm} weekCount={weekCount} onAdmin={()=>setShowAdmin(true)}/>
+              {showAdmin&&<AdminScreen onClose={()=>setShowAdmin(false)}/>}
           )}
           {screen==="setup"&&(
             <SetupScreen title={isIon?"イオンクイズ設定":"出題範囲を選択"} quizMode={quizMode} onBack={goHome}
