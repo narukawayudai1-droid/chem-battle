@@ -2239,8 +2239,6 @@ function QuizScreen({ maxNum, minNum=1, quizMode, directionMode="random", subLev
   const [selected,setSelected]=useState(null);
   const [feedback,setFeedback]=useState("none");
   const [bgmOn,setBgmOn]=useState(true);
-  const [showAdmin,setShowAdmin]=useState(false);
-  const [molMode,setMolMode]=useState("intro");
   const sRef=useRef(0),cRef=useRef(0),aRef=useRef(0),mRef=useRef([]);
 
   useEffect(()=>{
@@ -3934,6 +3932,7 @@ export default function App() {
   const [difficulty,setDifficulty]=useState("normal");
   const [quizResult,setQuizResult]=useState(null);
   const [bgmOn,setBgmOn]=useState(true);
+  const [showAdmin,setShowAdmin]=useState(false);
   const [molMode,setMolMode]=useState("intro");
 
   useEffect(()=>{
