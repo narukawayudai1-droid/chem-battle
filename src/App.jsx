@@ -859,7 +859,7 @@ function getPeriodicDummies(element, allElements) {
   return [...pool,...extra].slice(0,3);
 }
 
-function PeriodicTableQuizScreen({ maxNum=20, minNum=1, onFinish, onExit=null, seed=null }) {
+function PeriodicTableQuizScreen({ maxNum=20, minNum=1, mode="name", onFinish, onExit=null, seed=null }) {
   const elements = ALL_ELEMENTS.filter(e=>e.number>=minNum&&e.number<=maxNum);
   const rngRef = useRef(seed!==null?seededRng(seed):null);
   const rand = () => rngRef.current ? rngRef.current() : Math.random();
@@ -871,7 +871,12 @@ function PeriodicTableQuizScreen({ maxNum=20, minNum=1, onFinish, onExit=null, s
     lastIdRef.current = el.number;
     const dummies = getPeriodicDummies(el, elements);
     const choices = shuffle([el,...dummies]);
-    return { el, choices, answer: el.name };
+    // mode: "name"=記号→名前を答える, "symbol"=名前→記号を答える
+    return {
+      el, choices,
+      answer: mode==="symbol" ? el.symbol : el.name,
+      choiceLabel: mode==="symbol" ? (e)=>e.symbol : (e)=>e.name,
+    };
   };
 
   const [q, setQ] = useState(()=>genNextQ());
@@ -996,11 +1001,14 @@ function PeriodicTableQuizScreen({ maxNum=20, minNum=1, onFinish, onExit=null, s
 
       {/* 選択肢 */}
       <div className="chs">
-        {q.choices.map((el,i)=>(
-          <button key={i}
-            className={`ch ${selected!==null?"dis":""} ${selected!==null&&el.name===q.answer?"ok":""} ${selected===el.name&&el.name!==q.answer?"ng":""}`}
-            onClick={()=>handleChoice(el.name)}>{el.name}</button>
-        ))}
+        {q.choices.map((el,i)=>{
+          const label = q.choiceLabel(el);
+          return (
+            <button key={i}
+              className={`ch ${label===q.answer?"cn":""} ${selected!==null?"dis":""} ${selected!==null&&label===q.answer?"ok":""} ${selected===label&&label!==q.answer?"ng":""}`}
+              onClick={()=>handleChoice(label)}>{label}</button>
+          );
+        })}
       </div>
     </div>
   );
@@ -1052,6 +1060,7 @@ function PeriodicTableSetupScreen({ onStart, onBack, isBattle=false }) {
   useEffect(()=>{ bgm.start("lobby"); return()=>{}; },[]);
   const [minNum, setMinNum] = useState(1);
   const [maxNum, setMaxNum] = useState(20);
+  const [mode, setMode] = useState("name"); // "name"=記号→名前, "symbol"=名前→記号
   return (
     <div className="card">
       <div className="fb2 mb13">
@@ -1065,9 +1074,20 @@ function PeriodicTableSetupScreen({ onStart, onBack, isBattle=false }) {
           onChangeMax={v=>{setMaxNum(v);}}/>
         <ElementDifficultyBadge maxNum={maxNum}/>
       </div>
+      <div style={{marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>出題モード</div>
+        {[["name","名前を答える","点滅した元素の名前を選べ"],["symbol","記号を答える","点滅した元素の記号を選べ"]].map(([v,l,d])=>(
+          <div key={v} onClick={()=>setMode(v)}
+            style={{padding:"10px 14px",marginBottom:6,border:`2px solid ${mode===v?"#0891b2":"var(--border)"}`,borderRadius:10,cursor:"pointer",background:mode===v?"#e0f2fe":"#fff",transition:"all .12s"}}>
+            <span style={{fontWeight:700,color:mode===v?"#0891b2":"var(--text)"}}>{l}</span>
+            <span style={{fontSize:".78rem",color:"var(--muted)",marginLeft:8}}>{d}</span>
+          </div>
+        ))}
+      </div>
       <button className="btn btn-p btn-blk"
-        onClick={()=>onStart({min:minNum,max:maxNum})}
-        disabled={ALL_ELEMENTS.filter(e=>e.number>=minNum&&e.number<=maxNum).length<4}>
+        onClick={()=>onStart({min:minNum,max:maxNum},mode)}
+        disabled={ALL_ELEMENTS.filter(e=>e.number>=minNum&&e.number<=maxNum).length<4}
+        style={{background:"linear-gradient(135deg,#0891b2,#0e7490)"}}>
         {isBattle?"🚀 この設定でルーム作成":"🚀 スタート！"}
       </button>
       <AppFooter/>
@@ -1615,6 +1635,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .bform{background:#dcfce7;color:#166534;}
 .btn-form{background:#16a34a;color:#fff;}.btn-form:hover{background:#15803d;}
 .sc.form-sc:hover{border-color:#16a34a;}.sc.form-sc.on{border-color:#16a34a;background:#dcfce7;}
+.sc.pt-sc:hover{border-color:#0891b2;box-shadow:0 4px 14px rgba(8,145,178,.15);}
+.sc.mol-sc:hover{border-color:#6366f1;box-shadow:0 4px 14px rgba(99,102,241,.15);}
 /* battle */
 .rc{text-align:center;font-family:'Space Mono',monospace;font-size:2.3rem;font-weight:700;letter-spacing:7px;color:var(--primary);background:var(--pl);padding:16px;border-radius:var(--r);margin:9px 0;}
 .pli{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
@@ -2270,11 +2292,11 @@ function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, on
       <div style={{marginBottom:10}}>
         <div style={{fontWeight:800,fontSize:".78rem",color:"#0891b2",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🗺️ 周期表クイズ</div>
         <div className="g2">
-          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#0891b2"}:{borderColor:"#0891b2"}} onClick={()=>nickname&&onPeriodic("solo")}>
+          <div className="sc pt-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onPeriodic("solo")}>
             <div className="ic">🎮</div><div className="nm">ひとりで挑戦</div>
             <span className="rule-tag">周期表の枠が点滅！元素を答えよ</span>
           </div>
-          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#0891b2"}:{borderColor:"#0891b2"}} onClick={()=>nickname&&onPeriodic("battle")}>
+          <div className="sc pt-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onPeriodic("battle")}>
             <div className="ic">⚔️</div><div className="nm">対戦する</div>
             <span className="rule-tag">同時に解いてスコア比較</span>
           </div>
@@ -2326,12 +2348,12 @@ function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, on
       <div style={{marginBottom:10}}>
         <div style={{fontWeight:800,fontSize:".78rem",color:"#6366f1",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🧮 mol計算ドリル</div>
         <div className="g2">
-          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#6366f1"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol("solo")}>
+          <div className="sc mol-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onMol("solo")}>
             <div className="ic">🎮</div>
             <div className="nm">ひとりで挑戦</div>
             <span className="rule-tag">5分以内に10問解け！</span>
           </div>
-          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#6366f1"}:{borderColor:"#6366f1"}} onClick={()=>nickname&&onMol("battle")}>
+          <div className="sc mol-sc" style={!nickname?{opacity:.5,cursor:"not-allowed"}:{}} onClick={()=>nickname&&onMol("battle")}>
             <div className="ic">⚔️</div>
             <div className="nm">対戦する</div>
             <span className="rule-tag">同時に解いて正解数比較</span>
@@ -2693,7 +2715,7 @@ function ResultScreen({ result, nickname, maxNum, quizMode, subLevel="junior", o
 
 // ── RankingScreen ──────────────────────────────────────────────
 function RankingScreen({ onBack, myNickname }) {
-  const [tab,setTab]=useState("element_all");
+  const [tab,setTab]=useState("periodic");
   const [diffFilter,setDiffFilter]=useState("all");
   const [molFilter,setMolFilter]=useState("all");
   const [gradeFilter,setGradeFilter]=useState("all"); // 区分フィルター
@@ -2745,8 +2767,8 @@ function RankingScreen({ onBack, myNickname }) {
   }
 
   const tabs=[
-    ["element_all","⚛️元素"],["ion","⚡イオン"],["formula","🧬化学式"],
-    ["mol","🧮 mol"],["periodic","🗺️周期表"],
+    ["periodic","🗺️周期表"],["element_all","⚛️元素"],["ion","⚡イオン"],["formula","🧬化学式"],
+    ["mol","🧮 mol"],
   ];
 
   const showDiffFilter = ["element_all","ion","formula","periodic"].includes(tab);
@@ -4323,9 +4345,9 @@ export default function App() {
               bgmOn={bgmOn} onToggleBgm={toggleBgm} weekCount={weekCount} onAdmin={()=>setShowAdmin(true)}/>
           )}
           {showAdmin&&<AdminScreen onClose={()=>setShowAdmin(false)}/>}
-          {screen==="periodic_setup"&&<PeriodicTableSetupScreen onBack={goHome} onStart={(range,dir)=>{setPeriodicSettings({min:range.min,max:range.max,dir});bgm.stop();setScreen("periodic_countdown");}}/>}
+          {screen==="periodic_setup"&&<PeriodicTableSetupScreen onBack={goHome} onStart={(range,mode)=>{setPeriodicSettings({min:range.min,max:range.max,mode});bgm.stop();setScreen("periodic_countdown");}}/>}
           {screen==="periodic_countdown"&&<Countdown onDone={()=>setScreen("periodic_quiz")}/>}
-          {screen==="periodic_quiz"&&<PeriodicTableQuizScreen minNum={periodicSettings.min} maxNum={periodicSettings.max} directionMode={periodicSettings.dir} onFinish={r=>{bgm.stop();bgm.se("finish");setPeriodicResult(r);setScreen("periodic_result");}} onExit={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
+          {screen==="periodic_quiz"&&<PeriodicTableQuizScreen minNum={periodicSettings.min} maxNum={periodicSettings.max} mode={periodicSettings.mode||"name"} onFinish={r=>{bgm.stop();bgm.se("finish");setPeriodicResult(r);setScreen("periodic_result");}} onExit={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
           {screen==="periodic_result"&&periodicResult&&<PeriodicTableResultScreen result={periodicResult} nickname={nickname} userGrade={userGrade} userSchool={userSchool} onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}} onRetry={()=>{bgm.stop();setScreen("periodic_countdown");}} onRanking={()=>{bgm.se("fanfare");setScreen("ranking");}}/>}
           {screen==="setup"&&(
             <SetupScreen title={isIon?"イオンクイズ設定":"出題範囲を選択"} quizMode={quizMode} onBack={goHome}
