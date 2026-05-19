@@ -137,6 +137,39 @@ const PRESETS = [
 
 function getElements(maxNum) { return ALL_ELEMENTS.filter(e => e.number <= maxNum); }
 
+// ── 周期表クイズ用データ ─────────────────────────────────────
+// 各元素の周期（row）・族（col）・位置を定義
+// ランタノイド/アクチノイドは別行（row8/9）
+const PERIODIC_TABLE_POS = {
+  1:{row:1,col:1},  2:{row:1,col:18},
+  3:{row:2,col:1},  4:{row:2,col:2},  5:{row:2,col:13}, 6:{row:2,col:14}, 7:{row:2,col:15}, 8:{row:2,col:16}, 9:{row:2,col:17}, 10:{row:2,col:18},
+  11:{row:3,col:1}, 12:{row:3,col:2}, 13:{row:3,col:13},14:{row:3,col:14},15:{row:3,col:15},16:{row:3,col:16},17:{row:3,col:17},18:{row:3,col:18},
+  19:{row:4,col:1}, 20:{row:4,col:2}, 21:{row:4,col:3}, 22:{row:4,col:4}, 23:{row:4,col:5}, 24:{row:4,col:6}, 25:{row:4,col:7}, 26:{row:4,col:8}, 27:{row:4,col:9}, 28:{row:4,col:10},29:{row:4,col:11},30:{row:4,col:12},31:{row:4,col:13},32:{row:4,col:14},33:{row:4,col:15},34:{row:4,col:16},35:{row:4,col:17},36:{row:4,col:18},
+  37:{row:5,col:1}, 38:{row:5,col:2}, 39:{row:5,col:3}, 40:{row:5,col:4}, 41:{row:5,col:5}, 42:{row:5,col:6}, 43:{row:5,col:7}, 44:{row:5,col:8}, 45:{row:5,col:9}, 46:{row:5,col:10},47:{row:5,col:11},48:{row:5,col:12},49:{row:5,col:13},50:{row:5,col:14},51:{row:5,col:15},52:{row:5,col:16},53:{row:5,col:17},54:{row:5,col:18},
+  55:{row:6,col:1}, 56:{row:6,col:2}, 57:{row:8,col:3}, 58:{row:8,col:4}, 59:{row:8,col:5}, 60:{row:8,col:6}, 61:{row:8,col:7}, 62:{row:8,col:8}, 63:{row:8,col:9}, 64:{row:8,col:10},65:{row:8,col:11},66:{row:8,col:12},67:{row:8,col:13},68:{row:8,col:14},69:{row:8,col:15},70:{row:8,col:16},71:{row:8,col:17},
+  72:{row:6,col:4}, 73:{row:6,col:5}, 74:{row:6,col:6}, 75:{row:6,col:7}, 76:{row:6,col:8}, 77:{row:6,col:9}, 78:{row:6,col:10},79:{row:6,col:11},80:{row:6,col:12},81:{row:6,col:13},82:{row:6,col:14},83:{row:6,col:15},84:{row:6,col:16},85:{row:6,col:17},86:{row:6,col:18},
+  87:{row:7,col:1}, 88:{row:7,col:2}, 89:{row:9,col:3}, 90:{row:9,col:4}, 91:{row:9,col:5}, 92:{row:9,col:6}, 93:{row:9,col:7}, 94:{row:9,col:8}, 95:{row:9,col:9}, 96:{row:9,col:10},97:{row:9,col:11},98:{row:9,col:12},99:{row:9,col:13},100:{row:9,col:14},101:{row:9,col:15},102:{row:9,col:16},103:{row:9,col:17},
+  104:{row:7,col:4},105:{row:7,col:5},106:{row:7,col:6},107:{row:7,col:7},108:{row:7,col:8},109:{row:7,col:9},110:{row:7,col:10},111:{row:7,col:11},112:{row:7,col:12},113:{row:7,col:13},114:{row:7,col:14},115:{row:7,col:15},116:{row:7,col:16},117:{row:7,col:17},118:{row:7,col:18},
+};
+
+// 同族・同一周期のダミー生成
+function getPeriodicDummies(element, allElements) {
+  const pos = PERIODIC_TABLE_POS[element.number];
+  if(!pos) return shuffle(allElements.filter(e=>e.number!==element.number)).slice(0,3);
+  // 同族（同じcol）
+  const sameCol = allElements.filter(e=>e.number!==element.number&&PERIODIC_TABLE_POS[e.number]?.col===pos.col);
+  // 同一周期（同じrow）
+  const sameRow = allElements.filter(e=>e.number!==element.number&&PERIODIC_TABLE_POS[e.number]?.row===pos.row);
+  // 同族優先で3つ集める
+  const pool = shuffle([...sameCol,...sameRow]);
+  const unique = [...new Map(pool.map(e=>[e.number,e])).values()];
+  if(unique.length>=3) return unique.slice(0,3);
+  // 足りなければランダム補完
+  const extra = shuffle(allElements.filter(e=>e.number!==element.number&&!unique.find(u=>u.number===e.number)));
+  return [...unique,...extra].slice(0,3);
+}
+
+
 
 // ============================================================
 // イオンデータ（中学・高校レベル分け）
@@ -797,6 +830,269 @@ function generateElementQ(elements, rng, directionMode="random", difficulty="nor
   };
 }
 
+
+// ── PeriodicTableQuizScreen ──────────────────────────────────
+function PeriodicTableQuizScreen({ maxNum=20, minNum=1, directionMode="random", onFinish, onExit=null, seed=null }) {
+  const elements = ALL_ELEMENTS.filter(e=>e.number>=minNum&&e.number<=maxNum);
+  const rngRef = useRef(seed!==null?seededRng(seed):null);
+  const rand = () => rngRef.current ? rngRef.current() : Math.random();
+
+  const lastIdRef = useRef(null);
+  const genNextQ = () => {
+    let el = elements[Math.floor(rand()*elements.length)];
+    for(let i=0;i<4;i++){ if(el.number!==lastIdRef.current) break; el=elements[Math.floor(rand()*elements.length)]; }
+    lastIdRef.current = el.number;
+    const isF2N = directionMode==="f2n"?true:directionMode==="n2f"?false:rand()>0.5;
+    const dummies = getPeriodicDummies(el, elements);
+    const choices = shuffle([el,...dummies]);
+    return {
+      el, isF2N,
+      display: isF2N ? el.symbol : el.name,
+      label: isF2N ? "この元素の名前は？" : "この元素の記号は？",
+      choices: isF2N ? choices.map(e=>e.name) : choices.map(e=>e.symbol),
+      answer: isF2N ? el.name : el.symbol,
+    };
+  };
+
+  const [q, setQ] = useState(()=>genNextQ());
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [score, setScore] = useState(0);
+  const [correct, setCorrect] = useState(0);
+  const [answered, setAnswered] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [feedback, setFeedback] = useState("none"); // "ok"|"ng"|"none"
+  const [flash, setFlash] = useState(null); // "ok"|"ng"
+  const [bgmOn, setBgmOn] = useState(true);
+  const scoreRef = useRef(0);
+  const correctRef = useRef(0);
+  const answeredRef = useRef(0);
+  const timerRef = useRef();
+  const mistakesRef = useRef([]);
+
+  useEffect(()=>{
+    bgm.start("play");
+    timerRef.current = setInterval(()=>{
+      setTimeLeft(t=>{
+        if(t<=1){ clearInterval(timerRef.current); finishGame(); return 0; }
+        return t-1;
+      });
+    },1000);
+    return()=>{ clearInterval(timerRef.current); bgm.stop(); };
+  },[]);
+
+  const toggleBgm=()=>{ const n=!bgmOn; setBgmOn(n); if(n)bgm.start("play"); else bgm.stop(); };
+
+  const finishGame=()=>{
+    clearInterval(timerRef.current);
+    const acc = answeredRef.current>0?Math.round(correctRef.current/answeredRef.current*100):0;
+    const bonus = Math.round((acc/100)*(acc/100)*200);
+    onFinish({ score:scoreRef.current+bonus, rawScore:scoreRef.current, correct:correctRef.current, total:answeredRef.current, acc, mistakes:mistakesRef.current });
+  };
+
+  const handleChoice=(choice)=>{
+    if(selected!==null) return;
+    setSelected(choice);
+    answeredRef.current+=1;
+    setAnswered(answeredRef.current);
+    const ok = choice===q.answer;
+    setFeedback(ok?"ok":"ng");
+    setFlash(ok?"ok":"ng");
+    if(ok){
+      bgm.se("correct");
+      scoreRef.current+=timeLeft;
+      setScore(scoreRef.current);
+      correctRef.current+=1;
+      setCorrect(correctRef.current);
+    } else {
+      bgm.se("wrong");
+      mistakesRef.current=[...mistakesRef.current,{el:q.el,yours:choice,answer:q.answer,isF2N:q.isF2N}];
+    }
+    setTimeout(()=>{
+      setFlash(null);
+      setQ(genNextQ());
+      setSelected(null);
+      setFeedback("none");
+    },400);
+  };
+
+  // 周期表グリッド（9行×18列）
+  const rows = 9;
+  const cols = 18;
+
+  return (
+    <div style={{userSelect:"none"}}>
+      {/* ヘッダー */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6,padding:"6px 10px",background:"#1e293b",borderRadius:10,color:"#fff"}}>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <span style={{fontFamily:"Space Mono",fontWeight:700,fontSize:"1.1rem",color:timeLeft<=10?"#ef4444":"#38bdf8"}}>⏱ {timeLeft}</span>
+          {onExit&&<button onClick={()=>{bgm.stop();onExit();}} style={{background:"none",border:"1px solid rgba(255,255,255,.3)",borderRadius:6,padding:"2px 8px",fontSize:".7rem",color:"rgba(255,255,255,.7)",cursor:"pointer"}}>退出</button>}
+        </div>
+        <div style={{fontSize:".82rem",color:"rgba(255,255,255,.7)"}}>{correct}/{answered}</div>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <span style={{fontFamily:"Space Mono",fontWeight:700,color:"#fbbf24"}}>💯 {score}</span>
+          <button onClick={toggleBgm} style={{background:"none",border:"none",color:"rgba(255,255,255,.7)",cursor:"pointer",fontSize:".9rem"}}>{bgmOn?"🔊":"🔇"}</button>
+        </div>
+      </div>
+
+      {/* 問題文 */}
+      <div style={{textAlign:"center",marginBottom:4,fontSize:".8rem",color:"var(--muted)"}}>
+        {q.label}
+      </div>
+      <div style={{textAlign:"center",marginBottom:6,fontSize:"1.6rem",fontWeight:900,color:"var(--primary)",fontFamily:"Space Mono",letterSpacing:1}}>
+        {q.display}
+      </div>
+
+      {/* 周期表グリッド */}
+      <div style={{
+        display:"grid",
+        gridTemplateColumns:`repeat(${cols},1fr)`,
+        gridTemplateRows:`repeat(${rows},1fr)`,
+        gap:1,
+        width:"100%",
+        aspectRatio:"18/9",
+        marginBottom:6,
+        background:"var(--border)",
+        borderRadius:4,
+        overflow:"hidden",
+        padding:1,
+      }}>
+        {Array.from({length:rows*cols},(_,i)=>{
+          const row=Math.floor(i/cols)+1;
+          const col=(i%cols)+1;
+          // ランタノイド/アクチノイド区切り行（row6→8への架け橋）
+          if(row===6&&col===3){
+            return <div key={i} style={{gridRow:6,gridColumn:3,background:"#e2e8f0",borderRadius:2,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.35rem",color:"#94a3b8"}}>*</div>;
+          }
+          if(row===7&&col===3){
+            return <div key={i} style={{gridRow:7,gridColumn:3,background:"#e2e8f0",borderRadius:2,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.35rem",color:"#94a3b8"}}>**</div>;
+          }
+          // この位置の元素を探す
+          const el = ALL_ELEMENTS.find(e=>{
+            const p=PERIODIC_TABLE_POS[e.number];
+            return p&&p.row===row&&p.col===col;
+          });
+          if(!el) return <div key={i} style={{background:"transparent"}}/>;
+          // 出題範囲内かどうか
+          const inRange = el.number>=minNum&&el.number<=maxNum;
+          const isTarget = el.number===q.el.number;
+          let bg = inRange?"#dbeafe":"#f1f5f9";
+          let border = "none";
+          let animation = "none";
+          if(isTarget){
+            if(flash==="ok") bg="#86efac";
+            else if(flash==="ng") bg="#fca5a5";
+            else{ bg="#3b82f6"; border="2px solid #1d4ed8"; animation="ptPulse 0.6s ease-in-out infinite"; }
+          }
+          return (
+            <div key={i} style={{
+              background:bg,
+              border:border,
+              borderRadius:2,
+              display:"flex",alignItems:"center",justifyContent:"center",
+              animation:animation,
+              transition:"background .15s",
+              boxSizing:"border-box",
+            }}/>
+          );
+        })}
+      </div>
+
+      {/* 選択肢 */}
+      <div className="chs">
+        {q.choices.map((c,i)=>(
+          <button key={i}
+            className={`ch cn ${selected!==null?"dis":""} ${selected!==null&&c===q.answer?"ok":""} ${selected===c&&c!==q.answer?"ng":""}`}
+            onClick={()=>handleChoice(c)}>{c}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── PeriodicTableResultScreen ────────────────────────────────
+function PeriodicTableResultScreen({ result, nickname, onHome, onRetry, onRanking, userGrade="", userSchool="" }) {
+  const [showModal, setShowModal] = useState(false);
+  const [rankSaved, setRankSaved] = useState(false);
+  const acc = result.total>0?Math.round(result.correct/result.total*100):0;
+  const grade = acc>=90?"🥇 完璧！":acc>=70?"🥈 よくできました！":acc>=50?"🥉 もう少し！":"📚 練習しよう！";
+  return (
+    <div>
+      {showModal&&<RankingModal score={result.score} correct={result.correct} total={result.total}
+        nickname={nickname} quizMode="periodic" maxNum={null} subLevel="all" difficulty="normal"
+        userGrade={userGrade} userSchool={userSchool}
+        onDone={(saved)=>{setRankSaved(saved);setShowModal(false);}}/>}
+      <div className="card tc" style={{marginBottom:12}}>
+        <div style={{fontSize:"1.7rem",marginBottom:4}}>{grade}</div>
+        <div className="score-teacher-wrap">
+          <div>
+            <div className="rbig">{result.score}</div>
+            <div className="muted" style={{marginTop:2}}>点</div>
+          </div>
+          <img src="/teacher.png" alt="先生" className="teacher-img"/>
+        </div>
+        <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:10,flexWrap:"wrap"}}>
+          <div className="rstat"><div style={{color:"var(--success)",fontWeight:700}}>{result.correct}/{result.total}</div><div className="muted">正解</div></div>
+          <div className="rstat"><div style={{color:"var(--primary)",fontWeight:700}}>{acc}%</div><div className="muted">正答率</div></div>
+        </div>
+      </div>
+      {!rankSaved&&nickname&&(
+        <div className="card" style={{marginBottom:10}}>
+          <p className="tc muted" style={{marginBottom:10}}>🏆 スコアをランキングに登録しますか？</p>
+          <button className="btn btn-g btn-blk" onClick={()=>setShowModal(true)}>✅ ランキングに登録する</button>
+          <button className="btn btn-s btn-blk" style={{marginTop:8}} onClick={()=>setRankSaved(true)}>登録しない</button>
+        </div>
+      )}
+      {rankSaved&&<p className="tc" style={{color:"var(--success)",marginBottom:10,fontWeight:700}}>✅ ランキングに登録しました！</p>}
+      <div className="gap8">
+        <button className="btn btn-p" style={{flex:1}} onClick={onRetry}>🔁 もう一度</button>
+        <button className="btn btn-s" style={{flex:1}} onClick={onHome}>🏠 ホーム</button>
+        <button className="btn btn-s" style={{flex:1}} onClick={onRanking}>🏆 ランキング</button>
+      </div>
+      <AppFooter/>
+    </div>
+  );
+}
+
+// ── PeriodicTableSetupScreen ─────────────────────────────────
+function PeriodicTableSetupScreen({ onStart, onBack, isBattle=false }) {
+  useEffect(()=>{ bgm.start("lobby"); return()=>{}; },[]);
+  const [minNum, setMinNum] = useState(1);
+  const [maxNum, setMaxNum] = useState(20);
+  const [directionMode, setDirectionMode] = useState("random");
+
+  return (
+    <div className="card">
+      <div className="fb2 mb13">
+        <button className="btn btn-s btn-sm" onClick={onBack}>← 戻る</button>
+        <span style={{fontWeight:700}}>🗺️ {isBattle?"周期表対戦:ルーム作成":"出題範囲を選択"}</span>
+        <span/>
+      </div>
+      <div style={{marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>出題範囲（原子番号）</div>
+        <RangeSelector minNum={minNum} maxNum={maxNum} onChangeMin={setMinNum}
+          onChangeMax={v=>{setMaxNum(v);}}/>
+        <ElementDifficultyBadge maxNum={maxNum}/>
+      </div>
+      <div style={{marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:".86rem",marginBottom:8}}>出題方向</div>
+        {[["f2n","記号 → 名前","元素記号を見て名前を答える"],["n2f","名前 → 記号","元素名を見て記号を答える"],["random","ランダム","どちらもランダムに出題"]].map(([v,l,d])=>(
+          <div key={v} onClick={()=>setDirectionMode(v)}
+            style={{padding:"10px 14px",marginBottom:6,border:`2px solid ${directionMode===v?"var(--primary)":"var(--border)"}`,borderRadius:10,cursor:"pointer",background:directionMode===v?"var(--pl)":"#fff",transition:"all .12s"}}>
+            <span style={{fontWeight:700,color:directionMode===v?"var(--primary)":"var(--text)"}}>{l}</span>
+            <span style={{fontSize:".78rem",color:"var(--muted)",marginLeft:8}}>{d}</span>
+          </div>
+        ))}
+      </div>
+      <button className="btn btn-p btn-blk"
+        onClick={()=>onStart({min:minNum,max:maxNum},directionMode)}
+        disabled={ALL_ELEMENTS.filter(e=>e.number>=minNum&&e.number<=maxNum).length<4}>
+        {isBattle?"🚀 この設定でルーム作成":"🚀 スタート！"}
+      </button>
+      <AppFooter/>
+    </div>
+  );
+}
+
 function generateIonQ(ions, rng, directionMode="random", difficulty="normal") {
   const rand = rng || Math.random.bind(Math);
   const ion = ions[Math.floor(rand()*ions.length)];
@@ -1374,6 +1670,7 @@ input[type=range]{width:100%;accent-color:var(--primary);}
 .memo-sub{font-size:.7rem;color:var(--muted);}
 .memo-num{font-size:.68rem;color:var(--muted);font-family:"Space Mono",monospace;}
 .footer-copy{text-align:center;padding:18px 10px 10px;color:var(--muted);font-size:.72rem;line-height:1.6;}
+@keyframes ptPulse{0%{background:#3b82f6;transform:scale(1);}50%{background:#60a5fa;transform:scale(1.15);}100%{background:#3b82f6;transform:scale(1);}}
 /* how-to modal */
 .howto-modal{background:#fff;border-radius:var(--r);padding:0;max-width:420px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25);max-height:85vh;overflow-y:auto;}
 .howto-header{background:linear-gradient(135deg,#0f0c29,#1a1040,#0d2060);padding:20px;border-radius:var(--r) var(--r) 0 0;position:relative;}
@@ -1430,6 +1727,7 @@ function RankingModal({ score, correct, total, nickname, quizMode, maxNum, subLe
       const key = quizMode==="ion" ? "ranking:ion"
         : quizMode==="formula" ? "ranking:formula"
         : quizMode==="mol" ? "ranking:mol"
+        : quizMode==="periodic" ? "ranking:periodic"
         : "ranking:v2";
       const res = await sGet(key, true);
       let all = [];
@@ -1840,7 +2138,7 @@ function checkNickname(name) {
   return true;
 }
 
-function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, bgmOn, onToggleBgm, weekCount=0, onAdmin=null }) {
+function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, onBattle, onRanking, onMemo, onMol, onPeriodic, bgmOn, onToggleBgm, weekCount=0, onAdmin=null }) {
   const [edit,setEdit]=useState(false);
   const [step,setStep]=useState("grade"); // "grade"|"school"|"name"
   const [selGrade,setSelGrade]=useState("");
@@ -1984,6 +2282,20 @@ function HomeScreen({ nickname, userGrade, userSchool, onSetNickname, onSolo, on
             </div>
           </div>
         )}
+      </div>
+
+      <div style={{marginBottom:10}}>
+        <div style={{fontWeight:800,fontSize:".78rem",color:"#0891b2",marginBottom:7,paddingLeft:4,letterSpacing:"1px",textTransform:"uppercase"}}>🗺️ 周期表クイズ</div>
+        <div className="g2">
+          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#0891b2"}:{borderColor:"#0891b2"}} onClick={()=>nickname&&onPeriodic("solo")}>
+            <div className="ic">🎮</div><div className="nm">ひとりで挑戦</div>
+            <span className="rule-tag">周期表の枠が点滅！元素を答えよ</span>
+          </div>
+          <div className="sc" style={!nickname?{opacity:.5,cursor:"not-allowed",borderColor:"#0891b2"}:{borderColor:"#0891b2"}} onClick={()=>nickname&&onPeriodic("battle")}>
+            <div className="ic">⚔️</div><div className="nm">対戦する</div>
+            <span className="rule-tag">同時に解いてスコア比較</span>
+          </div>
+        </div>
       </div>
 
       <div style={{marginBottom:10}}>
@@ -2423,11 +2735,12 @@ function RankingScreen({ onBack, myNickname }) {
     if(tab==="ion") key="ranking:ion";
     else if(tab==="formula") key="ranking:formula";
     else if(tab==="mol") key="ranking:mol";
+    else if(tab==="periodic") key="ranking:periodic";
     else key="ranking:v2";
     const res=await sGet(key,true);
     let all=[];
     try{if(res)all=JSON.parse(res.value);}catch{}
-    if(!["element_all","ion","formula","mol"].includes(tab))
+    if(!["element_all","ion","formula","mol","periodic"].includes(tab))
       all=all.filter(r=>r.maxNum===Number(tab));
     setAllRanks(all);
     setDiffFilter("all");
@@ -2450,10 +2763,10 @@ function RankingScreen({ onBack, myNickname }) {
 
   const tabs=[
     ["element_all","⚛️元素"],["ion","⚡イオン"],["formula","🧬化学式"],
-    ["mol","🧮 mol"],
+    ["mol","🧮 mol"],["periodic","🗺️周期表"],
   ];
 
-  const showDiffFilter = ["element_all","ion","formula"].includes(tab);
+  const showDiffFilter = ["element_all","ion","formula","periodic"].includes(tab);
   const showMolFilter = tab==="mol";
   const GRADE_OPTIONS = [
     {v:"all",        l:"全体", icon:"🏆"},
@@ -3934,6 +4247,8 @@ export default function App() {
   const [bgmOn,setBgmOn]=useState(true);
   const [showAdmin,setShowAdmin]=useState(false);
   const [molMode,setMolMode]=useState("intro");
+  const [periodicSettings,setPeriodicSettings]=useState({min:1,max:20,dir:"random"});
+  const [periodicResult,setPeriodicResult]=useState(null);
 
   useEffect(()=>{
     const start=()=>{bgm.start("home");document.removeEventListener("click",start);};
@@ -4021,9 +4336,14 @@ export default function App() {
               onRanking={()=>{bgm.se("fanfare");setScreen("ranking");}}
               onMemo={()=>setScreen("memo")}
               onMol={(t)=>{bgm.stop();if(t==="battle")setScreen("mol_battle");else setScreen("mol_setup");}}
+              onPeriodic={(t)=>{bgm.stop();if(t==="battle")setScreen("periodic_battle");else setScreen("periodic_setup");}}
               bgmOn={bgmOn} onToggleBgm={toggleBgm} weekCount={weekCount} onAdmin={()=>setShowAdmin(true)}/>
           )}
           {showAdmin&&<AdminScreen onClose={()=>setShowAdmin(false)}/>}
+          {screen==="periodic_setup"&&<PeriodicTableSetupScreen onBack={goHome} onStart={(range,dir)=>{setPeriodicSettings({min:range.min,max:range.max,dir});bgm.stop();setScreen("periodic_countdown");}}/>}
+          {screen==="periodic_countdown"&&<Countdown onDone={()=>setScreen("periodic_quiz")}/>}
+          {screen==="periodic_quiz"&&<PeriodicTableQuizScreen minNum={periodicSettings.min} maxNum={periodicSettings.max} directionMode={periodicSettings.dir} onFinish={r=>{bgm.stop();bgm.se("finish");setPeriodicResult(r);setScreen("periodic_result");}} onExit={()=>{if(bgmOn)bgm.start("home");setScreen("home");}}/>}
+          {screen==="periodic_result"&&periodicResult&&<PeriodicTableResultScreen result={periodicResult} nickname={nickname} userGrade={userGrade} userSchool={userSchool} onHome={()=>{if(bgmOn)bgm.start("home");setScreen("home");}} onRetry={()=>{bgm.stop();setScreen("periodic_countdown");}} onRanking={()=>{bgm.se("fanfare");setScreen("ranking");}}/>}
           {screen==="setup"&&(
             <SetupScreen title={isIon?"イオンクイズ設定":"出題範囲を選択"} quizMode={quizMode} onBack={goHome}
               onStart={(mn,dm,sl,dif)=>{if(mn&&typeof mn==="object"){setMinNum(mn.min||1);setMaxNum(mn.max||20);}else{setMinNum(1);setMaxNum(mn||20);}setDirectionMode(dm||"random");setSubLevel(sl||"junior");setDifficulty(dif||"normal");bgm.stop();setScreen("countdown");}}/>
